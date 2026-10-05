@@ -49,6 +49,15 @@ def main(argv=None):
     p_inspect.add_argument("file", help=".stp file")
     p_inspect.add_argument("--top", type=int, default=20)
 
+    p_struct = sub.add_parser(
+        "structure",
+        help="extract product structure as OSLC JSON-LD / Turtle (P1)")
+    p_struct.add_argument("file", help=".stp file")
+    p_struct.add_argument("--base", default="https://example.org/stepper/",
+                          help="base URL for emitted resources")
+    p_struct.add_argument("--format", choices=("jsonld", "turtle"),
+                          default="jsonld")
+
     args = ap.parse_args(argv)
 
     if args.cmd == "check":
@@ -88,6 +97,15 @@ def main(argv=None):
         print(f"  top entity types:")
         for name, n in sorted(hist.items(), key=lambda kv: -kv[1])[:args.top]:
             print(f"    {name:45s} {n}")
+        return 0
+
+    if args.cmd == "structure":
+        from stepper.structure import structure_file
+        _, jsonld, turtle = structure_file(str(args.file), base=args.base)
+        if args.format == "turtle":
+            print(turtle, end="")
+        else:
+            print(json.dumps(jsonld, indent=2))
         return 0
 
 

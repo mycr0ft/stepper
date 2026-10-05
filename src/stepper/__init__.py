@@ -11,6 +11,10 @@ from .express import (
 from .check import (
     CheckResult, Finding, check_file, check_schema_instances,
 )
+from .structure import (
+    ProductStructure, StructureNode, extract_structure, to_oslc_jsonld,
+    to_oslc_turtle, structure_file,
+)
 
 __version__ = "0.1.0"
 
@@ -20,5 +24,7 @@ __all__ = [
     "parse_p21", "load_p21",
     "ExpressEntity", "ExpressSchema", "parse_express", "load_express",
     "CheckResult", "Finding", "check_file", "check_schema_instances",
+    "ProductStructure", "StructureNode", "extract_structure",
+    "to_oslc_jsonld", "to_oslc_turtle", "structure_file",
     "__version__",
 ]

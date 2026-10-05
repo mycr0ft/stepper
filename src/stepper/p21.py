@@ -414,36 +414,75 @@ class P21Parser:
             f"instance expects NAME( or (A()B()...), got {v!r}")
 
     def parse_value_list(self, close: str) -> List[Any]:
-        depth = 1
-        args, cur, refs = [], [], []
-        while depth > 0:
-            kind, v, _ = self.next()
+        """Parse a comma-separated value list UP TO (and consuming) the
+        closing ``close`` paren.  The CALLER consumes the opening paren.
+        Nested groups/lists/typed values are parsed recursively."""
+        args: List[Any] = []
+        while True:
+            kind, v, _ = self.peek()
             if v is None:
                 raise SyntaxError("unexpected EOF in value list")
-            if v == "(":
-                depth += 1
-                cur.append(v)
-            elif v == ")":
-                depth -= 1
-                if depth == 0:
-                    break
-                cur.append(v)
-            elif v == "," and depth == 1:
-                self._flush(args, cur, refs)
-                cur, refs = [], []
-            elif kind == "ref":
-                refs.append(v[1:])
-                cur.append(v)
-            elif kind == "kw" and depth == 1 and not cur:
-                # nested typed value TYPE(...)
-                self.expect("(")
-                nested = self.parse_value_list(close=")")
-                args.append(Typed(v, nested))
-            else:
-                cur.append(v)
-        if cur or refs:
-            self._flush(args, cur, refs)
+            if v == close:
+                self.next()
+                return args
+            if v == ";":
+                self.next()
+                return args
+            if v == ",":
+                self.next()
+                continue
+            args.append(self.parse_value())
         return args
+
+    def parse_value(self):
+        """Parse ONE value: literal / ref / enum / binary / typed /
+        nested group."""
+        kind, v, _ = self.next()
+        if v in (None,):
+            raise SyntaxError("unexpected EOF in value")
+        if v == "(":
+            # nested group: list or complex value — parse until ')'
+            items = []
+            while True:
+                kind2, v2, _ = self.peek()
+                if v2 is None:
+                    raise SyntaxError("unexpected EOF in nested group")
+                if v2 == ")":
+                    self.next()
+                    return items
+                items.append(self.parse_value())
+        if v == "$":
+            return UNSET
+        if v == "*":
+            return DERIVED
+        if kind == "ref":
+            return Ref(int(v[1:]))
+        if kind == "kw":
+            # typed value: TYPE(...)  (commas inside must be skipped)
+            self.expect("(")
+            args = []
+            while True:
+                kind2, v2, _ = self.peek()
+                if v2 is None:
+                    raise SyntaxError("unexpected EOF in typed value")
+                if v2 == ")":
+                    self.next()
+                    break
+                if v2 == ",":
+                    self.next()
+                    continue
+                args.append(self.parse_value())
+            return Typed(v, args)
+        if kind == "str":
+            return v[1:-1].replace("''", "'")
+        if kind == "enum":
+            return Enum(v)
+        if kind == "bin":
+            return Binary(v[1:-1])
+        if kind == "num" and _NUM_ONLY_RE.match(v):
+            return _decode_number(v)
+        # anything else (rare multi-token residue): keep raw text
+        return v
 
     def _flush(self, args, cur, refs):
         raw = "".join(cur).strip()
