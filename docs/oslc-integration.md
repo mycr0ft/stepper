@@ -72,28 +72,42 @@ via stepper. One tool serves the full Vee.
 
 ## Phases
 
-- **P1 — stepper: structure extraction (no server yet).**
+- **P1 — stepper: structure extraction ✅ (7bee9dc).**
   `stepper structure file.stp` emits OSLC-shaped JSON-LD/Turtle:
-  PRODUCT → `sysml:PartDefinition`-shaped resources,
-  NEXT_ASSEMBLY_USAGE_OCCURRENCE → `sysml:part` containment links,
+  PRODUCT → `Product` resources,
+  NEXT_ASSEMBLY_USAGE_OCCURRENCE → containment links,
   geometry summary (shape representations per product). P21 ANCHOR
   UUIDs (AP242 files carry them; NIST files have them when saved
   with P21 e3) become the `@id`s — same discipline as sysmlpy's
   stable-ids registry.
-- **P2 — pyoslc: STEP domain adapter.** Resource shapes + repository
-  for the STEP resources (same pattern as `domains/sysml.py`);
-  a ServiceProvider so the STEP data is discoverable through the
-  same catalog. Optional: serve stepper's check-gate result as an
-  OSLC resource (`oslc:Resource, dcterms:type "ValidationReport"`).
-- **P3 — the Vee link.** Join table between sysmlpy interchange
-  `@id`s and STEP instance UUIDs/anchors (file-based registry, same
-  shape as the reconcile_ids registry). Endpoints:
-  - `GET /oslc/vee/{element-id}` → what the element means in BOTH
-    worlds (its SysML definition, its AP242 geometry/PMI, its PLM
-    lifecycle state via Config Management).
-  - `sysmlpy diff`/`stepper diff` surfaced as OSLC change history.
-- **P4 — Config Management baselines.** A baseline pins a SysML
-  model + STEP geometry snapshot together — this is the actual PLM
+- **P2 — pyoslc: STEP domain adapter ✅ (pyoslc ef1aa2a).**
+  `StepProduct` / `StepProductDefinition` / `StepShapeRepresentation`
+  / `StepFile` resource classes at the `oslc:Resource` level, typed
+  by the stepper vocabulary; `/oslc/step/*` REST endpoints;
+  `Step-1` service provider in the catalog; resource shapes; seeder
+  from stepper's P1 output (`seed_from_step_file(.stp)` full pipe).
+  **Root-cause fix carried:** core.py's class-decorated
+  `@api.representation` broke every flask-restx error path — real
+  serializers now registered last.
+- **P3 — the Vee link ✅ (this repo P3 tests; sysmlpy qn_registry).**
+  The join table is built on sysmlpy's new **`qn_registry()`** export
+  side table (deduped declared-QN path → stable `@id`), which rides
+  every `to_interchange(stable_ids=True)` document under
+  `"#qn_registry"`. pyoslc's `VeeRegistry`
+  (`namespaces/step/vee.py`) stores the edges and exposes them at
+  `/oslc/step/vee`:
+  - `POST /oslc/step/vee {"registry": {...qn_registry output...}}` —
+    auto-links by leaf name (quoted SysML short names stripped);
+  - `POST {"sysml_qn":..., "sysml_id":..., "step_ref":...,
+    "kind": "realizes|specifies|traces"}` — manual edges;
+  - `GET ?sysml_qn=…` / `?step_ref=%23…` — both directions;
+  - optional JSON sidecar (`VeeRegistry(sidecar=…)`) — persists the
+    links across restarts, the sysmlpy-reconcile-registry pattern.
+  Demonstrated end-to-end: NIST CTC-01 product ↔ a SysML part with
+  the matching short name links automatically; the honest no-match
+  case reports zero new links.
+- **P4 — Config Management baselines (next).** A baseline pins a
+  SysML model + STEP geometry snapshot together — this is the actual PLM
   "released-configuration" concept. pyoslc already has
   `vocabularies/config.py`; the work is stepper-side id-stable
   snapshots + a baseline seeder.
