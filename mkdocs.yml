@@ -1,0 +1,54 @@
+site_name: stepper
+site_description: Pure-python STEP (ISO 10303) reader with OSLC Config-Management baselines
+repo_url: https://github.com/mycr0ft/stepper
+repo_name: mycr0ft/stepper
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - search.highlight
+    - search.share
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Tutorial:
+      - Beginner's Guide: tutorial/index.md
+      - 1. Inspecting a STEP file: tutorial/inspect.md
+      - 2. Checking models: tutorial/check.md
+      - 3. Product structure → OSLC: tutorial/structure.md
+      - 4. Serving as OSLC (pyoslc): tutorial/serve.md
+      - 5. The Vee link (SysML ↔ STEP): tutorial/vee.md
+      - 6. Baselines (releases): tutorial/baselines.md
+  - Where next: directions.md
+  - Architecture: oslc-integration.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+  - admonition
+  - pymdownx.details
