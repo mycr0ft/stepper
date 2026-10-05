@@ -29,6 +29,13 @@ work on real NIST AP242 files; semantic checks are next.
 - **Phase C** — STEP ⇄ SysML bridge via ISO/TS 10303-400 (Reference
   schema for SysML mapping): map AP242 data to a SysML-shaped ARM and
   reuse sysmlpy's interchange/identity/diff machinery.
+- **Phase D — OSLC integration (pyoslc)**: `stepper structure` emits
+  OSLC-shaped JSON-LD/Turtle; a STEP domain adapter in pyoslc serves
+  it; the Systems-Engineering Vee link ties SysML models (left/middle)
+  and STEP product data (right) together through shared element ids,
+  versioned by OSLC Config Management baselines.
+  See `docs/oslc-integration.md` for the architecture, probes, and
+  phased plan.
 
 ## Test corpus
 
