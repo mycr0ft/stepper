@@ -106,11 +106,18 @@ via stepper. One tool serves the full Vee.
   Demonstrated end-to-end: NIST CTC-01 product ↔ a SysML part with
   the matching short name links automatically; the honest no-match
   case reports zero new links.
-- **P4 — Config Management baselines (next).** A baseline pins a
-  SysML model + STEP geometry snapshot together — this is the actual PLM
-  "released-configuration" concept. pyoslc already has
-  `vocabularies/config.py`; the work is stepper-side id-stable
-  snapshots + a baseline seeder.
+- **P4 — Config Management baselines ✅ (pyoslc 964bab5).**
+  `create_baseline()` pins the Vee configuration by content hash:
+  `.sysml` + `.stp` source bytes land in a sha256
+  content-addressed artifact store; the DERIVED payloads ride the
+  manifest — the sysml interchange stable-ids JSON (with its
+  `qn_registry`) and stepper's structure JSON-LD per .stp — plus a
+  snapshot of the Vee link table. Baseline id = manifest digest:
+  identical content is idempotent (re-creation raises), any content
+  change mints a new id, `derived_from` chains baselines into a
+  release history, and `verify_baseline(id)` re-hashes every stored
+  artifact (tamper detection pinned by test). Immutable — the REST
+  surface (`/oslc/step/baselines`) is read/create/verify only.
 
 ## Immediate next step (when picked up)
 
