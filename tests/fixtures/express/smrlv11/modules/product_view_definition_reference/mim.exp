@@ -1,0 +1,23 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.3 2017/04/28 15:09:08 verodub Exp
+   ISO TC184/SC4/WG12 N7769 - ISO/TS 10303-1823 Product view definition reference - EXPRESS MIM*)
+
+SCHEMA Product_view_definition_reference_mim;
+
+	USE FROM Support_resource_mim; -- ISO/TS 10303-1800
+	USE FROM External_item_identification_assignment_mim;	-- ISO/TS 10303-1128
+	USE FROM Product_view_definition_mim;	-- ISO/TS 10303-1019
+	USE FROM External_reference_schema   -- ISO 10303-41
+		(externally_defined_item,
+		external_source);
+	USE FROM product_definition_schema (   -- ISO 10303-41
+		generic_product_definition_reference,
+		product_definition_reference,
+		product_definition_reference_with_local_representation);
+	
+TYPE pie_external_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON external_identification_item WITH 
+     (generic_product_definition_reference);
+END_TYPE; 
+
+END_SCHEMA;

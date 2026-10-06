@@ -1,0 +1,20 @@
+
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.6 2009/09/25 19:25:34 darla Exp
+   ISO TC184/SC4/WG12 N6708 - ISO/TS 10303-6708 Cfd_conditions - EXPRESS MIM
+ 
+*)
+
+SCHEMA Cfd_conditions_mim;
+
+USE FROM Analysis_mim;
+
+USE FROM Cfd_specified_general_property_mim;
+
+USE FROM conditions_schema;
+
+USE FROM Mesh_topology_mim;
+
+END_SCHEMA;
+

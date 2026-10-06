@@ -1,0 +1,52 @@
+(*
+   ISO TC184/SC4/WG12 N11093 - ISO/TS 10303-1804 Product as individual assembly and test - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N10433
+*)
+
+SCHEMA Product_as_individual_assembly_and_test_arm;
+
+USE FROM Activity_arm; -- ISO/TS 10303-1047
+
+USE FROM Planned_characteristic_arm; -- ISO/TS 10303-1733
+
+USE FROM Process_plan_arm;   -- ISO/TS 10303-1803
+
+USE FROM Product_as_individual_arm; -- ISO/TS 10303-1164
+
+USE FROM Property_assignment_arm; -- ISO/TS 10303-1030
+
+TYPE paiaata_activity_item = SELECT BASED_ON activity_item WITH
+  (Applied_independent_test_result_property);
+END_TYPE;
+
+ENTITY Applied_independent_test_result_property
+SUBTYPE OF (Applied_independent_property);
+  SELF\Assigned_property.described_element : Product_as_individual_test_result;
+END_ENTITY;
+
+ENTITY Applied_process_operation_occurrence;
+  items : SET [1 : ?] OF Applied_independent_test_result_property;
+  source : Process_operation_occurrence;
+END_ENTITY;
+
+ENTITY Applied_test_activity
+SUBTYPE OF (Applied_activity_assignment);
+  SELF\Applied_activity_assignment.items : SET [1 : ?] OF Applied_independent_test_result_property;
+DERIVE
+  SELF\Applied_activity_assignment.role : STRING := 'test activity';
+END_ENTITY;
+
+ENTITY Evaluated_characteristic_of_product_as_individual_test_result
+SUBTYPE OF (Evaluated_characteristic);
+INVERSE
+  test_result : Product_as_individual_test_result FOR evaluation_data;
+END_ENTITY;
+
+ENTITY Product_as_individual_test_result
+SUBTYPE OF (Evaluation_view_definition);
+  SELF\Evaluation_view_definition.evaluated_product_definition : Product_as_individual_view;
+  SELF\Evaluation_view_definition.evaluation_data : SET [1 : ?] OF Evaluated_characteristic_of_product_as_individual_test_result;
+END_ENTITY;
+
+END_SCHEMA;
+

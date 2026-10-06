@@ -1,0 +1,193 @@
+(*
+
+ISO 10303 TC184/SC4/WG12 N10250
+
+EXPRESS Source:
+ISO 10303-61 ed2 Systems engineering representation - Systems engineering representation schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2019  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-61 ed1 Systems engineering representation - Systems engineering representation schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*) 
+
+SCHEMA systems_engineering_representation_schema '{iso standard 10303 part(61) version(2) object(1) systems_engineering_representation_schema(1)}';
+
+REFERENCE FROM action_schema		-- ISO 10303-41
+  (action_method);
+REFERENCE FROM iso13584_expressions_schema	-- ISO 13584-20
+  (expression);
+REFERENCE FROM management_resources_schema	-- ISO 10303-41
+  (action_method_assignment);
+REFERENCE FROM product_analysis_schema;		-- ISO 10303-53
+REFERENCE FROM representation_schema		-- ISO 10303-43
+  (representation,
+   representation_context,
+   representation_item);
+REFERENCE FROM state_type_schema;			-- ISO 10303-53
+REFERENCE FROM support_resource_schema		-- ISO 10303-41
+  (bag_to_set,
+   identifier,
+   label,
+   text);
+
+TYPE analysis_model_idealisation_item = EXTENSIBLE GENERIC_ENTITY SELECT 
+  (physical_product_domain);
+END_TYPE;
+
+TYPE expression_element = SELECT 
+  (expression);
+END_TYPE;
+
+TYPE representation_proxy_select = EXTENSIBLE GENERIC_ENTITY SELECT ;
+END_TYPE;
+
+TYPE se_representation_proxy_select = SELECT BASED_ON representation_proxy_select WITH
+  (action_method,
+   state_type,
+   state_type_relationship);
+END_TYPE;
+
+TYPE state_based_behaviour_element = SELECT 
+  (state_type,
+   state_type_relationship);
+END_TYPE;
+
+ENTITY action_method_assignment_relationship;
+  relating_assignment : action_method_assignment;
+  related_assignment : action_method_assignment;
+END_ENTITY;
+
+ENTITY analysis_model
+SUBTYPE OF (representation);
+  SELF\representation.context_of_items : analysis_representation_context;
+END_ENTITY;
+
+ENTITY analysis_model_relationship;
+  id : identifier;
+  name : label;
+  description : text;
+  idealised : analysis_model;
+  idealisation : analysis_model_idealisation_item;
+END_ENTITY;
+
+ENTITY analysis_representation_context
+SUBTYPE OF (representation_context);
+END_ENTITY;
+
+ENTITY description_text;
+  description : text;
+END_ENTITY;
+
+ENTITY description_text_assignment ABSTRACT SUPERTYPE;
+  description : description_text;
+END_ENTITY;
+
+ENTITY description_text_assignment_relationship;
+	id 				: OPTIONAL identifier;
+	description 	: OPTIONAL text; 					
+	relating 		: description_text_assignment;			
+	related 		: description_text_assignment;											
+	relation_type	: STRING;							
+ WHERE
+	WR1 : acyclic_description_text_assignment_relationship(SELF, [related], 'SYSTEMS_ENGINEERING_REPRESENTATION_SCHEMA.DESCRIPTION_TEXT_ASSIGNMENT_RELATIONSHIP');
+END_ENTITY;
+
+ENTITY expression_assignment ABSTRACT SUPERTYPE;
+  assigned_expression : expression;
+  role : expression_role;
+END_ENTITY;
+
+ENTITY expression_item_representation_item
+SUBTYPE OF (representation_item);
+  item : expression_element;
+END_ENTITY;
+
+ENTITY expression_representation
+SUBTYPE OF (representation);
+  SELF\representation.context_of_items : expression_representation_context;
+  SELF\representation.items : SET [1 : ?] OF expression_item_representation_item;
+END_ENTITY;
+
+ENTITY expression_representation_context
+SUBTYPE OF (representation_context);
+END_ENTITY;
+
+ENTITY expression_role;
+  name : label;
+  description : OPTIONAL text;
+END_ENTITY;
+
+ENTITY functional_model
+SUBTYPE OF (representation);
+  SELF\representation.context_of_items : functional_representation_context;
+  SELF\representation.items : SET [1 : ?] OF functional_representation_item;
+END_ENTITY;
+
+ENTITY functional_representation_context
+SUBTYPE OF (representation_context);
+END_ENTITY;
+
+ENTITY functional_representation_item
+SUBTYPE OF (representation_proxy_item);
+  SELF\representation_proxy_item.item : action_method;
+END_ENTITY;
+
+ENTITY representation_proxy_item
+SUBTYPE OF (representation_item);
+  item : representation_proxy_select;
+END_ENTITY;
+
+ENTITY state_based_behaviour_model
+SUBTYPE OF (representation);
+  SELF\representation.context_of_items : state_based_behaviour_representation_context;
+  SELF\representation.items : SET [1 : ?] OF state_based_behaviour_representation_item;
+END_ENTITY;
+
+ENTITY state_based_behaviour_representation_context
+SUBTYPE OF (representation_context);
+END_ENTITY;
+
+ENTITY state_based_behaviour_representation_item
+SUBTYPE OF (representation_proxy_item);
+  SELF\representation_proxy_item.item : state_based_behaviour_element;
+END_ENTITY;
+
+FUNCTION acyclic_description_text_assignment_relationship (relation : description_text_assignment_relationship; relatives : SET [1:?] OF description_text_assignment; specific_relation : STRING):BOOLEAN;
+  LOCAL
+    x : SET OF description_text_assignment_relationship;
+  END_LOCAL;
+
+  IF relation.relating IN relatives THEN
+    RETURN (FALSE);
+  END_IF;
+  x := QUERY(dtar <* bag_to_set(USEDIN(relation.relating, 'SYSTEMS_ENGINEERING_REPRESENTATION_SCHEMA.' + 'DESCRIPTION_TEXT_ASSIGNMENT_RELATIONSHIP.' + 'RELATED')) | specific_relation IN TYPEOF(dtar));
+  REPEAT i := 1 TO HIINDEX(x);
+    IF NOT acyclic_description_text_assignment_relationship(x[i], relatives + relation.relating, specific_relation) THEN
+      RETURN (FALSE);
+    END_IF;
+  END_REPEAT;
+  RETURN (TRUE);
+ END_FUNCTION;
+
+END_SCHEMA;
+
+
+

@@ -1,0 +1,31 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.17 2018/11/29 20:44:30 brandon Exp
+   ISO TC184/SC4/WG12 N10293 - ISO/TS 10303-1473 Description assignment - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N5849
+*) 
+
+SCHEMA Description_assignment_mim;
+
+USE FROM systems_engineering_representation_schema   -- ISO 10303-61
+  (description_text,
+   description_text_assignment,
+   description_text_assignment_relationship);
+
+
+TYPE description_item = EXTENSIBLE GENERIC_ENTITY SELECT ;
+END_TYPE;
+
+ENTITY applied_description_text_assignment
+SUBTYPE OF (description_text_assignment);
+  items : SET [1 : ?] OF description_item;
+END_ENTITY;
+
+ENTITY applied_description_text_assignment_relationship
+	SUBTYPE of (description_text_assignment_relationship);
+	SELF\description_text_assignment_relationship.related 		: applied_description_text_assignment;					
+	SELF\description_text_assignment_relationship.relating 		: applied_description_text_assignment;						
+END_ENTITY;
+
+END_SCHEMA;  -- Description_assignment_mim
+

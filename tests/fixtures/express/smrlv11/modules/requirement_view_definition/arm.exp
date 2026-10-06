@@ -1,0 +1,29 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.14 2012/11/09 21:40:58 thomasrthurman Exp
+ISO TC184/SC4/WG12 N8295 - ISO/TS 10303-1141 Requirement view definition - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N6842
+*) 
+
+
+SCHEMA Requirement_view_definition_arm;
+
+USE FROM Property_as_definition_arm; -- ISO/TS 10303-1399
+USE FROM Product_view_definition_arm;    -- ISO/TS 10303-1019
+
+USE FROM Requirement_identification_and_version_arm;    -- ISO/TS 10303-1140
+
+
+ENTITY Requirement_view_definition
+  SUBTYPE OF (Product_view_definition);
+  SELF\Product_view_definition.defined_version : Requirement_version;
+END_ENTITY;
+
+ENTITY Single_requirement_view_definition
+  SUBTYPE OF (Requirement_view_definition);
+INVERSE
+  definition : Single_property_is_definition FOR described_element;
+END_ENTITY;
+
+END_SCHEMA;  -- Requirement_view_definition_arm
+

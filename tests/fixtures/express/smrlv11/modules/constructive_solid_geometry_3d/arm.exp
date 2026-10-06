@@ -1,0 +1,19 @@
+(*
+ISO TC184/SC4/WG12 N11322 - ISO/TS 10303-1068 Constructive solid geometry 3d - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N7822
+*) 
+
+
+SCHEMA Constructive_solid_geometry_3d_arm;
+
+USE FROM Advanced_boundary_representation_arm; -- ISO/TS 10303-1514
+USE FROM Elemental_geometric_shape_arm;    -- ISO/TS 10303-1004
+USE FROM Faceted_boundary_representation_arm; -- ISO/TS 10303-1512
+USE FROM Primitive_solids_arm; -- ISO/TS 10303-1801
+
+
+ENTITY Csg_model
+  SUBTYPE OF (Geometric_model);
+END_ENTITY;
+
+END_SCHEMA;  -- Constructive_solid_geometry_3d_arm

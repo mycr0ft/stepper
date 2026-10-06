@@ -1,0 +1,36 @@
+(*
+$Id: mim.exp,v 1.8 2010/06/09 21:51:47 philsp Exp $
+ISO TC184/SC4/WG12 N7123 - ISO/TS 10303-1013 Person organization assignment - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N1091
+*)
+      
+SCHEMA Person_organization_assignment_mim;
+
+USE FROM management_resources_schema   -- ISO 10303-41
+  (organization_assignment,
+   person_and_organization_assignment); 
+
+USE FROM Person_organization_mim;    -- ISO/TS 10303-1011
+
+USE FROM person_organization_schema   -- ISO 10303-41
+  (organization_role,
+   person_and_organization_role); 
+
+
+TYPE organization_item = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+TYPE person_and_organization_item = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+ENTITY applied_organization_assignment
+  SUBTYPE OF (organization_assignment);
+  items : SET[1:?] OF organization_item;
+END_ENTITY;
+
+ENTITY applied_person_and_organization_assignment
+  SUBTYPE OF (person_and_organization_assignment);
+  items : SET[1:?] OF person_and_organization_item;
+END_ENTITY;
+
+END_SCHEMA;  -- Person_organization_assignment_mim

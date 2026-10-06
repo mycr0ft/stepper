@@ -1,0 +1,12 @@
+(*
+ISO TC184/SC4/WG12 N11355 - ISO/CD-TS 10303-1515 tessellated_boundary_representation - EXPRESS ARM
+*)
+
+SCHEMA Tessellated_boundary_representation_arm;
+USE FROM Elemental_geometric_shape_arm;
+
+ENTITY Tessellated_boundary_representation
+SUBTYPE OF (Geometric_model);
+END_ENTITY;
+
+END_SCHEMA;

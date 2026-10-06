@@ -1,0 +1,137 @@
+(*
+ISO TC184/SC4/WG12 N11326 - ISO/TS 10303-1131 Construction geometry - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N11226
+*) 
+
+SCHEMA Construction_geometry_mim;
+
+USE FROM Basic_curve_mim;    -- ISO/TS 10303-1651;
+
+USE FROM geometry_schema(   -- ISO 10303-42
+   axis2_placement_2d,
+   axis2_placement_3d,
+   b_spline_surface,
+   bounded_surface,
+   cartesian_point,
+   circle,
+   conic,
+   conical_surface,
+   curve,
+   curve_bounded_surface,
+   curve_replica,
+   cylindrical_surface,
+   degenerate_pcurve,
+   elementary_surface,
+   ellipse,
+   hyperbola,
+   line,
+   offset_curve_2d,
+   offset_curve_3d,
+   offset_surface,
+   parabola,
+   pcurve,
+   placement,
+   plane,
+   point,
+   point_on_curve,
+   point_on_surface,
+   point_replica,
+   rectangular_composite_surface,
+   rectangular_trimmed_surface,
+   spherical_surface,
+   surface,
+   surface_curve,
+   surface_of_linear_extrusion,
+   surface_of_revolution,
+   surface_replica,
+   swept_surface,
+   toroidal_surface);
+
+
+USE FROM representation_schema   -- ISO 10303-43
+  (mapped_item,
+   representation,
+   representation_map,
+   representation_relationship); 
+
+USE FROM Topologically_bounded_surface_mim;    -- ISO/TS 10303-1511
+
+USE FROM topology_schema(   -- ISO 10303-42
+   connected_edge_set,
+   connected_edge_sub_set,
+   connected_face_set,
+   connected_face_sub_set,
+   edge_curve,
+   face_surface,
+   vertex_point);
+
+  TYPE constructive_geometry_representation_or_shape_representation = SELECT
+    (constructive_geometry_representation,
+    shape_representation);
+  END_TYPE;
+
+  ENTITY constructive_geometry_representation
+    SUBTYPE OF (representation);
+    WHERE
+      WR1: ('GEOMETRY_SCHEMA.GEOMETRIC_REPRESENTATION_CONTEXT' IN TYPEOF(SELF\representation.context_of_items)) AND 
+           ({2 <= SELF\representation.context_of_items\geometric_representation_context.coordinate_space_dimension <= 3});
+      WR2: SIZEOF( QUERY( cgr_i <* SELF.items | SIZEOF([
+        'GEOMETRY_SCHEMA.AXIS2_PLACEMENT_2D',
+        'GEOMETRY_SCHEMA.AXIS2_PLACEMENT_3D',
+        'GEOMETRY_SCHEMA.B_SPLINE_SURFACE',
+        'GEOMETRY_SCHEMA.BOUNDED_SURFACE',
+        'GEOMETRY_SCHEMA.CARTESIAN_POINT',
+        'GEOMETRY_SCHEMA.CIRCLE',
+        'GEOMETRY_SCHEMA.CONIC',
+        'GEOMETRY_SCHEMA.CONICAL_SURFACE',
+        'GEOMETRY_SCHEMA.CURVE',
+        'GEOMETRY_SCHEMA.CURVE_BOUNDED_SURFACE',
+        'GEOMETRY_SCHEMA.CURVE_REPLICA',
+        'GEOMETRY_SCHEMA.CYLINDRICAL_SURFACE',
+        'GEOMETRY_SCHEMA.DEGENERATE_PCURVE',
+        'GEOMETRY_SCHEMA.ELEMENTARY_SURFACE',
+        'GEOMETRY_SCHEMA.ELLIPSE',
+        'GEOMETRY_SCHEMA.HYPERBOLA',
+        'GEOMETRY_SCHEMA.LINE',
+        'GEOMETRY_SCHEMA.OFFSET_CURVE_2D',
+        'GEOMETRY_SCHEMA.OFFSET_CURVE_3D',
+        'GEOMETRY_SCHEMA.OFFSET_SURFACE',
+        'GEOMETRY_SCHEMA.PARABOLA',
+        'GEOMETRY_SCHEMA.PCURVE',
+        'GEOMETRY_SCHEMA.PLACEMENT',
+        'GEOMETRY_SCHEMA.PLANE',
+        'GEOMETRY_SCHEMA.POINT',
+        'GEOMETRY_SCHEMA.POINT_ON_CURVE',
+        'GEOMETRY_SCHEMA.POINT_ON_SURFACE',
+        'GEOMETRY_SCHEMA.POINT_REPLICA',
+        'GEOMETRY_SCHEMA.RECTANGULAR_COMPOSITE_SURFACE',
+        'GEOMETRY_SCHEMA.RECTANGULAR_TRIMMED_SURFACE',
+        'GEOMETRY_SCHEMA.SPHERICAL_SURFACE',
+        'GEOMETRY_SCHEMA.SURFACE',
+        'GEOMETRY_SCHEMA.SURFACE_CURVE',
+        'GEOMETRY_SCHEMA.SURFACE_OF_LINEAR_EXTRUSION',
+        'GEOMETRY_SCHEMA.SURFACE_OF_REVOLUTION',
+        'GEOMETRY_SCHEMA.SURFACE_REPLICA',
+        'GEOMETRY_SCHEMA.SWEPT_SURFACE',
+        'GEOMETRY_SCHEMA.TOROIDAL_SURFACE',
+        'TOPOLOGY_SCHEMA.EDGE_CURVE',
+        'TOPOLOGY_SCHEMA.FACE_SURFACE',
+        'TOPOLOGY_SCHEMA.VERTEX_POINT',
+	'TOPOLOGY_SCHEMA.CONNECTED_FACE_SET',
+	'TOPOLOGY_SCHEMA.CONNECTED_EDGE_SET'
+        ] * TYPEOF(cgr_i)) <> 1 )) = 0;
+      WR3: SIZEOF( USEDIN( SELF, 'REPRESENTATION_SCHEMA.' + 'REPRESENTATION_RELATIONSHIP.REP_2') ) > 0;
+  --IP1
+  END_ENTITY;
+
+  ENTITY constructive_geometry_representation_relationship
+    SUBTYPE OF (representation_relationship);
+      SELF\representation_relationship.rep_1 : constructive_geometry_representation_or_shape_representation;    
+      SELF\representation_relationship.rep_2 : constructive_geometry_representation;    
+    WHERE
+      WR1: (SELF.rep_1.context_of_items :=: SELF.rep_2.context_of_items) AND 
+      ('GEOMETRY_SCHEMA.GEOMETRIC_REPRESENTATION_CONTEXT' IN TYPEOF(SELF.rep_1.context_of_items));
+      WR2: NOT('REPRESENTATION_SCHEMA.' + 'REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION' IN TYPEOF(SELF));
+  END_ENTITY;
+
+END_SCHEMA;  

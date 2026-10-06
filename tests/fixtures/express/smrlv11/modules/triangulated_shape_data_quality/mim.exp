@@ -1,0 +1,930 @@
+(*
+   $Id: mim.exp,v 1.1 2021/10/02 07:18:35 ftanaka Exp $
+   N10830 - ISO/TS 10303-1850 triangulated_shape_data_quality - EXPRESS MIM*)
+(* Y.Kikuchi 2021-11-15, 
+   rev : F.Tanaka  2022-02-12
+   rev : F.Tanaka  2022-03-25
+*)
+SCHEMA Triangulated_shape_data_quality_mim;
+ 
+USE FROM Annotated_3d_model_data_quality_criteria_mim;	-- ISO/TS 10303-1848
+
+USE FROM Annotated_3d_model_data_quality_inspection_result_mim; -- ISO/TS 10303-1849
+
+USE FROM annotated_3d_model_data_quality_inspection_result_schema -- ISO 10303-59
+	(adjacent_triangle_pair,
+     adjacent_triangulated_face_pair,
+     representative_triangle,
+     triangle_edge,
+     triangle_vertex,
+     triangulated_face_element);
+  
+USE FROM Tessellated_geometry_mim; -- ISO/TS 10303-1819
+    
+REFERENCE FROM shape_data_quality_criteria_schema  -- ISO 10303-59
+    (value_limit_type);
+
+REFERENCE FROM support_resource_schema  -- ISO 10303-41
+    (bag_to_set);
+
+TYPE tsdq_inspected_element_select = SELECT BASED_ON inspected_element_select WITH 
+(tsdq_inspection_element);
+END_TYPE;
+
+(*
+TYPE tsdq_inspected_element_select = SELECT BASED_ON inspected_element_select WITH
+  (adjacent_triangle_pair,      
+   adjacent_triangulated_face_pair, 
+   representative_triangle,     
+   tessellated_connecting_edge, 
+   tessellated_shell,          
+   tessellated_solid,          
+   triangle_edge,              
+   triangulated_face,        
+   triangle_vertex);          
+END_TYPE;
+*)
+
+TYPE tsdq_inspected_element_type_name = ENUMERATION BASED_ON a3m_data_quality_inspected_element_type_name WITH
+  (tsdqi_adjacent_triangle_pair,
+   tsdqi_adjacent_triangulated_face_pair,
+   tsdqi_representative_triangle,
+   tsdqi_others,
+   tsdqi_tessellated_connecting_edge,
+   tsdqi_tessellated_shell,
+   tsdqi_tessellated_solid,
+   tsdqi_triangle_edge,
+   tsdqi_triangulated_face,
+   tsdqi_triangle_vertex);
+END_TYPE;
+
+TYPE tsdq_inspected_model_select = SELECT BASED_ON a3m_data_quality_inspected_model_select WITH 
+(shape_representation);
+END_TYPE;
+
+TYPE tsdq_location_of_extreme_value_select = SELECT BASED_ON a3m_location_of_extreme_value_select WITH
+(tsdq_location_of_extreme_value);
+END_TYPE;
+
+(*
+TYPE tsdq_location_of_extreme_value_select = SELECT BASED_ON a3m_location_of_extreme_value_select WITH
+  (representative_triangle,
+   tessellated_shell,
+   triangle_edge,
+   triangulated_face,
+   triangle_vertex);
+END_TYPE;
+*)
+
+TYPE tsdq_measured_data_type_name = ENUMERATION BASED_ON a3m_data_quality_measured_data_type_name WITH
+  (tsdqm_area_measure,
+   tsdqm_boolean_value,
+   tsdqm_count_measure,
+   tsdqm_others,
+   tsdqm_positive_length_measure,
+   tsdqm_positive_plane_angle_measure,
+   tsdqm_ratio_measure);
+END_TYPE;
+
+TYPE tsdq_measured_value_select = SELECT BASED_ON a3mir_data_quality_measured_value_select WITH
+  (area_measure,
+   count_measure,
+   positive_length_measure,
+   positive_plane_angle_measure,
+   ratio_measure);
+END_TYPE;
+
+TYPE tsdq_type_name_for_location_of_extreme_value = ENUMERATION BASED_ON a3m_data_quality_type_name_for_location_of_extreme_value WITH
+  (tsdqe_others,
+   tsdqe_set_of_representative_triangle,
+   tsdqe_set_of_tessellated_shell,
+   tsdqe_set_of_triangle_edge,
+   tsdqe_set_of_triangulated_face,
+   tsdqe_triangle_vertex);
+END_TYPE;
+
+ENTITY a3m_triangulated_shape_data_quality_criterion
+  ABSTRACT SUPERTYPE OF ( ONEOF(a3m_erroneous_triangulated_shape_data, a3m_inapt_triangulated_shape_data))
+  SUBTYPE OF (a3m_data_quality_criterion);
+  SELF\a3m_data_quality_criterion.measured_data_type : tsdq_measured_data_type_name;
+  SELF\a3m_data_quality_criterion.inspected_elements_types : LIST[1:?] OF tsdq_inspected_element_type_name;
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types : LIST[0:?] OF tsdq_type_name_for_location_of_extreme_value;
+DERIVE
+  SELF\a3m_data_quality_criterion.accuracy_types : LIST[0:0] OF a3m_data_quality_accuracy_type_name := [];
+WHERE
+   WR1: SIZEOF(bag_to_set(USEDIN(SELF, 
+     'ANNOTATED_3D_MODEL_DATA_QUALITY_CRITERIA_MIM.A3M_DATA_QUALITY_TARGET_ACCURACY_ASSOCIATION.TARGET_TO_ASSOCIATE')
+      )) = 0;
+END_ENTITY;
+
+ENTITY a3m_erroneous_triangulated_shape_data
+  ABSTRACT SUPERTYPE OF ( ONEOF( 
+    inconsistent_normals_of_adjacent_faces, 
+    inconsistent_normals_of_adjacent_triangles, 
+    non_manifold_at_triangle_edge, 
+    non_manifold_at_triangle_vertex, 
+    triangle_edge_in_free_edge_loop ))
+  SUBTYPE OF (a3m_triangulated_shape_data_quality_criterion);
+END_ENTITY;
+ 
+ENTITY a3m_inapt_triangulated_shape_data
+  ABSTRACT SUPERTYPE OF ( ONEOF(
+    abrupt_normal_change_of_adjacent_triangles, 
+    abrupt_normal_change_of_adjacent_faces, 
+    gap_in_triangulated_face, 
+    gap_in_triangulated_shell_or_solid, 
+    inconsistent_triangle_normal_and_normal_at_vertex, 
+    inner_void_in_triangulated_solid,
+    large_aspect_ratio_triangle, 
+    large_number_of_triangles, 
+    nearly_overlapping_triangles, 
+    non_homogeneous_triangle_size,
+    self_intersecting_triangulated_face, 
+    self_intersecting_triangulated_shell_or_solid, 
+    sharp_triangle_vertex, 
+    short_height_triangle, 
+    short_triangle_edge, 
+    small_triangulated_shell, 
+    thin_slit_in_triangulated_shell_or_solid, 
+    thin_thickness_of_triangulated_shell_or_solid))
+  SUBTYPE OF (a3m_triangulated_shape_data_quality_criterion);
+END_ENTITY;
+
+ENTITY a3m_triangulated_shape_data_quality_inspection_result
+  SUBTYPE OF (a3m_data_quality_inspection_result);
+  SELF\a3m_data_quality_inspection_result.criterion_inspected : a3m_triangulated_shape_data_quality_criterion;
+WHERE
+   WR1: SIZEOF(bag_to_set(USEDIN(SELF, 
+     'ANNOTATED_3D_MODEL_DATA_QUALITY_CRITERIA_MIM.A3M_DATA_QUALITY_TARGET_ACCURACY_ASSOCIATION.TARGET_TO_ASSOCIATE')
+      )) = 0;
+   WR2: SIZEOF (QUERY(re <* bag_to_set(USEDIN(SELF,
+     'PRODUCT_DATA_QUALITY_INSPECTION_RESULT_MIM.DATA_QUALITY_INSPECTION_REPORT.INSPECTION_RESULT')) 
+     |NOT(tsdq_validate_element_types(re,SELF.criterion_inspected)))) = 0;
+   WR3: SIZEOF (QUERY(re <* bag_to_set(USEDIN(SELF,
+     'PRODUCT_DATA_QUALITY_INSPECTION_RESULT_MIM.DATA_QUALITY_INSPECTION_REPORT.INSPECTION_RESULT')) 
+     |NOT(tsdq_validate_location_of_extreme_value_types(re,SELF.criterion_inspected)))) = 0;
+   WR4: SIZEOF (QUERY(re <* bag_to_set(USEDIN(SELF,
+     'PRODUCT_DATA_QUALITY_INSPECTION_RESULT_MIM.DATA_QUALITY_INSPECTION_REPORT.INSPECTION_RESULT'))
+     |NOT(tsdq_validate_measured_type(re,SELF.criterion_inspected)))) = 0;
+END_ENTITY;
+
+ENTITY abrupt_normal_change_of_adjacent_triangles
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_plane_angle_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_adjacent_triangle_pair];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_LOWER_VALUE_LIMIT' 
+        IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold))
+        AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold) 
+            = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY abrupt_normal_change_of_adjacent_faces
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+--  approximation_tolerance : positive_length_measure;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_plane_angle_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_adjacent_triangulated_face_pair];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value := [tsdqe_set_of_triangle_edge];
+INVERSE
+   approximation_tolerance: tsdq_positive_length_measure_for_abrupt_normal_change_of_adjacent_faces FOR criterion_to_assign_the_value;
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_VALUE_RANGE' 
+        IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold))
+        AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)
+             = SELF.measured_data_type);
+   WR2: (SELF.approximation_tolerance.name = 'approximation_tolerance');
+END_ENTITY;
+ 
+
+ 
+ENTITY inconsistent_triangle_normal_and_normal_at_vertex
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_plane_angle_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_triangle_vertex];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_LOWER_VALUE_LIMIT' 
+        IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+        AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)
+         = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY inconsistent_normals_of_adjacent_triangles
+  SUBTYPE OF (a3m_erroneous_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_logical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_boolean_value;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_adjacent_triangle_pair];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+END_ENTITY;
+
+ENTITY inconsistent_normals_of_adjacent_faces
+  SUBTYPE OF (a3m_erroneous_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_logical_test;
+--  approximation_tolerance : positive_length_measure;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_boolean_value;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_adjacent_triangulated_face_pair];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+INVERSE
+  approximation_tolerance: tsdq_positive_length_measure_for_inconsistent_normals_of_adjacent_faces FOR criterion_to_assign_the_value;
+WHERE
+   WR1: (SELF.approximation_tolerance.name = 'approximation_tolerance');
+END_ENTITY;
+
+ENTITY gap_in_triangulated_face
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_logical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_boolean_value;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_triangulated_face];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value := [tsdqe_set_of_triangle_edge];
+INVERSE
+	offset_radius: tsdq_positive_length_measure_for_gap_in_triangulated_face FOR criterion_to_assign_the_value;
+WHERE
+   WR1: (SELF.offset_radius.name = 'offset_radius');
+END_ENTITY;
+
+ENTITY gap_in_triangulated_shell_or_solid
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_logical_test;
+--  approximation_tolerance : positive_length_measure;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_boolean_value;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[2:2] OF tsdq_inspected_element_type_name := [tsdqi_tessellated_shell,tsdqi_tessellated_solid];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value := [tsdqe_set_of_triangle_edge];
+INVERSE
+  specific_applied_values: SET [2:2] OF tsdq_positive_length_measure_for_gap_in_triangulated_shell_or_solid FOR criterion_to_assign_the_value;
+WHERE
+   WR1: (SIZEOF(QUERY(ie <*specific_applied_values| ie.name = 'approximation_tolerance')) = 1) AND 
+        (SIZEOF(QUERY(ie <*specific_applied_values| ie.name = 'offset_radius')) = 1);
+END_ENTITY;
+
+ENTITY inner_void_in_triangulated_solid
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_logical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_boolean_value;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name :=
+    [tsdqi_tessellated_solid];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value := 
+    [tsdqe_set_of_tessellated_shell];
+END_ENTITY;
+
+ENTITY large_aspect_ratio_triangle
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_ratio_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name :=
+    [tsdqi_representative_triangle];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_LOWER_VALUE_LIMIT' 
+        IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+        AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)
+         = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY large_number_of_triangles
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_count_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[2:2] OF tsdq_inspected_element_type_name :=
+    [tsdqi_tessellated_shell, tsdqi_tessellated_solid];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_LOWER_VALUE_LIMIT' 
+   IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+   AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY nearly_overlapping_triangles
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_plane_angle_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_adjacent_triangle_pair];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_UPPER_VALUE_LIMIT' 
+   IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+   AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY non_homogeneous_triangle_size
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_ratio_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_triangulated_face];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value := [tsdqe_set_of_representative_triangle];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_LOWER_VALUE_LIMIT' 
+   IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+   AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY non_manifold_at_triangle_edge
+  SUBTYPE OF (a3m_erroneous_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_logical_test;
+--  approximation_tolerance : positive_length_measure;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_boolean_value;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_triangle_edge];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+INVERSE
+  approximation_tolerance: tsdq_positive_length_measure_for_non_manifold_at_triangle_edge FOR criterion_to_assign_the_value;
+WHERE
+   WR1: (SELF.approximation_tolerance.name = 'approximation_tolerance');
+END_ENTITY;
+
+ENTITY non_manifold_at_triangle_vertex
+  SUBTYPE OF (a3m_erroneous_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_logical_test;
+--  approximation_tolerance : positive_length_measure;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_boolean_value;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_triangle_vertex];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+INVERSE
+  approximation_tolerance: tsdq_positive_length_measure_for_non_manifold_at_triangle_vertex FOR criterion_to_assign_the_value;
+WHERE
+   WR1: (SELF.approximation_tolerance.name = 'approximation_tolerance');
+END_ENTITY;
+ 
+
+ENTITY self_intersecting_triangulated_face
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_length_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_triangulated_face];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value := [tsdqe_set_of_representative_triangle];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_UPPER_VALUE_LIMIT' 
+   IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+   AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY self_intersecting_triangulated_shell_or_solid
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+--  approximation_tolerance : positive_length_measure;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_length_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[2:2] OF tsdq_inspected_element_type_name := [tsdqi_tessellated_shell,tsdqi_tessellated_solid];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value := [tsdqe_set_of_triangulated_face];
+INVERSE
+  approximation_tolerance: tsdq_positive_length_measure_for_self_intersecting_triangulated_shell_or_solid FOR criterion_to_assign_the_value;
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_UPPER_VALUE_LIMIT' 
+   IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+   AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+   WR2: (SELF.approximation_tolerance.name = 'approximation_tolerance');
+END_ENTITY;
+
+ENTITY sharp_triangle_vertex
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_plane_angle_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name :=
+    [tsdqi_triangle_vertex];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_UPPER_VALUE_LIMIT' 
+       IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+       AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)
+        = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY short_height_triangle
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+  shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_length_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name :=
+    [tsdqi_representative_triangle];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value :=
+    [tsdqe_triangle_vertex];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_UPPER_VALUE_LIMIT' IN 
+          TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold))
+    AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)
+       = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY short_triangle_edge
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_length_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name :=
+    [tsdqi_triangle_edge];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_UPPER_VALUE_LIMIT'
+       IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold))
+       AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)
+        = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY small_triangulated_shell
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_length_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name :=
+    [tsdqi_tessellated_shell];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_UPPER_VALUE_LIMIT' 
+   IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+   AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY thin_thickness_of_triangulated_shell_or_solid
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_length_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[2:2] OF tsdq_inspected_element_type_name :=
+    [tsdqi_tessellated_shell,tsdqi_tessellated_solid];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value := 
+    [tsdqe_set_of_representative_triangle];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_UPPER_VALUE_LIMIT' 
+   IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+   AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY thin_slit_in_triangulated_shell_or_solid
+  SUBTYPE OF (a3m_inapt_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_numerical_test;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_positive_length_measure;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[2:2] OF tsdq_inspected_element_type_name :=
+    [tsdqi_tessellated_shell,tsdqi_tessellated_solid];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[1:1] OF tsdq_type_name_for_location_of_extreme_value := 
+    [tsdqe_set_of_representative_triangle];
+WHERE
+   WR1: ('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.SHAPE_DATA_QUALITY_UPPER_VALUE_LIMIT' 
+   IN TYPEOF(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold)) 
+   AND (tsdq_get_value_limit_type_name(SELF\a3m_data_quality_criterion.assessment_specification\shape_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY triangle_edge_in_free_edge_loop
+  SUBTYPE OF (a3m_erroneous_triangulated_shape_data);
+  SELF\a3m_data_quality_criterion.assessment_specification : 
+    shape_data_quality_assessment_by_logical_test;
+--  approximation_tolerance : positive_length_measure;
+DERIVE
+  SELF\a3m_data_quality_criterion.measured_data_type : 
+    tsdq_measured_data_type_name := tsdqm_boolean_value;
+  SELF\a3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF tsdq_inspected_element_type_name := [tsdqi_triangle_edge];
+  SELF\a3m_data_quality_criterion.location_of_extreme_value_types :
+    LIST[0:0] OF tsdq_type_name_for_location_of_extreme_value := [];
+INVERSE
+  approximation_tolerance: tsdq_positive_length_measure_for_triangle_edge_in_free_edge_loop FOR criterion_to_assign_the_value;
+WHERE
+   WR1: (SELF.approximation_tolerance.name = 'approximation_tolerance');
+END_ENTITY;
+
+  ENTITY tsdq_inspection_element
+    SUBTYPE OF (representation_item);
+    INVERSE
+       inspected_element: tsdq_inspection_representation_item_relationship FOR related_representation_item;
+  END_ENTITY;
+
+  ENTITY tsdq_inspection_representation_item_relationship
+    SUBTYPE OF(representation_item_relationship);
+	SELF\representation_item_relationship.related_representation_item : tsdq_inspection_element;
+    WHERE
+      WR1: SIZEOF(TYPEOF(SELF\representation_item_relationship.relating_representation_item) * 
+         ['TRIANGULATED_SHAPE_DATA_QUALITY_MIM.ADJACENT_TRIANGLE_PAIR',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.ADJACENT_TRIANGULATED_FACE_PAIR',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.REPRESENTATIVE_TRIANGLE',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TESSELLATED_CONNECTING_EDGE',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TESSELLATED_SHELL',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TESSELLATED_SOLID',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGLE_EDGE',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGULATED_FACE',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGLE_VERTEX'])=1;
+  END_ENTITY;
+
+  ENTITY tsdq_location_of_extreme_value
+    SUBTYPE OF (representation_item);
+    INVERSE
+       location_of_extreme_value: tsdq_location_of_extreme_value_representation_item_relationship FOR related_representation_item;
+  END_ENTITY;
+
+  ENTITY tsdq_location_of_extreme_value_representation_item_relationship
+    SUBTYPE OF(representation_item_relationship);
+	SELF\representation_item_relationship.related_representation_item : tsdq_location_of_extreme_value;
+    WHERE
+      WR1: SIZEOF(TYPEOF(SELF\representation_item_relationship.relating_representation_item) * 
+         ['TRIANGULATED_SHAPE_DATA_QUALITY_MIM.REPRESENTATIVE_TRIANGLE',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TESSELLATED_SHELL',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGLE_EDGE',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGULATED_FACE',
+          'TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGLE_VERTEX'])=1;
+  END_ENTITY;
+
+  ENTITY tsdq_positive_length_measure_for_abrupt_normal_change_of_adjacent_faces
+    SUBTYPE OF(a3m_data_quality_criterion_specific_applied_value);
+      SELF\a3m_data_quality_criterion_specific_applied_value.criterion_to_assign_the_value : abrupt_normal_change_of_adjacent_faces;
+      SELF\a3m_data_quality_criterion_specific_applied_value.applied_value : positive_length_measure;
+  END_ENTITY;
+
+  ENTITY tsdq_positive_length_measure_for_inconsistent_normals_of_adjacent_faces
+    SUBTYPE OF(a3m_data_quality_criterion_specific_applied_value);
+      SELF\a3m_data_quality_criterion_specific_applied_value.criterion_to_assign_the_value : inconsistent_normals_of_adjacent_faces;
+      SELF\a3m_data_quality_criterion_specific_applied_value.applied_value : positive_length_measure;
+  END_ENTITY;
+
+  ENTITY tsdq_positive_length_measure_for_gap_in_triangulated_face
+    SUBTYPE OF(a3m_data_quality_criterion_specific_applied_value);
+      SELF\a3m_data_quality_criterion_specific_applied_value.criterion_to_assign_the_value : gap_in_triangulated_face;
+      SELF\a3m_data_quality_criterion_specific_applied_value.applied_value : positive_length_measure;
+  END_ENTITY;
+
+  ENTITY tsdq_positive_length_measure_for_gap_in_triangulated_shell_or_solid
+    SUBTYPE OF(a3m_data_quality_criterion_specific_applied_value);
+      SELF\a3m_data_quality_criterion_specific_applied_value.criterion_to_assign_the_value : gap_in_triangulated_shell_or_solid;
+      SELF\a3m_data_quality_criterion_specific_applied_value.applied_value : positive_length_measure;
+  END_ENTITY;
+
+  ENTITY tsdq_positive_length_measure_for_non_manifold_at_triangle_edge
+    SUBTYPE OF(a3m_data_quality_criterion_specific_applied_value);
+      SELF\a3m_data_quality_criterion_specific_applied_value.criterion_to_assign_the_value : non_manifold_at_triangle_edge;
+      SELF\a3m_data_quality_criterion_specific_applied_value.applied_value : positive_length_measure;
+  END_ENTITY;
+
+  ENTITY tsdq_positive_length_measure_for_non_manifold_at_triangle_vertex
+    SUBTYPE OF(a3m_data_quality_criterion_specific_applied_value);
+      SELF\a3m_data_quality_criterion_specific_applied_value.criterion_to_assign_the_value : non_manifold_at_triangle_vertex;
+      SELF\a3m_data_quality_criterion_specific_applied_value.applied_value : positive_length_measure;
+  END_ENTITY;
+
+  ENTITY tsdq_positive_length_measure_for_self_intersecting_triangulated_shell_or_solid
+    SUBTYPE OF(a3m_data_quality_criterion_specific_applied_value);
+      SELF\a3m_data_quality_criterion_specific_applied_value.criterion_to_assign_the_value : self_intersecting_triangulated_shell_or_solid;
+      SELF\a3m_data_quality_criterion_specific_applied_value.applied_value : positive_length_measure;
+  END_ENTITY;
+
+  ENTITY tsdq_positive_length_measure_for_triangle_edge_in_free_edge_loop
+    SUBTYPE OF(a3m_data_quality_criterion_specific_applied_value);
+      SELF\a3m_data_quality_criterion_specific_applied_value.criterion_to_assign_the_value : triangle_edge_in_free_edge_loop;
+      SELF\a3m_data_quality_criterion_specific_applied_value.applied_value : positive_length_measure;
+  END_ENTITY;
+  
+  
+
+FUNCTION tsdq_get_value_limit_type_name
+  (sdqvlts:shape_data_quality_value_limit_type_select):tsdq_measured_data_type_name;
+     LOCAL
+      type_out : SET OF STRING :=[];
+    END_LOCAL;
+    type_out := value_limit_type(sdqvlts);
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.AREA_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_area_measure);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.COUNT_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_count_measure);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.POSITIVE_LENGTH_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_positive_length_measure);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.POSITIVE_PLANE_ANGLE_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_positive_plane_angle_measure);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.RATIO_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_ratio_measure);
+    END_IF;
+    RETURN(tsdqm_others);
+END_FUNCTION;
+
+  FUNCTION tsdq_get_measured_type_name
+    (ei:a3m_data_quality_measured_value_select):tsdq_measured_data_type_name;
+     LOCAL
+      type_out : SET OF STRING :=[];
+    END_LOCAL;
+    type_out := TYPEOF (ei);
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.AREA_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_area_measure);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.BOOLEAN_VALUE' IN type_out) THEN
+       RETURN(tsdqm_boolean_value);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.COUNT_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_count_measure);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.POSITIVE_LENGTH_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_positive_length_measure);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.POSITIVE_PLANE_ANGLE_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_positive_plane_angle_measure);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.RATIO_MEASURE' IN type_out) THEN
+       RETURN(tsdqm_ratio_measure);
+    END_IF;
+    RETURN(tsdqm_others);
+  END_FUNCTION;
+
+  FUNCTION tsdq_get_inspected_element_type_name
+    (ei:SET[1:?] OF inspected_element_select):tsdq_inspected_element_type_name;
+     LOCAL
+	  tie : tsdq_inspection_element;
+      type_out : SET OF STRING :=[];
+    END_LOCAL;
+	IF(SIZEOF(ei) > 1) THEN
+	    RETURN(tsdqi_others);
+	END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TSDQ_INSPECTION_ELEMENT' IN TYPEOF(ei[1])) THEN
+		tie := ei[1];
+		type_out := TYPEOF(tie.inspected_element.relating_representation_item);
+	ELSE
+	    RETURN(tsdqi_others);
+	END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.ADJACENT_TRIANGLE_PAIR' IN type_out) THEN
+       RETURN(tsdqi_adjacent_triangle_pair);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.ADJACENT_TRIANGULATED_FACE_PAIR' IN type_out) THEN
+       RETURN(tsdqi_adjacent_triangulated_face_pair);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.REPRESENTATIVE_TRIANGLE' IN type_out) THEN
+       RETURN(tsdqi_representative_triangle);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TESSELLATED_CONNECTING_EDGE' IN type_out) THEN
+       RETURN(tsdqi_tessellated_connecting_edge);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TESSELLATED_SHELL' IN type_out) THEN
+       RETURN(tsdqi_tessellated_shell);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TESSELLATED_SOLID' IN type_out) THEN
+       RETURN(tsdqi_tessellated_solid);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGLE_EDGE' IN type_out) THEN
+       RETURN(tsdqi_triangle_edge);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGULATED_FACE' IN type_out) THEN
+       RETURN(tsdqi_triangulated_face);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGLE_VERTEX' IN type_out) THEN
+       RETURN(tsdqi_triangle_vertex);
+    END_IF;
+    RETURN(tsdqi_others);
+   END_FUNCTION;
+
+  FUNCTION tsdq_get_type_name_for_location_of_extreme_value
+    (ei:SET[1:?] OF a3m_location_of_extreme_value_select):tsdq_type_name_for_location_of_extreme_value;
+     LOCAL
+      type_out : SET OF STRING;
+      tlev : tsdq_location_of_extreme_value;
+    END_LOCAL;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TSDQ_LOCATION_OF_EXTREME_VALUE' IN TYPEOF(ei[1])) THEN
+      tlev := ei[1];      
+      type_out := TYPEOF(tlev.location_of_extreme_value.relating_representation_item);
+    ELSE
+     RETURN(tsdqe_others);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGLE_VERTEX' IN type_out) THEN
+       IF(SIZEOF(ei) = 1) THEN
+         RETURN(tsdqe_triangle_vertex);
+       ELSE
+         RETURN(tsdqe_others);
+       END_IF;
+    END_IF;
+    (* Check elements of the set is same type *)
+    REPEAT i := 2 TO SIZEOF(ei);
+      IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TSDQ_LOCATION_OF_EXTREME_VALUE' IN TYPEOF(ei[i])) THEN
+        tlev := ei[i];
+        IF(TYPEOF(tlev.location_of_extreme_value.relating_representation_item) <> type_out) THEN
+           RETURN(tsdqe_others);
+        END_IF;
+      ELSE
+        RETURN(tsdqe_others);
+      END_IF;
+	END_REPEAT;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.REPRESENTATIVE_TRIANGLE' IN type_out) THEN
+       RETURN(tsdqe_set_of_representative_triangle);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TESSELLATED_SHELL' IN type_out) THEN
+       RETURN(tsdqe_set_of_tessellated_shell);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGLE_EDGE' IN type_out) THEN
+       RETURN(tsdqe_set_of_triangle_edge);
+    END_IF;
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.TRIANGULATED_FACE' IN type_out) THEN
+       RETURN(tsdqe_set_of_triangulated_face);
+    END_IF;
+    RETURN(tsdqe_others);
+   END_FUNCTION;
+  
+ FUNCTION tsdq_validate_element_types(ir:data_quality_inspection_report;cr:a3m_triangulated_shape_data_quality_criterion):LOGICAL;
+    LOCAL
+      aqiiri : a3m_data_quality_inspection_instance_report_item;
+      dqiir : data_quality_inspection_instance_report;
+      tietn : LIST [1:?] OF tsdq_inspected_element_type_name;
+    END_LOCAL;
+    tietn := cr.inspected_elements_types;
+    -- data_quality_inspection_instance_report
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.DATA_QUALITY_INSPECTION_INSTANCE_REPORT' IN TYPEOF(ir)) THEN
+      dqiir := ir;
+      REPEAT i := 1 TO SIZEOF(dqiir.inspected_instances);
+    --   > a3m_data_quality_inspection_instance_report_item.inspected_elements
+        IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.A3M_DATA_QUALITY_INSPECTION_INSTANCE_REPORT_ITEM'
+           IN TYPEOF(dqiir.inspected_instances[i])) THEN
+           aqiiri := dqiir.inspected_instances[i];
+           IF(NOT(tsdq_get_inspected_element_type_name(aqiiri.inspected_elements) IN  tietn)) THEN
+             RETURN(FALSE);
+           END_IF;
+        END_IF;
+      END_REPEAT;
+    END_IF;
+   RETURN(TRUE);
+ END_FUNCTION;
+ 
+ FUNCTION tsdq_validate_measured_type
+    (ir:data_quality_inspection_report;cr:a3m_triangulated_shape_data_quality_criterion):LOGICAL;
+    LOCAL
+      aqicri : a3m_data_quality_inspection_criterion_report_item;
+      aqiiri : a3m_data_quality_inspection_instance_report_item;
+      aqirie : a3m_instance_report_item_with_extreme_instances;
+      dqicr : data_quality_inspection_criterion_report;
+      dqiir : data_quality_inspection_instance_report;
+      tmdtn : tsdq_measured_data_type_name;
+    END_LOCAL;
+    tmdtn := cr.measured_data_type;
+    -- data_quality_inspection_criterion_report
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.DATA_QUALITY_INSPECTION_CRITERION_REPORT' IN TYPEOF(ir)) THEN
+      dqicr := ir;
+      REPEAT i := 1 TO SIZEOF(dqicr.statistical_values);
+    -- a3m_data_quality_inspection_criterion_report_item.representative_measured_value
+        IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.A3M_DATA_QUALITY_INSPECTION_CRITERION_REPORT_ITEM'
+           IN TYPEOF(dqicr.statistical_values[i])) THEN
+           aqicri := dqicr.statistical_values[i];
+           IF(tsdq_get_measured_type_name(aqicri.representative_measured_value) <> tmdtn) THEN
+             RETURN(FALSE);
+           END_IF;
+        END_IF;
+      END_REPEAT;
+    END_IF;   
+    -- data_quality_inspection_instance_report
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.DATA_QUALITY_INSPECTION_INSTANCE_REPORT' IN TYPEOF(ir)) THEN
+      dqiir := ir;
+      REPEAT i := 1 TO SIZEOF(dqiir.inspected_instances);
+    --   > a3m_data_quality_inspection_instance_report_item.representative_measured_value
+        IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.A3M_DATA_QUALITY_INSPECTION_INSTANCE_REPORT_ITEM'
+           IN TYPEOF(dqiir.inspected_instances[i])) THEN
+           aqiiri := dqiir.inspected_instances[i];
+           IF(tsdq_get_measured_type_name(aqiiri.representative_measured_value) <> tmdtn) THEN
+             RETURN(FALSE);
+           END_IF;
+        END_IF;
+    --   >     a3m_instance_report_item_with_extreme_instances
+        IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.A3M_INSTANCE_REPORT_ITEM_WITH_EXTREME_INSTANCES'
+           IN TYPEOF(dqiir.inspected_instances[i])) THEN
+           aqirie := dqiir.inspected_instances[i];
+           REPEAT j := 1 TO SIZEOF(aqirie.extreme_instances);
+             IF(tsdq_get_measured_type_name(aqirie.extreme_instances[j].measured_value) <> tmdtn) THEN
+               RETURN(FALSE);
+             END_IF;
+           END_REPEAT;
+        END_IF;
+      END_REPEAT;
+    END_IF;
+   RETURN(TRUE);
+ END_FUNCTION;
+
+ FUNCTION tsdq_validate_location_of_extreme_value_types
+   (ir:data_quality_inspection_report;cr:a3m_triangulated_shape_data_quality_criterion):LOGICAL;
+    LOCAL
+      aqirie : a3m_instance_report_item_with_extreme_instances;
+      dqiir : data_quality_inspection_instance_report;
+      ttnle : LIST[0:?] OF tsdq_type_name_for_location_of_extreme_value;
+    END_LOCAL;
+    ttnle := cr.location_of_extreme_value_types;
+    -- data_quality_inspection_instance_report
+    IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.DATA_QUALITY_INSPECTION_INSTANCE_REPORT' IN TYPEOF(ir)) THEN
+      dqiir := ir;
+      REPEAT i := 1 TO SIZEOF(dqiir.inspected_instances);
+    --   >     a3m_instance_report_item_with_extreme_instances
+        IF('TRIANGULATED_SHAPE_DATA_QUALITY_MIM.A3M_INSTANCE_REPORT_ITEM_WITH_EXTREME_INSTANCES'
+           IN TYPEOF(dqiir.inspected_instances[i])) THEN
+           aqirie := dqiir.inspected_instances[i];
+    -- IF location_of_extreme_value_types = [] THEN A3m_instance_report_item_with_extreme_instances is not exists
+           IF(SIZEOF(ttnle)= 0) THEN
+             RETURN(FALSE);
+           END_IF;
+           REPEAT j := 1 TO SIZEOF(aqirie.extreme_instances);
+             IF(NOT(tsdq_get_type_name_for_location_of_extreme_value(aqirie.extreme_instances[j].locations_of_extreme_value) IN ttnle)) THEN
+               RETURN(FALSE);
+             END_IF;
+           END_REPEAT;
+        END_IF;
+      END_REPEAT;
+    END_IF;
+   RETURN(TRUE);
+ END_FUNCTION;
+
+END_SCHEMA;  -- TRIANGULATED_SHAPE_DATA_QUALITY_MIM
+

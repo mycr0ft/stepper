@@ -1,0 +1,114 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.76 2019/01/10 22:26:07 brandon Exp
+   ISO TC184/SC4/WG12 N10336 - ISO/TS 10303-1649 Assembly technology - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N9922
+*)
+
+
+SCHEMA Assembly_technology_arm;
+
+USE FROM Feature_and_connection_zone_arm;	-- ISO/TS 10303-1671
+USE FROM Generic_material_aspects_arm; --  ISO/TS 10303-1681
+USE FROM Physical_component_feature_arm; -- ISO/TS 10303-1721
+USE FROM Product_view_definition_reference_arm;	-- ISO/TS 10303-1738
+USE FROM Requirement_assignment_arm; --  ISO/TS 10303-1233
+
+ 	TYPE at_external_identification_item = SELECT BASED_ON external_identification_item WITH
+		(Assembly_bond_definition);
+	END_TYPE;
+
+
+	TYPE at_material_item_select = SELECT BASED_ON material_item_select WITH
+		(Assembly_bond_definition);
+	END_TYPE;
+
+  TYPE at_property_assignment_select = SELECT BASED_ON property_assignment_select WITH
+    (Assembly_bond_definition);
+  END_TYPE;
+
+	TYPE at_requirement_assignment_item = SELECT BASED_ON requirement_assignment_item WITH
+	    (Assembly_joint);
+	END_TYPE;
+
+  TYPE bond_feature = EXTENSIBLE GENERIC_ENTITY SELECT
+     (General_part_feature);
+  END_TYPE;
+
+
+  TYPE degree_of_freedom = ENUMERATION OF
+    (x,
+     y,
+     z,
+     u,
+     v,
+     w);
+  END_TYPE;
+
+  ENTITY Assembled_with_bonding
+    SUBTYPE OF (Assembly_joint);
+      default_bond_definition : Assembly_bond_definition;
+  END_ENTITY;
+
+  ENTITY Assembled_with_fasteners
+    SUBTYPE OF (Assembly_joint);
+  END_ENTITY;
+
+  ENTITY Assembly_bond_definition;
+      name                                    : STRING;
+      associated_definition                   : Product_view_definition_reference_with_local_representation;
+      bonded_feature_1                        : OPTIONAL bond_feature;
+      bonded_feature_2                        : OPTIONAL bond_feature;
+    INVERSE
+      default_shape : SET[0:1] OF default_assembly_bond_shape_model FOR shape_characterized_definition;
+	  bond_category	: External_source_identification FOR item;
+	  bond_material : material_identification FOR items;
+    UNIQUE
+      UR1 : name;
+      UR2 : associated_definition;
+    WHERE
+      WR1 : bonded_feature_1 <> bonded_feature_2;
+  END_ENTITY;
+
+  ENTITY Assembly_joint
+    SUPERTYPE OF (Assembled_with_fasteners ANDOR
+ Assembled_with_bonding)
+    SUBTYPE OF (Component_feature_joint);
+      SELF\Component_feature_joint.feature_1 RENAMED assembly_feature_1             : Physical_component_feature; 
+      SELF\Component_feature_joint.feature_2 RENAMED assembly_feature_2             : Physical_component_feature; 
+      SELF\Component_feature_joint.associated_definition RENAMED associated_assembly : Assembly_definition; 
+    UNIQUE
+      UR1 : SELF\Shape_element.element_name,
+        associated_assembly;
+    WHERE
+      WR1 : assembly_feature_1 :<>: assembly_feature_2;
+  END_ENTITY;
+
+  ENTITY Component_mating_constraint_condition;
+      name                          : STRING;
+      constraining_joint            : SET[1:3] OF Assembly_joint;
+      constrained_degree_of_freedom : SET[1:6] OF degree_of_freedom;
+      of_context                    : Part_view_definition; -- Part_design_view;
+    UNIQUE
+      UR1 : name,
+ of_context;
+  END_ENTITY;
+
+  ENTITY Connection_zone_based_assembly_joint
+    SUBTYPE OF (Assembly_joint);
+      zone_1 : Connection_zone;
+      zone_2 : Connection_zone;
+    WHERE
+      WR1 : zone_1 :<>: zone_2;
+  END_ENTITY;
+
+  ENTITY Default_assembly_bond_shape_model
+    SUBTYPE OF (Geometric_model);
+      shape_characterized_definition : Assembly_bond_definition;
+    WHERE
+      WR1 : NOT EXISTS(SELF\Representation.description);
+      WR2 : SIZEOF(USEDIN(SELF, 'SHAPE_PROPERTY_ASSIGNMENT_ARM.SHAPE_DESCRIPTION_ASSOCIATION.USED_REPRESENTATION'))=0;
+  END_ENTITY;
+
+END_SCHEMA;
+

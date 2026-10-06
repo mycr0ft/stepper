@@ -1,0 +1,176 @@
+
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.13 2012/10/19 18:26:38 darla Exp
+   ISO TC184/SC4/WG12 N6723 - ISO/CD-TS 10303-1381 Finite element analysis - EXPRESS ARM
+  
+*)
+
+
+SCHEMA Finite_element_analysis_arm;
+
+USE FROM Analysis_characterized_arm;      --ISO/TS 10303-1475
+
+USE FROM Document_definition_arm;         --ISO/TS 10303-1123
+
+USE FROM Elemental_geometric_shape_arm;   --ISO/TS 10303-1004
+
+USE FROM Finite_elements_arm;             --ISO/TS 10303-1383
+
+TYPE constraint_definition_reference = SELECT 
+  (Detailed_geometric_model_element,
+   Fea_group,
+   Node);
+END_TYPE;
+
+TYPE definition_reference = SELECT 
+  (Detailed_geometric_model_element,
+   Element,
+   Fea_group,
+   Node);
+END_TYPE;
+
+TYPE fe_analysis_approval_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON analysis_approval_item WITH
+  (Fe_analysis,
+   Fe_analysis_results);
+END_TYPE;
+
+ENTITY Analysis_message
+SUBTYPE OF (Fe_analysis_state_definition);
+  message_level : STRING;
+  quality : STRING;
+END_ENTITY;
+
+ENTITY Analysis_report_representation
+SUPERTYPE OF (Graphical_representation ANDOR Tabular_representation);
+  control : OPTIONAL Fe_analysis;
+  model_ref : Fea_model;
+  result : OPTIONAL Fe_analysis_results;
+END_ENTITY;
+
+ENTITY Calculated_state
+SUBTYPE OF (Fe_analysis_state);
+END_ENTITY;
+
+ENTITY Constraint
+SUPERTYPE OF (ONEOF(Single_point_constraint, Linear_constraint_equation, Nodal_degree_of_freedom_reduction));
+  identification : STRING;
+  steps : SET [1 : ?] OF Fe_analysis_control_step;
+END_ENTITY;
+
+ENTITY Element_field_variable_definition
+SUBTYPE OF (Fe_analysis_state_definition);
+END_ENTITY;
+
+ENTITY Element_nodal_freedom_actions
+SUBTYPE OF (Fe_analysis_state_definition);
+END_ENTITY;
+
+ENTITY Fe_analysis;
+  intended_analysis_code : STRING;
+  model_ref : Fea_model;
+END_ENTITY;
+
+ENTITY Fe_analysis_control_step
+SUPERTYPE OF (ONEOF(Modes_and_frequencies_control_step, Static_control_step));
+  analysis : Fe_analysis;
+  identification : STRING;
+  initial_input_state : Fe_analysis_state;
+  sequence : INTEGER;
+END_ENTITY;
+
+ENTITY Fe_analysis_results;
+END_ENTITY;
+
+ENTITY Fe_analysis_results_step
+SUPERTYPE OF (ONEOF(Modes_and_frequencies_results_step, Static_results_step));
+  control : Fe_analysis_control_step;
+  result : Fe_analysis_results;
+END_ENTITY;
+
+ENTITY Fe_analysis_state
+SUPERTYPE OF (ONEOF(Calculated_state, Linearly_superimposed_state, Output_request_state, Specified_state));
+  definitions : SET [1 : ?] OF Fe_analysis_state_definition;
+END_ENTITY;
+
+ENTITY Fe_analysis_state_definition
+SUPERTYPE OF (ONEOF(Analysis_message, Element_field_variable_definition, Element_nodal_freedom_actions, Linear_constraint_equation_value, Nodal_freedom_definitions, Single_point_constraint_values));
+  ref : Definition_reference;
+END_ENTITY;
+
+ENTITY Graphical_representation
+SUBTYPE OF (Analysis_report_representation);
+  graphical_filename : Document_definition;
+END_ENTITY;
+
+ENTITY Linear_constraint_equation
+SUBTYPE OF (Constraint);
+  freedoms_and_coefficients_nodes : SET [1 : ?] OF Constraint_definition_reference;
+END_ENTITY;
+
+ENTITY Linear_constraint_equation_value
+SUBTYPE OF (Fe_analysis_state_definition);
+  equation : Linear_constraint_equation;
+END_ENTITY;
+
+ENTITY Linearly_superimposed_state
+SUBTYPE OF (Fe_analysis_state);
+END_ENTITY;
+
+ENTITY Modes_and_frequencies_control_step
+SUBTYPE OF (Fe_analysis_control_step);
+  final_input_state : Fe_analysis_state;
+  frequency_range : LIST [1 : 2] OF REAL;
+  number_of_modes : INTEGER;
+END_ENTITY;
+
+ENTITY Modes_and_frequencies_results_step
+SUBTYPE OF (Fe_analysis_results_step);
+  resulting_states : SET [1 : ?] OF Calculated_state;
+END_ENTITY;
+
+ENTITY Nodal_degree_of_freedom_reduction
+SUBTYPE OF (Constraint);
+  node : Constraint_definition_reference;
+END_ENTITY;
+
+ENTITY Nodal_freedom_definitions
+SUBTYPE OF (Fe_analysis_state_definition);
+END_ENTITY;
+
+ENTITY Output_request_state
+SUBTYPE OF (Fe_analysis_state);
+  steps : SET [1 : ?] OF Fe_analysis_control_step;
+END_ENTITY;
+
+ENTITY Single_point_constraint
+SUBTYPE OF (Constraint);
+  required_node : Constraint_definition_reference;
+END_ENTITY;
+
+ENTITY Single_point_constraint_values
+SUBTYPE OF (Fe_analysis_state_definition);
+  element : Single_point_constraint;
+END_ENTITY;
+
+ENTITY Specified_state
+SUBTYPE OF (Fe_analysis_state);
+END_ENTITY;
+
+ENTITY Static_control_step
+SUBTYPE OF (Fe_analysis_control_step);
+  final_input_state : Fe_analysis_state;
+END_ENTITY;
+
+ENTITY Static_results_step
+SUBTYPE OF (Fe_analysis_results_step);
+  resulting_state : Calculated_state;
+END_ENTITY;
+
+ENTITY Tabular_representation
+SUBTYPE OF (Analysis_report_representation);
+  tabular_file : Document_definition;
+END_ENTITY;
+
+END_SCHEMA;
+

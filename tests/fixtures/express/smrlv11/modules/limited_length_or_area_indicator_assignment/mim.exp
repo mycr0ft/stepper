@@ -1,0 +1,260 @@
+(*
+   N11283 - ISO/TS - 10303-1854 limited_length_or_area_indicator_assignment - EXPRESS MIM
+*)
+   
+SCHEMA Limited_length_or_area_indicator_assignment_mim;
+
+
+USE FROM product_definition_schema
+         (product_definition,
+          product_definition_relationship); -- ISO 10303-41
+
+
+USE FROM Composite_constituent_shape_mim; -- ISO/TS 10303-1767
+
+
+USE FROM Description_assignment_mim; -- ISO/TS 10303-1473
+
+
+USE FROM Document_and_version_identification_mim; -- ISO/TS 10303-1121
+
+
+USE FROM Part_and_zone_laminate_tables_mim; -- ISO/TS 10303-1770
+
+
+USE FROM Part_view_definition_mim; -- ISO/TS 10303-1023
+
+
+USE FROM Ply_orientation_specification_mim; -- ISO/TS 10303-1772
+
+
+USE FROM Product_class_mim; -- ISO/TS 10303-1103
+
+
+USE FROM Shape_property_assignment_mim; -- ISO/TS 10303-1032
+
+
+USE FROM Stock_material_mim; -- ISO/TS 10303-1771
+
+
+USE FROM Value_with_unit_mim; -- ISO/TS 10303-1054
+
+
+USE FROM Value_with_unit_extension_mim; -- ISO/TS 10303-1753
+
+
+
+ENTITY limited_length_area_indicator
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY user_defined_llai
+  SUBTYPE OF (limited_length_area_indicator);
+END_ENTITY;
+
+
+ENTITY point_based_llai
+  SUPERTYPE OF (ONEOF (core_sample,
+                       strategy_point))
+  SUBTYPE OF (limited_length_area_indicator);
+END_ENTITY;
+
+
+ENTITY line_based_llai
+  SUPERTYPE OF (ONEOF (edge_sealing,
+                       guide_curve))
+ SUBTYPE OF (limited_length_area_indicator);
+END_ENTITY;
+
+
+ENTITY area_based_llai
+  SUPERTYPE OF (ONEOF (butt_splice_area,
+                        darting_area,
+                        fiber_orientation_angle_tolerance_deviation_area,
+                        manufacturing_edge_of_part,
+                        manufacturing_edge_of_ply,
+                        no_splice_area,
+                        overlap_splice_area,
+                        ply_drop_off_stay_out_area,
+                        ply_wrinkle_allowance_area,
+                        potting_area,
+                        stitching_area,
+                        surface_porosity_allowance_area,
+                        surface_preparation_area))
+  SUBTYPE OF (limited_length_area_indicator);
+END_ENTITY;
+
+
+ENTITY strategy_point
+  SUBTYPE OF (point_based_llai);
+END_ENTITY;
+
+
+ENTITY strategy_point_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY core_sample
+  SUBTYPE OF (point_based_llai);
+END_ENTITY;
+
+
+ENTITY core_sample_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY guide_curve
+  SUBTYPE OF (line_based_llai);
+END_ENTITY;
+
+
+ENTITY guide_curve_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY edge_sealing
+  SUBTYPE OF (line_based_llai);
+END_ENTITY;
+
+
+ENTITY edge_sealing_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY overlap_splice_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY overlap_splice_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY butt_splice_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY butt_splice_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY no_splice_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY no_splice_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY fiber_orientation_angle_tolerance_deviation_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY fiber_orientation_angle_tolerance_deviation_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY surface_porosity_allowance_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY surface_porosity_allowance_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY ply_drop_off_stay_out_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY ply_drop_off_stay_out_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY surface_preparation_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY surface_preparation_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY potting_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY potting_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY darting_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY darting_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY ply_wrinkle_allowance_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY ply_wrinkle_allowance_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY stitching_area
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY stitching_area_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY manufacturing_edge_of_ply
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+ 
+ENTITY manufacturing_edge_of_ply_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+ENTITY manufacturing_edge_of_part
+  SUBTYPE OF (area_based_llai);
+END_ENTITY;
+
+
+ENTITY manufacturing_edge_of_part_llai_specification
+  SUBTYPE OF (product_definition);
+END_ENTITY;
+
+
+END_SCHEMA;
+

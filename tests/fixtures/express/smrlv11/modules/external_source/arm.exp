@@ -1,0 +1,14 @@
+(*
+   $Id: arm.exp,v 1.4 2008/09/12 12:28:23 liutkuviene Exp $
+   ISO TC184/SC4/WG12 N5386 - ISO/TS 10303-1331 External source - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N5075
+ *)
+
+SCHEMA External_source_arm;
+
+  ENTITY External_source; 
+    id          : STRING;
+    description : OPTIONAL STRING;
+  END_ENTITY;
+
+END_SCHEMA;

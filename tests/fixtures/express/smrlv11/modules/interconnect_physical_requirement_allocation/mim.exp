@@ -1,0 +1,18 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.27 2012/10/11 05:49:26 liutkuviene Exp
+   ISO TC184/SC4/WG12 N8159 - ISO/TS 10303-1689 Interconnect physical requirement allocation - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N6978
+*)
+
+SCHEMA Interconnect_physical_requirement_allocation_mim;
+USE FROM Requirement_view_definition_relationship_mim; -- ISO/TS 10303-1142	
+USE FROM Integral_shield_mim; -- ISO/TS 10303-1763	
+
+  ENTITY interconnect_shield_allocation
+    SUBTYPE OF (requirement_assignment);
+  END_ENTITY;
+
+END_SCHEMA;
+
+

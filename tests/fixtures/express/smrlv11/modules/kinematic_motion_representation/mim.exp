@@ -1,0 +1,19 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.10 2019/01/23 18:20:44 brandon Exp
+   ISO TC184/SC4/WG12 N10319 - ISO/TS 10303-1796 Kinematic motion representation - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7904
+*)
+
+SCHEMA Kinematic_motion_representation_mim;
+
+USE FROM B_spline_geometry_mim; --  ISO/TS 10303-1801
+USE FROM Contextual_shape_positioning_mim; -- ISO/TS 10303-1027
+USE FROM kinematic_motion_representation_schema; --  ISO 10303-105
+USE FROM Kinematic_state_mim; --  ISO-TS 10303-1798
+USE FROM Parametric_representation_mim; -- ISO/TS 10303-1813
+USE FROM Product_occurrence_mim; -- ISO/TS 10303-1063
+
+
+
+END_SCHEMA;

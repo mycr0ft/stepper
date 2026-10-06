@@ -1,0 +1,72 @@
+(*
+ $Id: arm.exp,v 1.26 2019/06/06 17:24:06 kevin Exp $
+ ISO TC184/SC4/WG12 N10265 - ISO/TS 10303-1030 Property assignment - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N8041
+*)
+
+
+SCHEMA Property_assignment_arm; 
+
+USE FROM Activity_arm;      -- ISO/TS 10303-1047
+
+USE FROM Foundation_representation_arm;    -- ISO/TS 10303-1006
+
+USE FROM Independent_property_arm;    -- ISO/TS 10303-1036
+
+TYPE pa_activity_item = SELECT BASED_ON activity_item WITH (
+    Property_definition_relationship);
+END_TYPE;
+
+TYPE property_assignment_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+TYPE represented_definition = EXTENSIBLE GENERIC_ENTITY SELECT (
+    Independent_property,
+    Assigned_property);
+END_TYPE;
+
+ENTITY Applied_independent_property
+  SUBTYPE OF (Assigned_property);
+  base_independent_property : Independent_property;
+DERIVE
+  SELF\Assigned_property.name : STRING := base_independent_property.property_type;
+END_ENTITY;
+
+ENTITY Assigned_property;
+  id : OPTIONAL STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  described_element : property_assignment_select;
+END_ENTITY;
+
+ENTITY Applied_independent_property_relationship;
+	description 	: OPTIONAL STRING; 					
+	id 				: OPTIONAL STRING; 					
+	related 		: Applied_independent_property;			
+	relating 		: Applied_independent_property;			
+	relation_type	: STRING;									
+ WHERE
+	WR1 : relating :<>: related;
+END_ENTITY;
+
+ENTITY Property_definition_relationship;
+  name                         : OPTIONAL STRING;
+  description                  : OPTIONAL STRING;
+  relating_property_definition : Assigned_property;
+  related_property_definition  : Assigned_property;
+END_ENTITY;
+
+ENTITY Property_definition_representation
+  ABSTRACT SUPERTYPE;
+    name : OPTIONAL STRING;
+    description : OPTIONAL STRING;
+    definition : represented_definition;
+    used_representation : Representation;
+END_ENTITY;
+
+ENTITY Property_representation
+  SUBTYPE OF (Property_definition_representation);
+    SELF\Property_definition_representation.definition RENAMED property : Assigned_property;
+END_ENTITY;
+
+END_SCHEMA;  -- Property_assignment_arm

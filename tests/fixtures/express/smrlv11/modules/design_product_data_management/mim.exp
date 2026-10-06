@@ -1,0 +1,263 @@
+(*
+   ISO TC184/SC4/WG12 N10793 - ISO/TS 10303-1628 Design product data management - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N10706
+*)
+
+SCHEMA Design_product_data_management_mim;
+
+USE FROM Activity_method_assignment_mim;    -- ISO/TS 10303-1249
+USE FROM Attribute_classification_mim; -- ISO/TS 10303-1246
+USE FROM Characterizable_object_mim;  -- ISO/TS 10303-1765
+USE FROM Classification_with_attributes_mim;	-- ISO/TS 10303-1111
+USE FROM contract_schema(contract_type);   -- ISO 10303-41
+USE FROM Design_material_aspects_mim;	-- ISO/TS 10303-1681
+USE FROM document_schema(document_type);   -- ISO 10303-41
+USE FROM Information_rights_mim;    -- ISO/TS 10303-1241
+USE FROM Item_definition_structure_mim;	-- ISO/TS 10303-1345
+USE FROM Manufacturing_configuration_effectivity_mim; -- ISO/TS 10303-1147
+USE FROM material_property_definition_schema(property_definition_relationship);   -- ISO 10303-45
+USE FROM Pre_defined_product_data_management_specializations_mim; -- ISO/TS 10303-1760
+USE FROM Product_data_management_mim;	-- ISO/TS 10303-1231
+USE FROM product_definition_schema(product_definition_formation_with_specified_source);   -- ISO 10303-41
+USE FROM product_structure_schema(make_from_usage_option);   -- ISO 10303-44
+USE FROM representation_schema(parametric_representation_context);   -- ISO 10303-43
+USE FROM Requirement_assignment_mim;	-- ISO/TS 10303-1233
+USE FROM Requirement_view_definition_relationship_mim;	-- ISO/TS 10303-1142
+USE FROM Retention_period_mim;	-- ISO/TS 10303-1852
+USE FROM Specification_control_mim; -- ISO/TS 10303-1112
+USE FROM Test_select_product_mim;	-- ISO/TS 10303-1757
+
+TYPE design_pdm_action_method_items = SELECT BASED_ON action_method_items WITH
+  (action,
+   action_method,
+   action_property,
+   applied_action_assignment,
+   assembly_component_usage,
+   configuration_item,
+   contract,
+   document_file,
+   event_occurrence,
+   organization,
+   organizational_project,
+   person,
+   person_and_organization,
+   product,
+   product_concept,
+   product_definition,
+   product_definition_formation,
+   product_definition_formation_relationship,
+   product_definition_relationship,
+   property_definition);
+END_TYPE;
+
+TYPE design_pdm_action_request_item = SELECT BASED_ON action_request_item WITH
+  (versioned_action_request);
+END_TYPE;
+
+TYPE design_pdm_approval_item = SELECT BASED_ON approval_item WITH
+  (action_directive,
+   configuration_item,
+   effectivity,
+   general_property_relationship,
+   group,
+   group_relationship,
+   product_definition,
+   product_definition_formation,
+   product_definition_formation_relationship,
+   requirement_assignment,
+   security_classification);
+END_TYPE;
+
+TYPE design_pdm_attribute_classification_item = SELECT BASED_ON attribute_classification_item WITH
+  (action_directive,
+   action_method,
+   action_property_representation,
+   action_relationship,
+   action_request_solution,
+   action_request_status,
+   alternate_product_relationship,
+   applied_action_assignment,
+   applied_action_request_assignment,
+   applied_approval_assignment,
+   applied_certification_assignment,
+   applied_document_reference,
+   applied_document_usage_constraint_assignment,
+   applied_effectivity_assignment,
+   applied_event_occurrence_assignment,
+   applied_external_identification_assignment,
+   applied_identification_assignment,
+   applied_organization_assignment,
+   applied_organizational_project_assignment,
+   applied_person_and_organization_assignment,
+   approval,
+   approval_person_organization,
+   approval_relationship,
+   approval_status,
+   certification,
+   contract,
+   date_and_time_assignment,
+   date_assignment,
+   derived_unit,
+   document_file,
+   document_relationship,
+   effectivity,
+   event_occurrence_relationship,
+   executed_action,
+   general_property,
+   general_property_relationship,
+   group,
+   group_relationship,
+   information_right,
+   information_usage_right,
+   language,
+   measure_with_unit,
+   named_unit,
+   organization_relationship,
+   organizational_address,
+   organizational_project_relationship,
+   person_and_organization,
+   person_and_organization_address,
+   product,
+   product_concept,
+   product_concept_context,
+   product_definition,
+   product_definition_context,
+   product_definition_formation,
+   product_definition_formation_relationship,
+   product_definition_relationship,
+   property_definition,
+   property_definition_representation,
+   representation,
+   representation_context,
+   representation_item,
+   security_classification,
+   time_interval_relationship,
+   usage_association,
+   versioned_action_request);
+END_TYPE;
+
+TYPE design_pdm_attribute_language_item = SELECT BASED_ON attribute_language_item WITH
+  (information_right,
+   information_usage_right,
+   usage_association);
+END_TYPE;
+
+TYPE design_pdm_certification_item = SELECT BASED_ON certification_item WITH
+  (alternate_product_relationship,
+   product_definition_formation);
+END_TYPE;
+
+TYPE design_pdm_classification_item = SELECT BASED_ON classification_item WITH
+  (characterized_object,
+   information_right,
+   information_usage_right,
+   usage_association);
+END_TYPE;
+
+TYPE design_pdm_contract_item = SELECT BASED_ON contract_item WITH
+  (action_directive,
+   organization,
+   person_and_organization,
+   product_definition_formation);
+END_TYPE;
+
+TYPE design_pdm_date_and_time_item = SELECT BASED_ON date_and_time_item WITH
+  (action_directive,
+   product_definition,
+   security_classification);
+END_TYPE;
+
+TYPE design_pdm_date_item = SELECT BASED_ON date_item WITH
+  (action_directive,
+   product_definition,
+   security_classification);
+END_TYPE;
+
+TYPE design_pdm_document_reference_item = SELECT BASED_ON document_reference_item WITH
+  (applied_external_identification_assignment,
+   characterized_class,
+   group,
+   group_relationship,
+   information_right,
+   information_usage_right,
+   material_designation,
+   representation_item,
+   usage_association);
+END_TYPE;
+
+TYPE design_pdm_groupable_item = SELECT BASED_ON groupable_item WITH
+  (applied_identification_assignment,
+   applied_name_assignment,
+   group_relationship);
+END_TYPE;
+
+TYPE design_pdm_identification_item = SELECT BASED_ON identification_item WITH
+  (configuration_item,
+   document_type,
+   group,
+   group_relationship,
+   information_right,
+   information_usage_right,
+   material_designation,
+   organization,
+   product,
+   product_concept,
+   product_definition_formation,
+   usage_association);
+END_TYPE;
+
+TYPE design_pdm_multi_language_attribute_item = SELECT BASED_ON multi_language_attribute_item WITH
+  (information_right,
+   information_usage_right,
+   usage_association);
+END_TYPE;
+
+TYPE design_pdm_name_item = SELECT BASED_ON name_item WITH
+  (group,
+   group_relationship,
+   product,
+   product_definition);
+END_TYPE;
+
+TYPE design_pdm_organization_item = SELECT BASED_ON organization_item WITH
+  (action_directive,
+   applied_classification_assignment,
+   applied_identification_assignment,
+   product_definition_formation_relationship);
+END_TYPE;
+
+TYPE design_pdm_person_and_organization_item = SELECT BASED_ON person_and_organization_item WITH
+  (action_directive,
+   applied_classification_assignment,
+   applied_identification_assignment,
+   product_definition_formation_relationship);
+END_TYPE;
+
+TYPE design_pdm_requirement_assigned_item = SELECT BASED_ON requirement_assigned_item WITH
+  (configuration_item,
+   product,
+   product_class,
+   product_definition,
+   product_definition_formation,
+   product_definition_relationship);
+END_TYPE;
+
+TYPE design_pdm_requirement_source_item = SELECT BASED_ON requirement_source_item WITH
+  (characterized_object,
+   group,
+   group_relationship,
+   product,
+   product_definition,
+   product_definition_formation,
+   product_definition_relationship,
+   shape_aspect);
+END_TYPE;
+
+TYPE design_pdm_security_classification_item = SELECT BASED_ON security_classification_item WITH
+  (assembly_component_usage,
+   product_definition,
+   product_definition_formation);
+END_TYPE;
+
+END_SCHEMA;
+

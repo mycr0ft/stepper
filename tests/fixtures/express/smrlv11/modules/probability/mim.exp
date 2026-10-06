@@ -1,0 +1,13 @@
+(*
+   ISO TC184/SC4/WG12 N11082 - ISO/TS 10303-1252 Probability - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N5891
+*) 
+
+SCHEMA Probability_mim;
+
+USE FROM External_representation_item_mim;    -- ISO/TS 10303-1779
+
+USE FROM Measure_representation_mim;    -- ISO/TS 10303-1118
+
+END_SCHEMA;  -- Probability_mim
+

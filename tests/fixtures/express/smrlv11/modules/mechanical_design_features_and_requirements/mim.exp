@@ -1,0 +1,63 @@
+(*
+ $Id: mim.exp,v 1.12 2019/02/15 18:07:44 rick Exp $
+ ISO TC184/SC4/WG12 N10176 - ISO/TS - 10303-1846 mechanical_design - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N9659
+*)
+SCHEMA Mechanical_design_features_and_requirements_mim;
+
+  USE FROM Assembly_structure_mim;    -- ISO/TS 10303-1026
+  
+  USE FROM Associative_draughting_elements_mim;    -- ISO/TS 10303-1311
+
+  USE FROM Characterizable_object_mim;    -- ISO/TS 10303-1765
+
+  USE FROM counterbore_countersink_schema;     -- ISO/DIS 10303-113
+  
+  USE FROM Dimension_tolerance_mim;    -- ISO/TS 10303-1050
+  
+  USE FROM Elemental_geometric_shape_mim;    -- ISO/TS 10303-1004
+
+  USE FROM Geometric_tolerance_mim;    -- ISO/TS 10303-1051
+  
+  USE FROM Machining_features_mim;   -- ISO/TS 10303-1814
+
+  USE FROM mechanical_design_schema;     -- ISO/DIS 10303-113
+  
+  USE FROM Part_view_definition_mim;    -- ISO/TS 10303-1023
+
+  USE FROM Requirement_assignment_mim;    -- ISO/TS 10303-1233
+   
+  USE FROM Shape_property_assignment_mim;    -- ISO/TS 10303-1032
+  
+  USE FROM Value_with_unit_extension_mim;     -- ISO/TS 10303-1753
+  
+TYPE md_requirement_assigned_item = SELECT BASED_ON requirement_assigned_item WITH
+    (characterized_object,
+     dimensional_size,
+     dimensional_location,
+     geometric_tolerance,
+     product,
+     product_definition_formation,
+     product_definition,
+     shape_aspect,
+     product_definition_relationship);
+END_TYPE;
+
+TYPE md_requirement_source_item = SELECT BASED_ON requirement_source_item WITH
+    (characterized_object,
+     dimensional_size,
+     dimensional_location,
+     geometric_tolerance,
+     product,
+     product_definition_formation,
+     product_definition,
+     shape_aspect,
+     product_definition_relationship);
+END_TYPE;
+      
+ENTITY mechanical_design_requirement_item_association
+  SUBTYPE OF (pmi_requirement_item_association);
+    SELF\pmi_requirement_item_association.requirement : requirement_assignment; 
+END_ENTITY;
+      
+END_SCHEMA;

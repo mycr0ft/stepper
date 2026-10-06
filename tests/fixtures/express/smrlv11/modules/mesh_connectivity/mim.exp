@@ -1,0 +1,12 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.5 2009/09/03 19:00:35 darla Exp
+   ISO/CD-TS WG12N 6731 10303-1384 mesh_connectivity - EXPRESS MIM*)
+
+SCHEMA Mesh_connectivity_mim;
+
+USE FROM mesh_connectivity_schema;
+
+USE FROM Mesh_topology_mim;
+
+END_SCHEMA;

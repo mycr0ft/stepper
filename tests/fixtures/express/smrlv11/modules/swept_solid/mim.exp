@@ -1,0 +1,24 @@
+(*
+  Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.8 2019/01/23 18:36:52 brandon Exp
+  ISO TC184/SC4/WG12 N10328 - ISO/TS 10303-1321 Swept solid - EXPRESS MIM
+  Supersedes ISO TC184/SC4/WG12 N5519
+*)
+
+SCHEMA Swept_solid_mim;
+
+
+USE FROM geometric_model_schema  -- ISO 10303-42 
+      (swept_face_solid,
+       revolved_face_solid,
+       extruded_face_solid);
+USE FROM geometry_schema  -- ISO 10303-42 
+      (plane);
+USE FROM measure_schema  -- ISO 10303-41 
+    (plane_angle_measure,
+     positive_length_measure);
+USE FROM Topologically_bounded_surface_mim; -- ISO 10303-1511 
+USE FROM topology_schema  -- ISO 10303-42 
+    (face_surface);
+    
+END_SCHEMA;

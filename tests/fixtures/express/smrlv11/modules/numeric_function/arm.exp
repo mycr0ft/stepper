@@ -1,0 +1,45 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.25 2017/10/26 15:52:18 verodub Exp
+ ISO TC184/SC4/WG12 N7870 - ISO/TS 10303-1346 Numeric function - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N7226
+*)
+
+	SCHEMA Numeric_function_arm;
+	
+	USE FROM Elementary_function_arm;   -- ISO/TS 10303-1527
+	USE FROM Expression_arm;   -- ISO/TS 10303-1342
+	
+	REFERENCE FROM Numeric_expression_arm(Is_int_expr);   -- ISO/TS 10303-1526
+	
+	ENTITY Function_parameter_value
+	SUPERTYPE OF (Int_value_function)
+	SUBTYPE OF (Numeric_expression, Unary_generic_expression);
+	SELF\Unary_generic_expression.operand: String_expression;
+	END_ENTITY;
+	
+	
+	ENTITY Int_value_function
+	SUBTYPE OF (Function_parameter_value);
+	END_ENTITY;
+	
+	
+	
+	
+	ENTITY Length_function
+	SUBTYPE OF (Numeric_expression, Unary_generic_expression);
+	SELF\Unary_generic_expression.operand: String_expression;
+	END_ENTITY;
+	
+	
+	
+	ENTITY Odd_function
+	SUBTYPE OF (Unary_boolean_expression);
+	SELF\Unary_generic_expression.operand: Numeric_expression;
+	WHERE
+	WR1: Is_int_expr(SELF);
+	END_ENTITY;
+	
+	
+
+END_SCHEMA;

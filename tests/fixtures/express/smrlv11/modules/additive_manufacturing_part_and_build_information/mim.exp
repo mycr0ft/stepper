@@ -1,0 +1,68 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.14 2018/06/01 12:33:08 verodub Exp
+   ISO TC184/SC4/WG12 N10133 - ISO/TS 10303-1835 Additive_manufacturing_part_and_build_information - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N9242
+ *)
+ 
+SCHEMA Additive_manufacturing_part_and_build_information_mim;
+
+ USE FROM Assembly_structure_mim;  -- ISO/TS 10303-1026
+ USE FROM Construction_geometry_mim; -- ISO/TS 10303-1131
+ USE FROM Elemental_geometric_shape_mim; -- ISO/TS 10303-1004
+ USE FROM Foundation_representation_mim; -- ISO/TS 10303-1006
+ USE FROM Item_definition_structure_mim; -- ISO/TS 10303-1345
+ USE FROM Part_shape_mim; -- ISO/TS 10303-1807
+ USE FROM Part_view_definition_mim; -- ISO/TS 10303-1023
+ USE FROM Process_plan_mim; -- ISO/TS 10303-1803
+ USE FROM product_structure_schema -- ISO 10303-44
+  (next_assembly_usage_occurrence);
+ USE FROM shape_aspect_definition_schema -- ISO 10303-47
+  (shape_representation_with_parameters);
+ USE FROM Value_with_unit_extension_mim; -- ISO/TS 10303-1753
+   
+ ENTITY additive_manufacturing_build_plate_relationship 
+     SUBTYPE OF (additive_manufacturing_setup_relationship);
+ END_ENTITY;
+ 
+ ENTITY additive_manufacturing_setup
+     SUBTYPE OF (product);
+ END_ENTITY;
+ 
+ ENTITY additive_manufacturing_setup_relationship
+    ABSTRACT SUPERTYPE OF (
+        ONEOF (
+            additive_manufacturing_build_plate_relationship,
+            additive_manufacturing_support_structure_geometry_relationship,
+            additive_manufacturing_setup_workpiece_relationship ) )
+    SUBTYPE OF ( next_assembly_usage_occurrence );
+  END_ENTITY;
+  
+ ENTITY additive_manufacturing_support_structure_geometry_relationship 
+     SUBTYPE OF (additive_manufacturing_setup_relationship);
+ END_ENTITY;
+ 
+ ENTITY additive_manufacturing_setup_workpiece_relationship 
+     SUBTYPE OF (additive_manufacturing_setup_relationship);
+ END_ENTITY;
+
+ ENTITY machining_process_executable
+     SUBTYPE OF (process_operation);
+ END_ENTITY;
+ 
+ RULE restrict_support_structure_category FOR (product_definition);
+	LOCAL
+      support_structures: SET OF product_definition := [];
+    END_LOCAL;
+      support_structures :=  QUERY ( pd <* product_definition | 
+	    ( SIZEOF ( QUERY ( prpc <* USEDIN ( pd.formation.of_product ,
+        'PRODUCT_DEFINITION_SCHEMA.PRODUCT_RELATED_PRODUCT_CATEGORY.PRODUCTS' ) | 
+		prpc. name ='additive manufacturing support structure' ) ) <> 0 ) );
+		WHERE
+		  WR1: SIZEOF ( QUERY ( pd <* support_structures | 
+		    ( SIZEOF ( QUERY ( prpc <* USEDIN ( pd.formation.of_product ,
+		    'PRODUCT_DEFINITION_SCHEMA.PRODUCT_RELATED_PRODUCT_CATEGORY.PRODUCTS' ) | 
+			prpc. name ='part' ) ) <> 0 ) ) ) =0;
+ END_RULE;
+ 
+END_SCHEMA;

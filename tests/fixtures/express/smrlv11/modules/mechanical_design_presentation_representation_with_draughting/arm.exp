@@ -1,0 +1,101 @@
+(*
+  $Id: arm.exp,v 1.16 2017/10/20 15:46:07 brandonus Exp $
+   ISO TC184/SC4/WG12 N9710 - ISO/TS 10303-1315 Mechanical design presentation representation with draughting - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N6682
+*)
+
+SCHEMA Mechanical_design_presentation_representation_with_draughting_arm;
+
+USE FROM Associative_draughting_elements_arm; -- ISO/CD-TS 10303-1311
+
+USE FROM Characterized_representation_arm; -- ISO/CD-TS 10303-1805
+
+USE FROM Description_assignment_arm; -- ISO/TS 10303-1473
+
+USE FROM Mechanical_design_geometric_presentation_arm; -- ISO/CD-TS 10303-1313
+
+USE FROM Mechanical_design_shaded_presentation_arm; -- ISO/CD-TS 10303-1314
+
+USE FROM Part_view_definition_arm; -- ISO/CD-TS 10303-1023
+
+  TYPE mdprwd_draughting_model_element_select = SELECT BASED_ON draughting_model_element_select WITH 
+    (Camera_model_d3);
+  END_TYPE; 
+
+  TYPE mdprwd_element_select = EXTENSIBLE GENERIC_ENTITY SELECT 
+    (Axis_placement,
+    Camera_model_d3); 
+  END_TYPE;   
+
+  TYPE mechanical_design_and_draughting_relationship_select = EXTENSIBLE GENERIC_ENTITY SELECT ( 
+    Draughting_model,
+    Geometric_model,
+    Mechanical_design_shaded_styled_model, 
+    Mechanical_design_presentation_representation_with_draughting,
+    Mechanical_representation_styled_model); 
+  END_TYPE; 
+  
+  TYPE mdprwd_string_select = SELECT BASED_ON string_select WITH 
+    (Draughting_callout_relationship,
+    Draughting_model_item_association,
+    Colour,
+    Curve_font);
+  END_TYPE;
+  
+  TYPE mdprwd_description_item = SELECT BASED_ON description_item WITH 
+    (Draughting_callout_relationship,
+    Draughting_model_item_association,
+    Colour,
+    Curve_font);
+  END_TYPE;
+
+ENTITY Default_model_geometric_view
+  SUBTYPE OF (Model_geometric_view, Shape_element);
+   SELF\Shape_element.associated_definition : Part_view_definition;
+  DERIVE
+   Self\Shape_element.product_definitional : BOOLEAN := FALSE;
+ UNIQUE 
+  UR1: associated_definition;
+ WHERE
+  WR1: SELF\Characterizable_object.name = SELF\Shape_element.element_name;
+  WR2: NOT EXISTS(SELF\Shape_element.description);
+  WR3: NOT EXISTS(SELF\Shape_element.identified_item);
+  WR4: NOT EXISTS(SELF\Shape_element.nodes);
+  WR5: NOT EXISTS(SELF\Shape_element.undirected_link);
+END_ENTITY;
+
+  ENTITY Mechanical_design_and_draughting_relationship
+    SUBTYPE OF(Definitional_representation_relationship); 
+      SELF\representation_relationship.rep_1 : mechanical_design_and_draughting_relationship_select; 
+      SELF\representation_relationship.rep_2 : mechanical_design_and_draughting_relationship_select; 
+    WHERE    
+      WR1: NOT('ASSOCIATIVE_DRAUGHTING_ELEMENTS_ARM.'+'DRAUGHTING_MODEL' IN TYPEOF(rep_2)) OR 
+        (SIZEOF(['ASSOCIATIVE_DRAUGHTING_ELEMENTS_ARM.'+'DRAUGHTING_MODEL', 
+        'ELEMENTAL_GEOMETRIC_SHAPE_ARM.'+'GEOMETRIC_MODEL'] * TYPEOF(rep_1)) = 1);
+      WR2: NOT('MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_ARM.'+'MECHANICAL_REPRESENTATION_STYLED_MODEL' IN TYPEOF(rep_2)) 
+        OR (SIZEOF(['MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_ARM.'+'MECHANICAL_REPRESENTATION_STYLED_MODEL', 
+        'ELEMENTAL_GEOMETRIC_SHAPE_ARM.'+'GEOMETRIC_MODEL'] * TYPEOF(rep_1)) = 1);
+      WR3: NOT('MECHANICAL_DESIGN_SHADED_PRESENTATION_ARM.'+'MECHANICAL_DESIGN_SHADED_STYLED_MODEL' IN TYPEOF(rep_2)) 
+        OR (SIZEOF(['MECHANICAL_DESIGN_SHADED_PRESENTATION_ARM.'+'MECHANICAL_DESIGN_SHADED_STYLED_MODEL',
+        'ELEMENTAL_GEOMETRIC_SHAPE_ARM.'+'GEOMETRIC_MODEL'] * TYPEOF(rep_1)) = 1);
+  END_ENTITY;  
+
+  ENTITY Mechanical_design_presentation_representation_with_draughting
+    SUBTYPE OF (Styled_model); 
+      SELF\Representation.items : SET [1:?] OF mdprwd_element_select; 
+    WHERE 
+      WR1: SELF\Representation.context_of_items\Geometric_coordinate_space.dimension_count = 3;
+  END_ENTITY; 
+
+ENTITY Model_geometric_view
+  SUBTYPE OF (Characterized_item_within_representation);
+  SELF\Characterized_item_within_representation.rep  : Draughting_model;
+  SELF\Characterized_item_within_representation.item : Camera_model_d3;
+ WHERE
+  WR1: NOT EXISTS(SELF\Characterizable_object.description);
+  WR2: NOT EXISTS(SELF\Characterizable_object.shape_type);
+  WR3: NOT EXISTS(SELF\Characterizable_object.primary_shape_representation);
+  WR4: NOT EXISTS(SELF\Characterizable_object.auxiliary_shape_representations);
+END_ENTITY;
+
+END_SCHEMA;

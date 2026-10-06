@@ -1,0 +1,22 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.9 2017/01/23 13:58:18 kevletu Exp
+ISO TC184/SC4/WG12 N9344 - ISO/TS 10303-1399 Property as definition - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N6583
+*) 
+
+
+SCHEMA Property_as_definition_mim;
+
+USE FROM Product_view_definition_properties_mim;    -- ISO/TS 10303-1034
+
+ENTITY single_property_is_definition
+  SUBTYPE OF (property_definition);
+  SELF\property_definition.definition : product_definition;
+UNIQUE
+  UR1: definition;
+END_ENTITY;
+
+END_SCHEMA;  -- Property_as_definition_mim
+
+

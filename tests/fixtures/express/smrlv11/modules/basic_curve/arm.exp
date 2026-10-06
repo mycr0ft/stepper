@@ -1,0 +1,53 @@
+(*
+   $Id: arm.exp,v 1.25 2012/10/11 05:49:08 liutkuviene Exp $
+   ISO TC184/SC4/WG12 N7825 - ISO/TS 10303-1651 Basic curve - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N7388
+*)
+
+SCHEMA Basic_curve_arm;
+
+USE FROM Basic_geometry_arm;-- ISO/TS 10303-1652
+USE FROM External_item_identification_assignment_arm;-- ISO/TS 10303-1128
+
+SUBTYPE_CONSTRAINT curve_subtypes FOR Bounded_curve;         
+  ONEOF (Composite_curve, Trimmed_curve);    
+END_SUBTYPE_CONSTRAINT;
+
+TYPE curve_transition_code = ENUMERATION OF
+  (discontinuous,
+   continuous,
+   cont_same_gradient,
+   cont_same_gradient_same_curvature);
+END_TYPE;  
+
+TYPE closed_curve = EXTENSIBLE GENERIC_ENTITY SELECT
+  (Circle,
+   Closed_composite_curve);
+END_TYPE;
+
+ENTITY Closed_composite_curve
+  SUBTYPE OF (Composite_curve);
+END_ENTITY;
+  
+ENTITY Composite_curve
+  SUBTYPE OF (Bounded_curve);
+  curve_segment : LIST[1:?] OF UNIQUE Composite_curve_segment;
+END_ENTITY;
+
+ENTITY Composite_curve_segment;
+  transition   : curve_transition_code;
+  same_sense   : BOOLEAN;
+  segment_curve : Bounded_curve;
+INVERSE
+  using_curves : SET[1:?] OF Composite_curve FOR curve_segment;
+END_ENTITY;
+
+ENTITY Trimmed_curve
+  SUBTYPE OF (Bounded_curve);
+  basis_curve : Curve;
+  start_point : Cartesian_point;
+  end_point : Cartesian_point;
+END_ENTITY;
+
+END_SCHEMA;
+

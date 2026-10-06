@@ -1,0 +1,120 @@
+(*
+ $Id: mim.exp,v 1.11 2005/04/07 14:49:10 davidleal Exp $
+ ISO TC184/SC4/WG3 N1597 - ISO/TS 10303-421 Functional data and schematic representation - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG3 N1214
+*)
+
+SCHEMA Functional_data_and_schematic_representation_mim;
+
+USE FROM Functional_data_mim;    --  ISO/TS 10303-1151
+USE FROM Schematic_and_symbolization_mim;    --  ISO/TS 10303-1203
+
+TYPE functional_symbolized_item_select = SELECT BASED_ON symbolized_item_select WITH 
+   (class_of_activity, 
+    class_of_composition_of_activity, 
+    class_of_connection_of_activity, 
+    class_of_involvement_in_activity, 
+    class_of_product, 
+    class_of_composition_of_product, 
+    class_of_connection_of_product, 
+    class_of_containment_of_product, 
+    class_of_involvement_of_product_in_connection, 
+    organization_type, 
+    class_of_person, 
+    drawing_revision_class_of_document, 
+    drawing_sheet_revision_class_of_document, 
+    schematic_element, 
+    symbolization_by_schematic_element, 
+    property_condition_for_activity, 
+    property_condition_for_product, 
+    individual_activity, 
+    composition_of_individual_activity, 
+    connection_of_individual_activity, 
+    individual_involvement_in_activity, 
+    product_as_individual_version, 
+    composition_of_individual_product, 
+    connection_of_individual_product, 
+    containment_of_individual_product, 
+    involvement_of_individual_product_in_connection, 
+    organization, 
+    person, 
+    person_and_organization, 
+    possession_of_property_by_activity, 
+    possession_of_property_by_product);
+END_TYPE; 
+
+TYPE functional_symbolized_class_select = SELECT BASED_ON symbolized_class_select WITH 
+   (class_of_activity, 
+    class_of_composition_of_activity, 
+    class_of_connection_of_activity, 
+    class_of_involvement_in_activity, 
+    class_of_product, 
+    class_of_composition_of_product, 
+    class_of_connection_of_product, 
+    class_of_containment_of_product, 
+    class_of_involvement_of_product_in_connection, 
+    organization_type, 
+    class_of_person, 
+    drawing_revision_class_of_document, 
+    drawing_sheet_revision_class_of_document, 
+    schematic_element, 
+    symbolization_by_schematic_element, 
+    property_condition_for_activity, 
+    property_condition_for_product);
+END_TYPE; 
+
+TYPE functional_symbolized_involved_class_select = SELECT BASED_ON involved_class_select WITH 
+   (class_of_activity, 
+    class_of_composition_of_activity, 
+    class_of_connection_of_activity, 
+    class_of_involvement_in_activity, 
+    class_of_product, 
+    class_of_composition_of_product, 
+    class_of_connection_of_product, 
+    class_of_containment_of_product, 
+    class_of_involvement_of_product_in_connection, 
+    organization_type, 
+    class_of_person, 
+    drawing_revision_class_of_document, 
+    drawing_sheet_revision_class_of_document, 
+    schematic_element, 
+    symbolization_by_schematic_element, 
+    property_condition_for_activity, 
+    property_condition_for_product);
+END_TYPE; 
+
+TYPE functional_symbolized_involved_item_select = SELECT BASED_ON involved_select WITH 
+   (class_of_activity, 
+    class_of_composition_of_activity, 
+    class_of_connection_of_activity, 
+    class_of_involvement_in_activity, 
+    class_of_product, 
+    class_of_composition_of_product, 
+    class_of_connection_of_product, 
+    class_of_containment_of_product, 
+    class_of_involvement_of_product_in_connection, 
+    organization_type, 
+    class_of_person, 
+    drawing_revision_class_of_document, 
+    drawing_sheet_revision_class_of_document, 
+    schematic_element, 
+    symbolization_by_schematic_element, 
+    property_condition_for_activity, 
+    property_condition_for_product, 
+    individual_activity, 
+    composition_of_individual_activity, 
+    connection_of_individual_activity, 
+    individual_involvement_in_activity, 
+    product_as_individual_version, 
+    composition_of_individual_product, 
+    connection_of_individual_product, 
+    containment_of_individual_product, 
+    involvement_of_individual_product_in_connection, 
+    organization, 
+    person, 
+    person_and_organization, 
+    possession_of_property_by_activity, 
+    possession_of_property_by_product);
+END_TYPE; 
+
+END_SCHEMA;  -- Functional_data_and_schematic_representation_mim

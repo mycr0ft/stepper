@@ -1,0 +1,49 @@
+(*
+   $Id: arm.exp,v 1.27 2012/10/11 05:49:26 liutkuviene Exp $
+   ISO TC184/SC4/WG12 N8224 - ISO/TS 10303-1748 Stratum non planar shape - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N7619
+*)
+
+SCHEMA Stratum_non_planar_shape_arm;
+
+	USE FROM Layered_interconnect_module_design_arm;	-- ISO/TS 10303-1698
+	USE FROM Manifold_surface_arm;	-- ISO/TS 10303-1509
+
+  TYPE snps_sf_shape_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON limd_sf_shape_select WITH 
+    (Shell_based_surface_model);
+  END_TYPE; 
+
+  TYPE snps_stratum_shape_model_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON limd_stratum_shape_model_select WITH 
+    (Stratum_average_surface_shape_model,
+     Stratum_surface_shape_model);
+  END_TYPE; 
+
+  ENTITY Stratum_average_surface_shape_model
+    SUBTYPE OF (Topologically_constrained_manifold_surface_shape_representation);
+      of_surface : Stratum_average_surface;
+    UNIQUE
+    	UR1 : of_surface;  
+    WHERE
+      WR1 : NOT EXISTS(SELF\Representation.name);
+      WR2 : NOT EXISTS(SELF\Representation.description);
+  END_ENTITY;
+
+   ENTITY Stratum_surface_shape_model
+    SUBTYPE OF (Topologically_constrained_manifold_surface_shape_representation);
+      of_surface : Stratum_surface;
+    UNIQUE
+    	UR1 : of_surface;  
+    WHERE
+      WR1 : NOT EXISTS(SELF\Representation.name);
+      WR2 : NOT EXISTS(SELF\Representation.description);
+  END_ENTITY;
+
+  ENTITY Topologically_constrained_manifold_surface_shape_representation
+    SUBTYPE OF (Manifold_surface_shape_representation);
+(* IPs
+     IP1: SheLL_based_surface_models that are contained in this representation shall not intersect.
+     IP2: SheLL_based_surface_models that are contained in this representation shall not overlap.
+*)
+  END_ENTITY;
+
+END_SCHEMA;

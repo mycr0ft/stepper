@@ -1,0 +1,20 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.17 2017/05/05 15:04:02 kevletu Exp
+   ISO TC184/SC4/WG12 N9462 - ISO/TS 10303-1726 Physical unit 2d shape - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7691
+*)
+
+
+SCHEMA Physical_unit_2d_shape_mim;
+
+USE FROM Characteristic_mim;        -- ISO/TS 10303-1654
+USE FROM Non_feature_shape_element_mim;	-- ISO/TS 10303-1706
+USE FROM Layered_2d_shape_mim; -- ISO/TS 10303-1693
+	
+  TYPE pu2ds_external_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON external_identification_item WITH  
+    (shape_representation);
+  END_TYPE;
+	
+END_SCHEMA;
+

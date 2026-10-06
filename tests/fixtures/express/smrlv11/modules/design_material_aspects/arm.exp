@@ -1,0 +1,24 @@
+
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.15 2016/10/20 11:58:24 kevletu Exp
+ ISO TC184/SC4/WG12 N9285 - ISO/CD-TS 10303-1232 Design material aspects - EXPRESS ARM
+*)
+
+SCHEMA Design_material_aspects_arm;
+
+USE FROM Generic_material_aspects_arm;
+
+USE FROM Product_view_definition_arm;
+
+USE FROM Shape_property_assignment_arm;
+
+TYPE dma_material_item_select = SELECT BASED_ON material_item_select WITH (
+  Product_occurrence_definition_relationship, 
+  Product_view_definition, 
+  View_definition_relationship,
+  Shape_element);
+END_TYPE;
+
+END_SCHEMA;
+

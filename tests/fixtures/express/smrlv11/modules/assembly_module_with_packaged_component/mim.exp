@@ -1,0 +1,17 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.7 2017/06/25 21:49:34 lothartklein Exp
+   ISO TC184/SC4/WG12 N9523 - ISO/TS 10303-1829 Assembly module with packaged component - EXPRESS MIM
+*)
+
+SCHEMA Assembly_module_with_packaged_component_mim;
+
+USE FROM Altered_package_mim;	-- ISO/TS 10303-1601
+USE FROM Assembly_module_design_mim;	-- ISO/TS 10303-1636
+USE FROM Packaged_part_black_box_model_mim;	-- ISO/TS 10303-1710
+
+ENTITY packaged_component
+  SUBTYPE OF (physical_component);
+END_ENTITY;
+
+END_SCHEMA;

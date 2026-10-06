@@ -1,0 +1,46 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.18 2010/06/09 21:37:43 philsp Exp
+ISO TC184/SC4/WG12 N7131 - ISO/TS 10303-1233 Requirement assignment - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N6129
+*) 
+
+
+SCHEMA Requirement_assignment_arm;
+
+USE FROM Requirement_view_definition_arm;    -- ISO/TS 10303-1141
+
+
+TYPE requirement_assignment_item = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+TYPE requirement_satisfaction_item = EXTENSIBLE GENERIC_ENTITY SELECT
+   (requirement_assignment_item);
+END_TYPE; 
+
+TYPE requirement_source_item = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+ENTITY Requirement_assignment;
+  id : STRING;
+  description : OPTIONAL STRING;
+  assigned_requirement : Requirement_view_definition;
+  assigned_to : requirement_assignment_item;
+END_ENTITY;
+
+ENTITY Requirement_satisfied_by;
+  id : STRING;
+  description : OPTIONAL STRING;
+  satisfied_by : requirement_satisfaction_item;
+  satisfied_requirement : Requirement_view_definition;
+  related_assignment : OPTIONAL Requirement_assignment;
+END_ENTITY;
+
+ENTITY Requirement_source;
+  id : STRING;
+  description : OPTIONAL STRING;
+  source : requirement_source_item;
+  sourced_requirement : Requirement_view_definition;
+END_ENTITY;
+
+END_SCHEMA;  -- Requirement_assignment_arm

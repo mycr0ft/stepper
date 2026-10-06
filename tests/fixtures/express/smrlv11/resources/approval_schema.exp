@@ -1,0 +1,114 @@
+(*
+$Id: approval_schema.exp,v 1.15 2014/03/04 00:30:30  Exp $
+ISO 10303 TC184/SC4/WG12 N8369
+
+EXPRESS Source:
+ISO 10303-41 ed4 Fundamentals of product description and support - Approval schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-41 ed4 Fundamentals of product description and support - Approval schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA approval_schema '{iso standard 10303 part(41) version(7) object(1) approval_schema(3)}';
+  REFERENCE FROM basic_attribute_schema (
+    description_attribute, 
+    description_attribute_select,
+    get_description_value, 
+    get_role, 
+    object_role, 
+    role_association,
+    role_select);
+  REFERENCE FROM date_time_schema (
+    date_time_select);
+  REFERENCE FROM person_organization_schema (
+    person_organization_select);
+  REFERENCE FROM support_resource_schema (
+    bag_to_set, 
+    label, 
+    text);
+    
+  TYPE apps_description_attribute_select = SELECT BASED_ON description_attribute_select WITH (
+    approval_role);
+  END_TYPE;
+  
+  TYPE apps_role_select = SELECT BASED_ON role_select WITH (
+    approval_date_time);
+  END_TYPE;
+  
+    
+  ENTITY approval;
+    status : approval_status;
+    level : label;
+  END_ENTITY;
+
+  ENTITY approval_date_time;
+    date_time : date_time_select;
+    dated_approval : approval;
+  DERIVE
+    role : object_role := get_role(SELF);
+  WHERE
+    WR1: SIZEOF(USEDIN(SELF, 'BASIC_ATTRIBUTE_SCHEMA.' + 'ROLE_ASSOCIATION.ITEM_WITH_ROLE')) <= 1;
+  END_ENTITY;
+
+  ENTITY approval_person_organization;
+    person_organization : person_organization_select;
+    authorized_approval : approval;
+    role : approval_role;
+  END_ENTITY;
+
+  ENTITY approval_relationship;
+    name : label;
+    description : OPTIONAL text;
+    relating_approval : approval;
+    related_approval : approval;
+  END_ENTITY;
+
+  ENTITY approval_role;
+    role : label;
+  DERIVE
+    description : text := get_description_value(SELF);
+  WHERE
+    WR1: SIZEOF(USEDIN(SELF, 'BASIC_ATTRIBUTE_SCHEMA.' + 'DESCRIPTION_ATTRIBUTE.DESCRIBED_ITEM')) <= 1;
+  END_ENTITY;
+
+  ENTITY approval_status;
+    name : label;
+  END_ENTITY;
+
+  FUNCTION acyclic_approval_relationship (relation : approval_relationship; relatives : SET [1:?] OF approval; specific_relation : STRING):BOOLEAN;
+    LOCAL
+      x : SET OF approval_relationship;
+    END_LOCAL;
+
+    IF relation.relating_approval IN relatives THEN
+      RETURN (FALSE);
+    END_IF;
+    x := QUERY(app <* bag_to_set(USEDIN(relation.relating_approval, 'APPROVAL_SCHEMA.' + 'APPROVAL_RELATIONSHIP.' + 'RELATED_APPROVAL')) | specific_relation IN TYPEOF(app));
+    REPEAT i := 1 TO HIINDEX(x);
+      IF NOT acyclic_approval_relationship(x[i], relatives + relation.relating_approval, specific_relation) THEN
+        RETURN (FALSE);
+      END_IF;
+    END_REPEAT;
+    RETURN (TRUE);
+  END_FUNCTION;
+
+END_SCHEMA;

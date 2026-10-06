@@ -1,0 +1,114 @@
+(*
+ISO TC184/SC4/WG12 N10741 - ISO/TS 10303-1251 Interface - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N10349
+*) 
+SCHEMA Interface_arm;
+
+USE FROM Assembly_structure_arm;    -- ISO/TS 10303-1026
+
+USE FROM Product_view_definition_relationship_arm;    -- ISO/TS 10303-1041
+
+TYPE connection_definition_items = SELECT 
+  (Interface_connector_definition,
+   Product_view_definition);
+END_TYPE;
+
+TYPE connection_items = SELECT 
+  (Assembly_component_relationship,
+   connection_definition_items,
+   Interface_connector_occurrence,
+   View_definition_relationship);
+END_TYPE;
+
+TYPE connector_on_item = EXTENSIBLE GENERIC_ENTITY SELECT 
+  (Assembly_component_relationship,
+   Product_view_definition,
+   View_definition_relationship);
+END_TYPE;
+
+TYPE interface_definition_item = SELECT 
+  (Interface_connection,
+   Interface_connector_occurrence,
+   Interface_definition_connection,
+   Product_view_definition);
+END_TYPE;
+
+ENTITY Connection_definition_to_connection;
+  connection : Interface_connection;
+  definition : Interface_definition_connection;
+END_ENTITY;
+
+ENTITY Hierarchical_interface_connection
+SUBTYPE OF (Interface_connection);
+END_ENTITY;
+
+ENTITY Interface_connection;
+  id : STRING;
+  description : OPTIONAL STRING;
+  connection_type : STRING;
+  connecting : connection_items;
+  connected : connection_items;
+END_ENTITY;
+
+ENTITY Interface_connector
+SUBTYPE OF (Product);
+END_ENTITY;
+
+ENTITY Interface_connector_definition
+SUBTYPE OF (Product_view_definition);
+  connector_on : OPTIONAL Product_view_definition;
+  SELF\Product_view_definition.defined_version : Interface_connector_version;
+END_ENTITY;
+
+ENTITY Interface_connector_occurrence;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  occurrence_of : Interface_connector_definition;
+  connector_on : connector_on_item;
+END_ENTITY;
+
+ENTITY Interface_connector_occurrence_relationship;
+  description : OPTIONAL STRING;
+  related : Interface_connector_occurrence;
+  relating : Interface_connector_occurrence;
+  relation_type : STRING;
+END_ENTITY;
+
+ENTITY Interface_connector_version
+SUBTYPE OF (Product_version);
+  SELF\Product_version.of_product : Interface_connector;
+END_ENTITY;
+
+ENTITY Interface_definition_connection;
+  id : STRING;
+  description : OPTIONAL STRING;
+  connection_type : STRING;
+  connecting : connection_definition_items;
+  connected : connection_definition_items;
+END_ENTITY;
+
+ENTITY Interface_definition_for;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  interface : Interface_specification_definition;
+  interface_component : interface_definition_item;
+END_ENTITY;
+
+ENTITY Interface_specification
+SUBTYPE OF (Product);
+END_ENTITY;
+
+ENTITY Interface_specification_definition
+SUBTYPE OF (Product_view_definition);
+  SELF\Product_view_definition.defined_version : Interface_specification_version;
+END_ENTITY;
+
+ENTITY Interface_specification_version
+SUBTYPE OF (Product_version);
+  SELF\Product_version.of_product : Interface_specification;
+END_ENTITY;
+
+END_SCHEMA;  -- Interface_arm
+

@@ -1,0 +1,34 @@
+(* 
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.18 2019/01/10 22:45:29 brandon Exp
+ ISO TC184/SC4/WG12 N10277 - ISO/TS 10303-1114 Classification assignment - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N3249 
+*)
+
+SCHEMA Classification_assignment_mim;
+
+USE FROM Class_mim;    -- ISO/TS 10303-1070
+
+USE FROM management_resources_schema   -- ISO 10303-41
+  (classification_assignment); 
+
+REFERENCE FROM management_resources_schema   -- ISO 10303-41
+  (classification_assignment_relationship);
+
+
+TYPE classification_item = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+ENTITY applied_classification_assignment
+  SUBTYPE OF (classification_assignment);
+  items : SET[1:?] OF classification_item;
+END_ENTITY;
+
+ENTITY applied_classification_assignment_relationship
+	SUBTYPE of (classification_assignment_relationship);			
+	SELF\classification_assignment_relationship.related 	: applied_classification_assignment;									
+	SELF\classification_assignment_relationship.relating 	: applied_classification_assignment;																
+END_ENTITY;
+
+END_SCHEMA;  -- Classification_assignment_mim
+

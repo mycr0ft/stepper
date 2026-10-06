@@ -1,0 +1,61 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.69 2017/06/27 08:50:41 kevletu Exp
+   ISO TC184/SC4/WG12 N9476 - ISO/TS 10303-1636 Assembly module design - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N8420
+*)
+
+SCHEMA Assembly_module_design_arm;
+
+USE FROM Assembly_module_usage_view_arm;	-- ISO/TS 10303-1642
+USE FROM Assembly_technology_arm;           -- ISO/TS 10303-1649
+USE FROM Physical_component_feature_arm;	-- ISO/TS 10303-1721
+USE FROM Physical_unit_design_view_arm; -- ISO/TS 10303-1728
+USE FROM Physical_connectivity_layout_topology_requirement_arm; -- ISO/TS 10303-1826
+USE FROM Physical_connectivity_definition_arm; -- ISO/TS 10303-1755
+
+  TYPE assembly_module_or_assembly_group_component = EXTENSIBLE GENERIC_ENTITY SELECT (
+    Assembly_module_design_view);
+  END_TYPE;
+
+  ENTITY Assembly_module_design_view
+    SUBTYPE OF (Assembly_definition, Part_design_view);
+  WHERE
+    WR1 : NOT EXISTS(SELF\Product_view_definition.additional_characterization);
+  END_ENTITY;
+
+  ENTITY Component_external_reference;
+      design_owner          : STRING;
+      part_number           : STRING;
+      revision_code         : STRING;
+      product_definition_id : STRING;
+      reference_designation : STRING;
+  END_ENTITY;
+
+  ENTITY Component_feature_external_reference;
+      name                 : STRING;
+      associated_component : Component_external_reference;
+    UNIQUE
+      UR1 : associated_component,
+ name;
+  END_ENTITY;
+
+  ENTITY Component_mounting_clearance_relationship;
+      feature_relationship : Component_feature_relationship;
+      mounting_clearance   : Length_tolerance_characteristic;
+  END_ENTITY;
+
+  ENTITY Component_mounting_feature
+    SUBTYPE OF (Physical_component_feature);
+      SELF\Component_feature.definition : Part_mounting_feature;
+  END_ENTITY;
+
+  ENTITY Minimally_defined_component_terminal
+    SUBTYPE OF (Physical_component_terminal);
+      SELF\Component_feature.definition : Part_terminal_external_reference;
+    WHERE
+      WR1 : NOT EXISTS(SELF\Shape_element.description);
+  END_ENTITY;
+
+END_SCHEMA;
+

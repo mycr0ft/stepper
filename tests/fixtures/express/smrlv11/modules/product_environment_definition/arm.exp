@@ -1,0 +1,59 @@
+(*
+ISO TC184/SC4/WG12 N11172 - ISO/TS 10303-1400 Product environment definition - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N7271
+*) 
+ 
+
+SCHEMA Product_environment_definition_arm;
+
+USE FROM Classification_assignment_arm;    -- ISO/TS 10303-1114
+
+USE FROM Identification_assignment_arm;    -- ISO/TS 10303-1021
+
+USE FROM Product_view_definition_relationship_arm;    -- ISO/TS 10303-1041
+
+
+TYPE env_dfn_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON classification_item WITH 
+   (Environment_assignment, 
+    Environment_definition, 
+    Environment_definition_version, 
+    Environment_view_definition_relationship);
+END_TYPE; 
+
+TYPE env_dfn_identification_assignment = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON identification_item WITH 
+   (Environment_assignment, 
+    Environment_definition, 
+    Environment_definition_version, 
+    Environment_view_definition_relationship);
+END_TYPE; 
+
+TYPE environment_item = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+ENTITY Environment_assignment;
+  environment : Environment_definition_view;
+  item : environment_item;
+END_ENTITY;
+
+ENTITY Environment_definition
+  SUBTYPE OF (Product);
+END_ENTITY;
+
+ENTITY Environment_definition_version
+  SUBTYPE OF (Product_version);
+  SELF\Product_version.of_product RENAMED of_environment : Environment_definition;
+END_ENTITY;
+
+ENTITY Environment_definition_view
+  SUBTYPE OF (Product_view_definition);
+  SELF\Product_view_definition.defined_version RENAMED defined_environment_version : Environment_definition_version;
+END_ENTITY;
+
+ENTITY Environment_view_definition_relationship
+  SUBTYPE OF (View_definition_relationship);
+  SELF\View_definition_relationship.relating_view RENAMED relating_environment : Environment_definition_view;
+  SELF\View_definition_relationship.related_view RENAMED related_environment : Environment_definition_view;
+END_ENTITY;
+
+END_SCHEMA;  -- Product_environment_definition_arm
+

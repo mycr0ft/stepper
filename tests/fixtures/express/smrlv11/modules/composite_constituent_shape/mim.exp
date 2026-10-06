@@ -1,0 +1,47 @@
+(*
+   $Id: mim.exp,v 1.24 2021/07/21 17:00:07 kevin Exp $
+   ISO TC184/SC4/WG12 N10926 - ISO/TS 10303-1767 Composite constituent shape - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N10339
+*)
+SCHEMA Composite_constituent_shape_mim;
+
+USE FROM Advanced_boundary_representation_mim; -- ISO/TS 10303-1514
+USE FROM Construction_geometry_mim; -- ISO/TS 10303-1131
+USE FROM Constructive_solid_geometry_3d_mim; -- ISO/TS 10303-1068
+USE FROM Curve_swept_solid_mim; -- ISO/TS 10303-1659
+USE FROM Edge_based_wireframe_mim; -- ISO/TS 10303-1501
+USE FROM Elementary_boundary_representation_mim; -- ISO/TS 10303-1329
+USE FROM External_model_mim; -- ISO/TS 10303-1033
+USE FROM Faceted_boundary_representation_mim; -- ISO/TS 10303-1512
+USE FROM geometric_model_schema ( -- ISO 10303-42
+	geometric_curve_set,
+	geometric_set);
+USE FROM Geometrically_bounded_surface_mim; -- ISO/TS 10303-1507
+USE FROM Geometrically_bounded_wireframe_mim; -- ISO/TS 10303-1510
+USE FROM Manifold_surface_mim; -- ISO/TS 10303-1509
+USE FROM product_property_representation_schema(shape_representation_relationship); --ISO 10303-41
+USE FROM Shell_based_wireframe_mim; -- ISO/TS 10303-1502
+USE FROM Tessellated_geometry_mim; -- ISO/TS 10303-1819
+USE FROM Value_with_unit_extension_mim; -- ISO/TS 10303-1753
+
+  ENTITY beveled_sheet_representation
+    SUBTYPE OF (shape_representation);
+  END_ENTITY;
+
+  ENTITY composite_sheet_representation
+    SUBTYPE OF (shape_representation);
+    WHERE
+      WR1: SIZEOF (['AIC_GEOMETRICALLY_BOUNDED_SURFACE.' +
+        'GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION',
+        'AIC_MANIFOLD_SURFACE.' +
+        'MANIFOLD_SURFACE_SHAPE_REPRESENTATION'] * TYPEOF (SELF)) = 1;
+  END_ENTITY;
+
+  ENTITY flat_pattern_ply_representation_relationship
+    SUBTYPE OF (shape_representation_relationship);
+    WHERE
+    WR1: 'PRODUCT_PROPERTY_REPRESENTATION_SCHEMA.SHAPE_REPRESENTATION' IN (TYPEOF (SELF\representation_relationship.rep_1) * TYPEOF (SELF\representation_relationship.rep_2));
+    WR2: SELF\representation_relationship.rep_1\representation.context_of_items\geometric_representation_context.coordinate_space_dimension = 3;
+  END_ENTITY;
+
+END_SCHEMA;

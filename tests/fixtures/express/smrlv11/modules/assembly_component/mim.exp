@@ -1,0 +1,41 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.7 2015/09/24 11:01:19 lothartklein Exp
+   ISO TC184/SC4/WG12 N7877 - ISO/TS - 10303-1802 Assembly component - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7314
+*)
+
+SCHEMA Assembly_component_mim;
+
+USE FROM Component_grouping_mim;
+USE FROM Assembly_shape_mim;
+
+ENTITY assembly_component
+  SUBTYPE OF (component_definition, product_definition_shape);
+  DERIVE
+    SELF\property_definition.definition : assembly_component := SELF;
+  WHERE
+    WR1: NOT EXISTS(SELF\property_definition.description);
+END_ENTITY;
+
+ENTITY component_definition
+  SUBTYPE OF (product_definition, product_definition_relationship);
+  DERIVE
+    SELF\product_definition_relationship.related_product_definition : component_definition := SELF;
+  WHERE
+    WR1: NOT EXISTS(SELF\product_definition_relationship.description);
+    WR2: NOT EXISTS(SELF\property_definition.description);    
+    WR3: SELF\product_definition_relationship.id = SELF\product_definition.id;
+    WR4: SELF\product_definition_relationship.name = 'definition usage';
+    WR5: NOT ('PRODUCT_STRUCTURE_SCHEMA.' + 'PRODUCT_DEFINITION_USAGE' IN TYPEOF(SELF));
+END_ENTITY;
+
+ENTITY physical_component
+  SUBTYPE OF (assembly_component);
+END_ENTITY;
+
+ENTITY thermal_component
+  SUBTYPE OF (assembly_component);
+END_ENTITY;
+	
+END_SCHEMA;

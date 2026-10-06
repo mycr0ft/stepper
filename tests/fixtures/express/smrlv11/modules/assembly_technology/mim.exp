@@ -1,0 +1,52 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.34 2017/11/29 16:25:55 verodub Exp
+   ISO TC184/SC4/WG12 N9923 - ISO/TS 10303-1649 Assembly technology - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N9483
+*)
+SCHEMA Assembly_technology_mim;
+
+USE FROM Feature_and_connection_zone_mim;	-- ISO/TS 10303-1671
+USE FROM Generic_material_aspects_mim; --  ISO/TS 10303-1681
+USE FROM Physical_component_feature_mim; -- ISO/TS 10303-1721
+USE FROM Product_view_definition_reference_mim;	-- ISO/TS 10303-1738
+USE FROM Requirement_assignment_mim; --  ISO/TS 10303-1233
+
+REFERENCE FROM product_property_definition_schema -- ISO 10303-41
+  (acyclic_shape_aspect_relationship);
+
+TYPE at_requirement_assigned_item = SELECT BASED_ON requirement_assigned_item WITH 
+     (assembly_joint);
+END_TYPE;
+
+TYPE at_external_identification_item = SELECT BASED_ON external_identification_item WITH 
+     (assembly_bond_definition);
+END_TYPE;
+
+ENTITY assembly_bond_definition
+  SUBTYPE OF (shape_aspect);
+UNIQUE
+  UR1: SELF\shape_aspect.name;
+END_ENTITY;
+
+ENTITY assembly_joint
+  SUBTYPE OF (component_feature_joint);
+WHERE
+  WR1: acyclic_shape_aspect_relationship(SELF,
+       [SELF\shape_aspect_relationship.related_shape_aspect],
+       'ASSEMBLY_TECHNOLOGY_MIM.'+
+       'ASSEMBLY_JOINT');
+END_ENTITY;
+
+ENTITY component_mating_constraint_condition
+  SUBTYPE OF (shape_aspect);
+UNIQUE
+  UR1: SELF\shape_aspect.name, SELF\shape_aspect.of_shape;
+END_ENTITY;
+
+ENTITY connection_zone_based_assembly_joint
+  SUBTYPE OF (assembly_joint);
+END_ENTITY;
+
+END_SCHEMA;
+

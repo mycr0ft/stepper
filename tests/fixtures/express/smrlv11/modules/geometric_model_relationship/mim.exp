@@ -1,0 +1,19 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.7 2012/10/11 05:49:26 liutkuviene Exp
+   ISO TC184/SC4/WG12 N8024 - ISO/TS 10303-1403 Geometric model relationship - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N6906
+*)   
+SCHEMA Geometric_model_relationship_mim;
+
+USE FROM Elemental_geometric_shape_mim;    -- ISO/TS 10303-1004
+
+USE FROM representation_schema(
+  definitional_representation_relationship
+);
+
+USE FROM product_property_representation_schema -- ISO 10303-41
+  (shape_representation_relationship);
+
+
+END_SCHEMA;

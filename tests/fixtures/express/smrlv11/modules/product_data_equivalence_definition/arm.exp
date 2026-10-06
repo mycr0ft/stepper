@@ -1,0 +1,71 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.5 2018/06/11 09:38:03 ftanaka Exp
+   ISO TC184/SC4/WG12 N9963 - ISO/TS 10303-1837 product_data_equivalence_definition - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N9821
+   *)
+
+SCHEMA Product_data_equivalence_definition_arm;
+
+  USE FROM Date_time_assignment_arm;    --  ISO/TS 10303-1014
+
+  USE FROM Person_organization_assignment_arm;   --  ISO/TS 10303-1013
+
+  USE FROM Product_view_definition_relationship_arm;   --  ISO/TS 10303-1041
+
+  TYPE equivalence_product_data_select = SELECT
+   (as_product_view_definition_or_reference,
+    View_definition_relationship);
+  END_TYPE;
+
+  TYPE pde_date_or_date_time_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON date_or_date_time_item WITH
+    (Data_equivalence_definition);
+  END_TYPE;
+
+  TYPE pde_organization_or_person_in_organization_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON organization_or_person_in_organization_item WITH
+    (Data_equivalence_definition);
+  END_TYPE;
+  
+  TYPE used_equivalence_representation_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE;
+
+  ENTITY Data_equivalence_definition;
+      id : identifier;
+      name : label;
+      description : OPTIONAL text;
+  END_ENTITY;
+
+  ENTITY Data_equivalence_definition_relationship;
+      id : identifier;
+      name : label;
+      description : OPTIONAL text;
+      relating_data_equivalence_definition : Data_equivalence_definition;
+      related_data_equivalence_definition  : Data_equivalence_definition;
+  END_ENTITY;
+
+  ENTITY Data_equivalence_definition_representation_relationship;
+      id : identifier;
+      name : label;
+      description : OPTIONAL text;
+      definition          : Data_equivalence_definition;
+      used_representation : used_equivalence_representation_select;
+  END_ENTITY;
+
+  ENTITY Product_data_and_data_equivalence_relationship;
+      id : identifier;
+      name : label;
+      description : OPTIONAL text;
+      product_data : equivalence_product_data_select;
+      data_equivalence : Data_equivalence_definition;
+  END_ENTITY;
+
+  ENTITY Software_for_data_equivalence_check;
+      id : identifier;
+      name : label;
+      description : OPTIONAL text;
+      software_name    : label;
+      software_version : label;
+      data_equivalence     : Data_equivalence_definition_representation_relationship;
+  END_ENTITY;
+
+END_SCHEMA;

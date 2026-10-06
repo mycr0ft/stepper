@@ -1,0 +1,143 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.16 2018/05/02 15:31:28 kevin Exp
+ ISO TC184/SC4/WG12 N10042 - ISO/TS 10303-1379 Cfd_specified_general_property_arm - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N6717
+*) 
+
+SCHEMA Cfd_specified_general_property_arm;
+
+USE FROM Activity_arm;                                --ISO/TS 10303-1047
+
+USE FROM Activity_method_arm;                         --ISO/TS 10303-1049
+
+USE FROM Analysis_arm;                                --ISO/TS 10303-1372
+
+USE FROM Cfd_conditions_arm;                          --ISO/TS 10303-1375
+
+USE FROM Cfd_equations_arm;                           --ISO/TS 10303-1376
+
+USE FROM Cfd_model_arm;                               --ISO/TS 10303-1377
+
+USE FROM Cfd_results_arm;                             --ISO/TS 10303-1378
+
+USE FROM Elemental_geometric_shape_arm;               --ISO/TS 10303-1004
+
+USE FROM External_item_identification_assignment_arm; --ISO/TS 10303-1128
+
+USE FROM External_model_arm;                          --ISO/TS 10303-1033
+
+USE FROM Foundation_representation_arm;               --ISO/TS 10303-1006
+
+USE FROM Independent_property_arm;                    --ISO/TS 10303-1036
+
+USE FROM Process_property_assignment_arm;             --ISO/TS 10303-1040
+
+USE FROM Product_view_definition_arm;                 --ISO/TS 10303-1019
+
+USE FROM Product_view_definition_relationship_arm;    --ISO/TS 10303-1041
+
+USE FROM Property_assignment_arm;                     --ISO/TS 10303-1030
+
+USE FROM Shape_property_assignment_arm;               --ISO/TS 10303-1032
+
+TYPE choose_general_property_identifier = EXTENSIBLE SELECT 
+  (defined_data_name,
+   External_item_identification);
+END_TYPE;
+
+TYPE choose_geometry_location = EXTENSIBLE SELECT 
+  (External_geometric_model,
+   Geometric_model);
+END_TYPE;
+
+TYPE choose_representation_context_identifier = EXTENSIBLE SELECT 
+  (defined_data_class,
+   External_item_identification);
+END_TYPE;
+
+TYPE defined_data_class = EXTENSIBLE ENUMERATION OF 
+  (unspecified,
+   application_defined,
+   dimensional,
+   normalised_by_dimensional,
+   normalise_by_unknown_dimensional,
+   dimensionless_parameter,
+   dimensionless_constant);
+END_TYPE;
+
+TYPE defined_data_name = EXTENSIBLE SELECT 
+  (coordinate_data_name,
+   fd_defined_data_name);
+END_TYPE;
+
+TYPE fd_defined_data_name = EXTENSIBLE SELECT 
+  (fd_nondimensional_parameter_name,
+   flow_solution_data_name,
+   force_moment_data_name,
+   gas_model_data_name,
+   riemann_1d_data_name,
+   thermal_conductivity_model_data_name,
+   turbulence_closure_data_name,
+   turbulence_model_data_name,
+   viscosity_model_data_name);
+END_TYPE;
+
+TYPE fd_nondimensional_parameter_name = EXTENSIBLE ENUMERATION OF
+  (Mach,
+   Mach_velocity,
+   Mach_velocity_sound,
+   Reynolds,
+   Reynolds_velocity,
+   Reynolds_length,
+   Reynolds_viscosity_kinematic,
+   Prandtl,
+   Prandtl_thermal_conductivity,
+   Prandtl_viscosity_molecular,
+   Prandtl_specific_heat_pressure,
+   specific_heat_ratio,
+   specific_heat_ratio_pressure,
+   specific_heat_ratio_volume,
+   coef_pressure,
+   coef_skin_friction_x,
+   coef_skin_friction_y,
+   coef_skin_friction_z,
+   coef_pressure_dynamic,
+   coef_pressure_reference,
+   length_reference);
+END_TYPE;
+
+TYPE mbna_property_distribution_select = EXTENSIBLE SELECT BASED_ON property_distribution_select WITH
+  (Model_property_distribution);
+END_TYPE;
+
+TYPE value_context_select = EXTENSIBLE SELECT 
+  (Activity,
+   Activity_method,
+   Independent_property,
+   Product_view_definition,
+   Representation_item,
+   Shape_element,
+   defined_data_class,
+   External_item_identification,
+   Activity_property,
+   Assigned_property,
+   Independent_property_relationship);
+END_TYPE;
+
+ENTITY Geometry_reference;
+  description : STRING;
+  data : choose_geometry_location;
+END_ENTITY;
+
+ENTITY Specified_general_property
+SUBTYPE OF (Independent_property);
+  name_specifier : choose_general_property_identifier;
+END_ENTITY;
+
+ENTITY Specified_representation_context
+SUBTYPE OF (Representation_context);
+  class_specifier : choose_representation_context_identifier;
+END_ENTITY;
+
+END_SCHEMA;

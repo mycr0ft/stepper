@@ -1,0 +1,16 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.8 2019/06/10 20:32:29 kevin Exp
+ ISO TC184/SC4/WG12 N10489 - ISO/TS 10303-1091 Maths space - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N2798
+*)
+
+SCHEMA Maths_space_arm;
+
+USE FROM Maths_value_arm;    -- ISO/TS 10303-1092
+
+
+ENTITY Maths_space;
+END_ENTITY;
+
+END_SCHEMA;

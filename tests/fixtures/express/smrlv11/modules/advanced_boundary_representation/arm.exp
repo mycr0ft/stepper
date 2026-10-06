@@ -1,0 +1,69 @@
+(*
+ $Id: arm.exp,v 1.18 2010/01/21 20:45:00 lothartklein Exp $
+ ISO TC184/SC4/WG12 N6857 - ISO/TS 10303-1514 Advanced boundary representation - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N5272
+*)
+
+SCHEMA Advanced_boundary_representation_arm;
+
+USE FROM Topologically_bounded_surface_arm; -- ISO/TS 10303-1511:2004
+USE FROM Solid_model_arm;
+
+TYPE advanced_brep_shape_representation_item = SELECT (
+  Axis_placement_3d,
+  Geometric_placement_operation,
+  Manifold_solid_brep);
+END_TYPE;
+
+ENTITY Advanced_brep_shape_representation
+  SUBTYPE OF (Geometric_model);
+  SELF\Representation.items : SET [1:?] of
+advanced_brep_shape_representation_item;
+WHERE
+  WR1: SIZEOF(QUERY ( msb <* QUERY ( it <* SELF.items |
+                ('ADVANCED_BOUNDARY_REPRESENTATION_ARM.MANIFOLD_SOLID_BREP' IN TYPEOF(it)) ) |
+               ( NOT (SIZEOF(QUERY ( csh <* collect_shells(msb) |
+                                (NOT (SIZEOF(QUERY ( fcs <* csh\
+                connected_face_set.connected_faces | (NOT (
+                'ADVANCED_BOUNDARY_REPRESENTATION_ARM.ADVANCED_FACE' IN TYPEOF(fcs))) )) = 0)) ))
+              = 0)) )) = 0;
+END_ENTITY;
+
+ENTITY Closed_shell
+  SUBTYPE OF (Connected_face_set);
+END_ENTITY;
+
+ENTITY Manifold_solid_brep 
+  SUBTYPE OF (Solid_model);
+  outer : Closed_shell;
+  voids : OPTIONAL SET[1:?] OF Oriented_closed_shell;
+WHERE
+  WR1: (NOT EXISTS(voids)) OR (SIZEOF(QUERY ( ocs <* SELF.voids |                
+                      ( NOT (ocs.orientation = FALSE)))) = 0);
+END_ENTITY;
+
+ENTITY Oriented_closed_shell
+   SUBTYPE OF (Closed_shell);
+   shell       : Closed_shell;
+   orientation : BOOLEAN;
+WHERE
+   WR1: NOT ('ADVANCED_BOUNDARY_REPRESENTATION_ARM.ORIENTED_CLOSED_SHELL'
+              IN TYPEOF (SELF.shell));
+END_ENTITY;
+
+FUNCTION collect_shells(brep : Manifold_solid_brep)    
+               : SET[1:?] OF Closed_shell;   
+    LOCAL   
+      return_set: SET[1:?] OF closed_shell := [brep.outer];   
+    END_LOCAL;   
+
+    IF SIZEOF(brep.voids)  >= 1    
+          THEN   
+       return_set := return_set + brep.voids;   
+    END_IF;   
+   RETURN(return_set);   
+END_FUNCTION; 
+
+END_SCHEMA;
+
+

@@ -1,0 +1,369 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.23 2019/06/10 20:32:27 kevin Exp
+   ISO TC184/SC4/WG12 N10505 - ISO/CD-TS 10303-1386 Mesh topology - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N10045 
+*)
+
+SCHEMA Mesh_topology_arm;
+
+USE FROM Basic_geometric_topology_arm;--  ISO/TS 10303-1323
+
+USE FROM Elemental_topology_arm;--  ISO/TS 10303-1005
+
+USE FROM Finite_elements_arm; --  ISO/CD-TS 10303-1383
+
+USE FROM Maths_space_arm;--  ISO/TS 10303-1091
+
+USE FROM Support_resource_arm;--  ISO/TS 10303-1800
+
+TYPE cell_shape = EXTENSIBLE SELECT 
+    (cell_shape_0d,
+     cell_shape_1d,
+     cell_shape_2d,
+     cell_shape_3d);
+END_TYPE;
+
+TYPE cell_shape_0d = EXTENSIBLE ENUMERATION OF
+    (single);
+END_TYPE;
+
+TYPE cell_shape_1d = EXTENSIBLE ENUMERATION OF
+    (line);
+END_TYPE;
+
+TYPE cell_shape_2d = EXTENSIBLE ENUMERATION OF
+    (quadrilateral,
+     triangle);
+END_TYPE;
+
+TYPE cell_shape_3d = EXTENSIBLE ENUMERATION OF
+    (hexahedron,
+     wedge,
+     tetrahedron,
+     pyramid);
+END_TYPE;
+
+TYPE element_order = ENUMERATION OF 
+  (linear,
+   quadratic,
+   cubic);
+END_TYPE;
+
+TYPE indices_group = SELECT
+     (indices_list,
+      indices_range);
+END_TYPE;
+
+TYPE mesh_location = EXTENSIBLE ENUMERATION OF
+     (unspecified,
+      application_defined,
+      vertices,
+      cell_centre,
+      face_centre,
+      iface_centre,
+      jface_centre,
+      kface_centre,
+      edge_centre);
+END_TYPE;
+
+TYPE mesh_maths_space_type = EXTENSIBLE ENUMERATION OF
+     (cells,
+      vertices);
+END_TYPE;
+
+TYPE structured_mesh_type = EXTENSIBLE ENUMERATION OF
+    (rectangular,
+     pentahedral,
+     pyramidal,
+     tetrahedral);
+END_TYPE;
+
+ENTITY Array_based_unstructured_mesh
+  SUBTYPE OF (Unstructured_mesh);
+  cells        : ARRAY [1:cell_count] OF Vertex_defined_cell;
+WHERE
+  WR1 : SELF\Mesh.index_count = 1;
+END_ENTITY;
+
+ENTITY Array_based_unstructured_mesh_and_vertices
+  SUBTYPE OF (Array_based_unstructured_mesh);
+  vertex_count : INTEGER;
+  vertices     : ARRAY [1:vertex_count] OF UNIQUE Vertex;
+WHERE
+  WR1 : all_mesh_vertices(SELF);
+END_ENTITY;
+
+ENTITY Cell
+  SUPERTYPE OF (ONEOF(Cell_of_structured_mesh, Vertex_defined_cell))
+  SUBTYPE OF (Detailed_topological_model_element);
+  description : text;
+  dimension   : INTEGER;
+END_ENTITY;
+
+ENTITY Cell_of_structured_mesh
+  SUBTYPE OF (Cell);
+  the_mesh : Structured_mesh;
+  cell_identifier : ARRAY [1:index_count] OF INTEGER;
+DERIVE
+  index_count : INTEGER := the_mesh\Mesh.index_count;
+END_ENTITY;
+
+ENTITY Cell_with_explicit_boundary
+  SUBTYPE OF (Cell);
+  boundary : SET [1:?] OF Detailed_topological_model_element;
+END_ENTITY;
+
+ENTITY Explicit_unstructured_mesh
+  SUBTYPE OF (Unstructured_mesh);
+  explicit_model : Fea_model;
+  cells          : ARRAY [1:cell_count] OF UNIQUE Element; -- element_representation;
+END_ENTITY;
+
+ENTITY Extraction_of_structured_submesh
+SUBTYPE OF(Extraction_of_submesh);
+  lower_vertex : ARRAY [1:whole_indices] OF INTEGER;
+  used_indices : ARRAY [1:part_indices] OF INTEGER;
+  used_senses  : ARRAY [1:part_indices] OF BOOLEAN;
+DERIVE
+  whole_indices : INTEGER := whole\Mesh.index_count;
+  part_indices  : INTEGER := part\Mesh.index_count;
+WHERE
+  WR1: ('MESH_TOPOLOGY_ARM.STRUCTURED_MESH' IN  TYPEOF(
+             SELF\Extraction_of_submesh.whole));
+  WR2: ('MESH_TOPOLOGY_ARM.STRUCTURED_MESH' IN  TYPEOF(
+             SELF\Extraction_of_submesh.part));
+
+END_ENTITY;
+
+ENTITY Extraction_of_submesh;
+   whole:  mesh;
+   part:   submesh;
+END_ENTITY;
+ 
+ENTITY Extraction_of_submesh_by_cells
+  SUBTYPE OF (Extraction_of_submesh);
+  cell_count: INTEGER;
+  cells : ARRAY [1:cell_count] OF cell;
+END_ENTITY;
+
+ENTITY Extraction_of_submesh_by_vertices
+  SUBTYPE OF (Extraction_of_submesh);
+  vertex_count: INTEGER;
+  vertices : ARRAY [1:vertex_count] OF Vertex;
+END_ENTITY;
+
+ENTITY Indices_list;
+  nindices : INTEGER;
+  indices  : LIST [1:?] OF ARRAY [1:nindices] OF INTEGER;
+END_ENTITY;
+
+ENTITY Indices_range;
+  nindices : INTEGER;
+  start    : ARRAY [1:nindices] OF INTEGER;
+  finish   : ARRAY [1:nindices] OF INTEGER;
+END_ENTITY;
+
+ENTITY Mesh
+  ABSTRACT SUPERTYPE OF (ONEOF(Structured_mesh,
+        Unstructured_mesh) ANDOR Submesh)
+   SUBTYPE OF (Detailed_topological_model_element);
+  description : text;
+  index_count : INTEGER;
+END_ENTITY;
+
+ENTITY Mesh_derived_maths_space
+  SUBTYPE OF (Maths_space);
+  description : text;
+  name        : label;
+  id          : identifier;
+  the_mesh    : Mesh;
+  kind        : Mesh_maths_space_type;
+END_ENTITY;
+
+ENTITY Product_of_mesh;
+  operands : LIST [2:2] OF Mesh;
+  product  : Mesh;
+WHERE
+  WR1 : ('MESH_TOPOLOGY_ARM.STRUCTURED_MESH' IN TYPEOF(operands[1])) AND
+        ('MESH_TOPOLOGY_ARM.STRUCTURED_MESH' IN TYPEOF(operands[2])) AND
+        ('MESH_TOPOLOGY_ARM.STRUCTURED_MESH' IN TYPEOF(product));
+  WR2 : operands[1].index_count = 1;
+  WR3 : operands[1].index_count + operands[2].index_count
+        = product.index_count;
+END_ENTITY;
+
+ENTITY Rind;
+  index_count : INTEGER;
+  planes      : ARRAY [1:2*index_count] OF INTEGER;
+END_ENTITY;
+
+ENTITY Structured_mesh
+  SUBTYPE OF (mesh);
+  vertex_counts : ARRAY [1:SELF\mesh.index_count] OF INTEGER;
+  cell_counts   : ARRAY [1:SELF\mesh.index_count] OF INTEGER;
+  kind          : Structured_mesh_type;
+END_ENTITY;
+
+ENTITY Structured_mesh_with_rind
+  SUBTYPE OF (Structured_mesh);
+  rind_planes : Rind;
+END_ENTITY;
+
+ENTITY Submesh
+  SUBTYPE OF (Mesh);
+END_ENTITY;
+
+ENTITY Unstructured_mesh
+  ABSTRACT SUPERTYPE OF (ONEOF(Array_based_unstructured_mesh, 
+        Explicit_unstructured_mesh))
+  SUBTYPE OF (Mesh);
+  cell_count   : INTEGER;
+END_ENTITY;
+
+
+
+ENTITY Vertex_defined_cell 
+  SUBTYPE OF (Cell); 
+  shape       : cell_shape;
+  order       : element_order;
+  vertices    : ARRAY [1:vn_count] OF OPTIONAL Vertex;
+DERIVE
+  bound_count       : INTEGER := cell_counts(SELF)[1];
+  edge_node_count   : INTEGER := cell_counts(SELF)[2];
+  opt_node_count    : INTEGER := cell_counts(SELF)[3];
+  required_count    : INTEGER := bound_count + edge_node_count;
+  vn_count          : INTEGER := required_count + opt_node_count;
+  required_vertices : ARRAY [1:required_count] OF vertex
+                        := shorten_array(vertices, vn_count, required_count);
+END_ENTITY;
+
+FUNCTION all_mesh_vertices(arg : Array_based_unstructured_mesh_and_vertices)
+         : BOOLEAN;
+LOCAL
+  vertex_set : SET OF Vertex := [];
+  cell : Vertex_defined_cell;
+END_LOCAL;
+  REPEAT i := 1 TO arg.cell_count;
+    cell := arg.cells[i];
+    REPEAT j := 1 TO cell.vn_count;
+      vertex_set := vertex_set + cell.vertices[j];
+    END_REPEAT;
+  END_REPEAT;
+  IF (SIZEOF(vertex_set) <> arg.index_count) THEN
+    RETURN(FALSE);
+  END_IF;
+  REPEAT i := 1 TO arg.index_count;
+    IF (NOT (arg.vertices[i] IN vertex_set) ) THEN
+      RETURN(FALSE);
+    END_IF;
+  END_REPEAT;
+  RETURN(TRUE);
+END_FUNCTION;
+
+FUNCTION cell_counts(arg : Vertex_defined_cell) : ARRAY[1:3] OF INTEGER;
+LOCAL
+  om1    : INTEGER := 0;      -- (order - 1)
+  om1sq  : INTEGER := om1**2; -- (order - 1) squared
+  vts    : INTEGER;           -- number of bounding vertices
+  eds    : INTEGER;           -- number of edges
+  qf     : INTEGER := 0;      -- number of quadrilateral faces
+  tf     : INTEGER := 0;      -- number of triangular faces
+  result : ARRAY [1:3] OF INTEGER := [0,0,0];
+END_LOCAL;
+  CASE arg.order OF
+    element_order.linear    : om1 := 0;
+    element_order.quadratic : om1 := 1;
+    element_order.cubic     : om1 := 2;
+    OTHERWISE : RETURN(result);
+  END_CASE;
+  om1sq := om1**2;
+  CASE arg.shape OF
+    cell_shape_0d.single : 
+        BEGIN
+          vts := 1; eds := 0; qf := 0; tf := 0;
+          result[1] := vts;
+          result[2] := om1*eds;                   -- 0, 0, 0
+          result[3] := 0;                         -- 0, 0, 0
+        END;
+    cell_shape_1d.line :
+        BEGIN
+          vts := 2; eds := 1; qf := 0; tf := 0;
+          result[1] := vts;
+          result[2] := om1*eds;                   -- 0, 1, 2
+          result[3] := 0;                         -- 0, 0, 0
+        END;
+    cell_shape_2d.quadrilateral : 
+        BEGIN
+          vts := 4; eds := 4; qf := 1; tf := 0;
+          result[1] := vts;
+          result[2] := om1*eds;                   -- 0, 4, 8
+          result[3] := om1sq*qf;                  -- 0, 1, 4
+        END;
+    cell_shape_2d.triangle : 
+        BEGIN
+          vts := 3; eds := 3; qf := 0; tf := 1;
+          result[1] := vts;
+          result[2] := om1*eds;                   -- 0, 3, 6
+          result[3] := (om1-1)*tf;                --    0, 1
+          CASE arg.order OF
+            element_order.linear : result[3] := 0;              -- 0
+          END_CASE;
+        END;
+    cell_shape_3d.hexahedron :
+        BEGIN
+          vts := 8; eds := 12; qf := 6; tf := 0;
+          result[1] := vts;
+          result[2] := om1*eds;                   -- 0, 12, 24
+          result[3] := om1sq*(qf+om1);            -- 0, 7, 32
+        END;
+    cell_shape_3d.wedge :
+        BEGIN
+          vts := 6; eds := 9; qf := 3; tf := 2;
+          result[1] := vts;
+          result[2] := om1*eds;                   -- 0, 9,  18
+          result[3] := om1sq*qf + om1*tf;         -- 0, 3, 16
+        END;
+    cell_shape_3d.tetrahedron : 
+        BEGIN
+          vts := 4; eds := 6; qf := 0; tf := 4;
+          result[1] := vts;
+          result[2] := om1*eds;                   -- 0, 6, 12
+          result[3] := (om1-1)*tf;                --    0, 4
+          CASE arg.order OF
+            element_order.linear : result[3] := 0;              -- 0
+          END_CASE;
+        END;
+    cell_shape_3d.pyramid : 
+        BEGIN
+          vts := 5; eds := 8; qf := 1; tf := 4;
+          result[1] := vts;
+          result[2] := om1*eds;                   -- 0, 8, 16
+          result[3] := om1sq*qf + (om1-1)*tf;     --    1, 9
+          CASE arg.order OF
+            element_order.linear : result[3] := 0;              -- 0
+          END_CASE;
+        END;
+  END_CASE;
+RETURN(result);
+END_FUNCTION;
+
+
+FUNCTION shorten_array(longa : ARRAY OF GENERIC : T;
+                      oldl, newl : INTEGER) : ARRAY OF GENERIC : T;
+   LOCAL
+     shorta : ARRAY [1:newl] OF GENERIC : T;
+   END_LOCAL;
+
+   IF (newl > oldl) THEN
+     RETURN(?);
+   ELSE
+     REPEAT i := 1 TO newl;
+       shorta[i] := longa[i];
+     END_REPEAT;
+     RETURN(shorta);
+   END_IF;
+END_FUNCTION;
+
+END_SCHEMA;
+

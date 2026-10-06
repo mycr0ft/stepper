@@ -1,0 +1,31 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.5 2009/09/03 19:18:11 darla Exp
+   WG12N6701 - ISO/CD-TS - 10303-1373 analysis_product_relationships - EXPRESS ARMM*)
+
+SCHEMA Analysis_product_relationships_arm;
+
+USE FROM Analysis_arm;
+
+USE FROM Product_analysis_arm;
+
+USE FROM Product_view_definition_arm;
+
+ENTITY Idealisation_relationship;
+  id : STRING;
+  name : STRING;
+  description : STRING;
+  idealised : Product_view_definition;
+  idealisation : Temporal_spatial_domain;
+END_ENTITY;
+
+ENTITY Analysis_view_relationship;
+  id : STRING;
+  name : STRING;
+  description : STRING;
+  viewed : Temporal_spatial_domain;
+  view : Numerical_model;
+END_ENTITY;
+
+END_SCHEMA;
+

@@ -1,0 +1,13 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.10 2009/04/23 10:04:58 liutkuviene Exp
+   ISO TC184/SC4/WG12 N6286 - ISO/TS 10303-1633 Assembly 3d shape - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N5567
+*)
+
+
+SCHEMA Assembly_3d_shape_mim;
+	USE FROM Assembly_technology_mim;	-- ISO/TS 10303-1649
+    USE FROM Physical_unit_3d_shape_mim; -- ISO/TS 10303-1727
+END_SCHEMA;
+

@@ -1,0 +1,16 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.2 2012/10/11 05:49:04 liutkuviene Exp
+ ISO TC184/SC4/WG12 N7880 - ISO/TS 10303-1794 Assembly constraints - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N7317
+*)
+
+SCHEMA Assembly_constraints_mim;
+
+USE FROM Assembly_feature_relationship_mim; -- ISO/CD-TS 10303-1af1
+USE FROM Geometric_constraints_mim; -- ISO/CD-TS 10303-1pc3
+USE FROM Explicit_constraints_mim; -- ISO/CD-TS 10303-1pc2
+USE FROM Foundation_representation_mim;  -- ISO/TS 10303-1006
+USE FROM Contextual_shape_positioning_mim; -- ISO/TS 10303-1027
+USE FROM Assembly_constraint_schema; -- ISO 10303-109
+END_SCHEMA;

@@ -1,0 +1,14 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.5 2007/02/14 16:31:05 liutkus Exp
+ ISO TC184/SC4/WG12 N3800 - ISO/CD-TS 10303-1232 Design material aspects - EXPRESS MIM
+*)
+
+SCHEMA Design_material_aspects_mim;
+
+USE FROM Generic_material_aspects_mim;
+USE FROM Product_view_definition_mim;
+USE FROM Shape_property_assignment_mim;
+
+
+END_SCHEMA;

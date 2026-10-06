@@ -1,0 +1,19 @@
+(*
+ ISO TC184/SC4/WG12 N11345 - ISO/TS 10303-1511 Topologically bounded surface - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N7841
+*)
+
+SCHEMA Topologically_bounded_surface_mim;
+
+USE FROM B_spline_geometry_mim;
+USE FROM Basic_geometric_topology_mim;
+USE FROM geometry_schema(
+             b_spline_curve_with_knots,
+             b_spline_surface_with_knots,
+             composite_curve_on_surface,
+             degenerate_toroidal_surface,
+             spherical_surface);
+USE FROM topology_schema(
+                        advanced_face);
+
+END_SCHEMA;

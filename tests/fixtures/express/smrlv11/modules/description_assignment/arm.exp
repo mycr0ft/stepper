@@ -1,0 +1,32 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.12 2018/11/28 18:01:49 sjohnston Exp
+   ISO TC184/SC4/WG12 N10292 - ISO/TS 10303-1473 Description assignment - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N5848
+*)
+
+SCHEMA Description_assignment_arm;
+
+TYPE description_item = EXTENSIBLE GENERIC_ENTITY SELECT ;
+END_TYPE;
+
+ENTITY Description_text;
+  description : STRING;
+END_ENTITY;
+
+ENTITY Description_text_assignment;
+  description : Description_text;
+  items : SET [1 : ?] OF description_item;
+END_ENTITY;
+
+ENTITY Description_text_assignment_relationship;
+	description 	: OPTIONAL STRING; 					
+	id 				: OPTIONAL STRING;					
+	related 		: Description_text_assignment;					
+	relating 		: Description_text_assignment;					
+	relation_type	: STRING;							
+ WHERE
+	WR1 : relating :<>: related;
+END_ENTITY;
+
+END_SCHEMA;

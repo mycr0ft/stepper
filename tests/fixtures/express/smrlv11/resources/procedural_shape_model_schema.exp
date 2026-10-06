@@ -1,0 +1,124 @@
+(*
+ISO 10303 TC184/SC4/WG12 N11115
+
+EXPRESS Source:
+ISO 10303-55 TC2 Procedural & hybrid representation - Procedural shape model schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2022  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-55 TC2 Procedural & hybrid representation - Procedural shape model schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA procedural_shape_model_schema '{ iso standard 10303 part(55) version(3) schema(1) procedural-shape-model-schema(2) }';
+
+REFERENCE FROM product_property_representation_schema   -- ISO 10303-41
+  (shape_representation);
+
+REFERENCE FROM geometry_schema                          -- ISO 10303-42
+  (geometric_representation_item);
+
+REFERENCE FROM topology_schema                          -- ISO 10303-42
+  (topological_representation_item);
+
+REFERENCE FROM geometric_model_schema                   -- ISO 10303-42
+  (edge_based_wireframe_model,
+   face_based_surface_model,
+   shell_based_surface_model,
+   shell_based_wireframe_model,
+   solid_model);
+
+REFERENCE FROM representation_schema                    -- ISO 10303-43
+  (representation,
+   representation_item_relationship,
+   representation_relationship);
+
+REFERENCE FROM procedural_model_schema;                 -- ISO 10303-55 
+
+TYPE shape_representation_item = SELECT
+  (geometric_representation_item,
+   topological_representation_item);
+END_TYPE;
+
+ENTITY explicit_procedural_shape_representation_relationship
+  SUBTYPE OF (explicit_procedural_representation_relationship);
+  SELF\representation_relationship.rep_1 : procedural_shape_representation; 
+  SELF\representation_relationship.rep_2 : shape_representation;
+END_ENTITY; 
+
+ENTITY explicit_procedural_geometric_representation_item_relationship
+  SUBTYPE OF (explicit_procedural_representation_item_relationship);
+  SELF\representation_item_relationship.relating_representation_item :
+    procedural_shape_representation_sequence;
+  SELF\representation_item_relationship.related_representation_item :
+    geometric_representation_item; 
+WHERE
+  WR1 : NOT (
+    'PROCEDURAL_SHAPE_MODEL_SCHEMA.PROCEDURAL_SHAPE_REPRESENTATION_SEQUENCE'
+    IN TYPEOF(
+      SELF\representation_item_relationship.related_representation_item));
+END_ENTITY; 
+
+ENTITY procedural_shape_representation
+  SUBTYPE OF (procedural_representation, shape_representation);
+  SELF\representation.items : 
+    SET[1:?] OF procedural_shape_representation_sequence;
+END_ENTITY; 
+
+ENTITY procedural_shape_representation_sequence
+  SUBTYPE OF (geometric_representation_item, 
+              procedural_representation_sequence);
+  SELF\procedural_representation_sequence.elements : LIST [1:?] OF shape_representation_item;              
+END_ENTITY; 
+
+ENTITY procedural_solid_representation_sequence
+  SUBTYPE OF (procedural_shape_representation_sequence);
+WHERE
+  WR1 : 'GEOMETRIC_MODEL_SCHEMA.SOLID_MODEL' IN TYPEOF(SELF);
+END_ENTITY; 
+
+ENTITY procedural_surface_representation_sequence
+  SUBTYPE OF (procedural_shape_representation_sequence);
+WHERE
+  WR1 : ('GEOMETRIC_MODEL_SCHEMA.FACE_BASED_SURFACE_MODEL' IN TYPEOF(SELF))
+    XOR
+    ('GEOMETRIC_MODEL_SCHEMA.SHELL_BASED_SURFACE_MODEL' IN TYPEOF(SELF));
+END_ENTITY; 
+
+ENTITY procedural_wireframe_representation_sequence
+  SUBTYPE OF (procedural_shape_representation_sequence);
+WHERE
+WR1 : ('GEOMETRIC_MODEL_SCHEMA.EDGE_BASED_WIREFRAME_MODEL' IN TYPEOF(SELF))
+    XOR
+    ('GEOMETRIC_MODEL_SCHEMA.SHELL_BASED_WIREFRAME_MODEL' IN TYPEOF(SELF));
+END_ENTITY; 
+
+ENTITY user_selected_shape_elements
+  SUBTYPE OF (user_selected_elements);
+  SELF\user_selected_elements.picked_items : SET [1:?] OF shape_representation_item;
+END_ENTITY; 
+
+ENTITY indirectly_selected_shape_elements
+  SUBTYPE OF (indirectly_selected_elements,
+              user_selected_shape_elements);
+  SELF\indirectly_selected_elements.indirectly_picked_items : SET [1:?] OF shape_representation_item;              
+END_ENTITY; 
+
+END_SCHEMA; -- procedural_shape_model_schema

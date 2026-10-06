@@ -1,0 +1,26 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.20 2012/10/11 05:49:13 liutkuviene Exp
+   ISO TC184/SC4/WG12 N8044 - ISO/TS 10303-1742 Shape composition - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N7460
+*)
+
+SCHEMA Shape_composition_arm; 
+
+  	USE FROM Shape_property_assignment_arm;	-- ISO/TS 10303-1032
+
+  ENTITY Composite_group_shape_element
+    SUBTYPE OF (Composite_shape_element);
+  END_ENTITY;
+
+  ENTITY Composite_shape_element
+    ABSTRACT SUPERTYPE OF (ONEOF (Composite_group_shape_element, Composite_unit_shape_element))
+    SUBTYPE OF (Shape_element);
+    components : SET[2:?] OF Shape_element;
+  END_ENTITY;
+
+  ENTITY Composite_unit_shape_element
+    SUBTYPE OF (Composite_shape_element);
+  END_ENTITY;
+
+END_SCHEMA;

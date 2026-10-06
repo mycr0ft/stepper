@@ -1,0 +1,13 @@
+(*
+ISO TC184/SC4/WG12 N11350- ISO/TS 10303-1513 hybrid_boundary_representation - EXPRESS MIM
+*)
+
+SCHEMA Hybrid_boundary_representation_mim;
+USE FROM Elemental_geometric_shape_mim;
+USE FROM geometric_model_schema(
+                      hybrid_brep_shape_representation,
+                      hybrid_brep_edge_assignment,
+                      hybrid_brep_face_assignment,
+                      hybrid_brep_vertex_assignment); -- ISO 10303-42
+
+END_SCHEMA;

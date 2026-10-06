@@ -1,0 +1,12 @@
+(*
+ $Id: mim.exp,v 1.6 2004/10/22 15:24:55 darla Exp $
+ ISO TC184/SC4/WG12 N1271 - ISO/TS 10303-1502 Shell based wireframe - EXPRESS MIM
+*)
+
+SCHEMA Shell_based_wireframe_mim;
+
+USE FROM aic_shell_based_wireframe;	     -- ISO 10303-501
+USE FROM Elemental_geometric_shape_mim;  -- ISO 10303-1004
+
+END_SCHEMA;
+

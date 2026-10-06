@@ -1,0 +1,139 @@
+(*
+$Id: method_definition_schema.exp,v 1.4 2015/06/29 19:31:31 dgnedwards Exp $
+ISO 10303 TC184/SC4/WG12 N8546
+
+EXPRESS Source:
+ISO 10303-49 ed1 Process structure and properties - Method definition schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-49 ed1 Process structure and properties - Method definition schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA method_definition_schema '{iso standard 10303 part(49) version(1) object(1) method_definition_schema(1)}';
+
+REFERENCE FROM action_schema
+    (action_method, 
+     action_method_relationship, 
+     action_relationship);
+
+REFERENCE FROM document_schema
+    (document, 
+     document_usage_constraint);
+
+REFERENCE FROM effectivity_schema
+    (effectivity);
+
+REFERENCE FROM measure_schema
+    (count_measure);
+
+REFERENCE FROM support_resource_schema
+    (label, 
+     text);
+
+REFERENCE FROM process_property_schema
+    (product_definition_process,
+     property_process);
+
+TYPE relationship_with_condition = SELECT
+  (action_method_relationship,
+   action_relationship,
+   context_dependent_action_method_relationship,
+   context_dependent_action_relationship);
+END_TYPE;
+
+TYPE process_or_process_relationship = SELECT
+  (product_definition_process,
+   property_process,
+   relationship_with_condition);
+END_TYPE;
+
+ENTITY action_method_with_associated_documents
+  SUBTYPE OF (action_method);
+  documents : SET [1:?] of document;
+END_ENTITY;
+
+ENTITY action_method_with_associated_documents_constrained
+  SUBTYPE OF (action_method_with_associated_documents);
+  usage_constraints : SET [1:?] OF document_usage_constraint;
+WHERE
+  WR1: SIZEOF (QUERY (item <* usage_constraints | 
+       NOT (item.source 
+       IN SELF\action_method_with_associated_documents.documents))) = 0;
+END_ENTITY;
+
+ENTITY action_method_to_select_from
+  SUBTYPE OF (action_method);
+  number_of_elements : count_measure;
+WHERE
+  WR1: number_of_elements >=1;
+  WR2: SIZEOF (USEDIN (SELF, 
+       'ACTION_SCHEMA.ACTION_METHOD_RELATIONSHIP.RELATING_METHOD')) >= 
+       number_of_elements;
+END_ENTITY;
+
+ENTITY process_or_process_relationship_effectivity
+  SUBTYPE OF (effectivity);
+  effective_process_or_process_relationship : process_or_process_relationship;
+END_ENTITY;
+
+ENTITY serial_action_method
+  SUBTYPE OF (action_method_relationship);
+END_ENTITY;
+
+ENTITY sequential_method
+  SUBTYPE OF (serial_action_method);
+  sequence_position : count_measure;
+END_ENTITY;
+
+ENTITY concurrent_action_method
+  SUBTYPE OF (action_method_relationship);
+END_ENTITY;
+
+ENTITY context_dependent_action_method_relationship;
+  name                  : label;
+  relating_relationship : action_method_relationship;
+  related_relationship  : action_method_relationship;
+UNIQUE
+  UR1: relating_relationship, related_relationship;
+WHERE
+  WR1: relating_relationship.relating_method :=:
+       related_relationship.relating_method;
+END_ENTITY;
+
+ENTITY context_dependent_action_relationship;
+  name                  : label;
+  relating_relationship : action_relationship;
+  related_relationship  : action_relationship;
+UNIQUE
+  UR1: relating_relationship, related_relationship;
+WHERE
+  WR1: relating_relationship.relating_action :=:
+       related_relationship.relating_action;
+END_ENTITY;
+
+ENTITY relationship_condition;
+  name                     : label;
+  applicable_relationships : SET [1:?] OF relationship_with_condition;
+  condition_description    : text;
+END_ENTITY;
+
+END_SCHEMA;  -- method_definition_schema

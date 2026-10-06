@@ -1,0 +1,25 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.23 2012/10/06 20:09:56 liutkuviene Exp
+ ISO TC184/SC4/WG12 N7702 - ISO/TS 10303-1022 Part and version identification - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N6051
+*) 
+
+
+SCHEMA Part_and_version_identification_arm;
+
+USE FROM Product_identification_arm;    -- ISO/TS 10303-1017
+
+USE FROM Product_version_arm;    -- ISO/TS 10303-1018
+
+
+ENTITY Part
+  SUBTYPE OF (Product);
+END_ENTITY;
+
+ENTITY Part_version
+  SUBTYPE OF (Product_version);
+  SELF\Product_version.of_product : Part;
+END_ENTITY;
+
+END_SCHEMA;  -- Part_and_version_identification_arm

@@ -1,0 +1,50 @@
+(*
+   ISO TC184/SC4/WG12 N11331 - ISO/TS 10303-1324 Non manifold surface - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N5435
+*)
+SCHEMA Non_manifold_surface_mim;
+
+  USE FROM Elemental_geometric_shape_mim; -- ISO/CD-TS 10303-1004
+
+  USE FROM geometric_model_schema (                 -- ISO 10303-42
+      face_based_surface_model,
+      non_manifold_surface_shape_representation); 
+ 
+  USE FROM geometry_schema (                        -- ISO 10303-42
+      b_spline_curve,
+      b_spline_surface,
+      bounded_pcurve,
+      bounded_surface_curve,
+      cartesian_transformation_operator_3d,
+      curve, 
+      curve_replica, 
+      degenerate_pcurve, 
+      evaluated_degenerate_pcurve, 
+      intersection_curve, 
+      offset_curve_3d, 
+      offset_surface, 
+      point_on_curve, 
+      point_on_surface, 
+      seam_curve, 
+      surface, 
+      surface_replica); 
+
+  USE FROM product_property_representation_schema ( -- ISO 10303-41
+      shape_representation); 
+ 
+  USE FROM representation_schema (                  -- ISO 10303-43
+      mapped_item,
+      representation,
+      representation_item,
+      representation_map);
+ 
+  USE FROM Topologically_bounded_surface_mim; --ISO/TS 10303-1511:2004
+ 
+  USE FROM topology_schema (                        -- ISO 10303-42
+      closed_shell,
+      connected_face_set, 
+      face,
+      open_shell, 
+      oriented_face);
+
+END_SCHEMA;

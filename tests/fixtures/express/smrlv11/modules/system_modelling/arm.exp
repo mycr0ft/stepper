@@ -1,0 +1,793 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.40 2010/06/10 21:34:43 philsp Exp
+ISO TC184/SC4/WG3 N2767 - ISO/TS 10303-1477 System modelling - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG3 N2684
+*)
+
+SCHEMA System_modelling_arm;
+
+USE FROM Decision_support_arm;    -- ISO/TS 10303-1486
+
+USE FROM Functional_breakdown_arm;    -- ISO/TS 10303-1216
+
+USE FROM Group_arm;    -- ISO/TS 10303-1113
+
+USE FROM System_behaviour_arm;    -- ISO/TS 10303-1448
+
+USE FROM System_structure_arm;    -- ISO/TS 10303-1450
+
+
+TYPE sysm_activity_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_activity_item WITH 
+   (Location, 
+    Location_representation, 
+    Product_group, 
+    Product_group_membership);
+END_TYPE; 
+
+TYPE sysm_activity_method_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON fbb_activity_method_item WITH 
+   (Activity, 
+    Activity_property, 
+    Analysis_assignment, 
+    Applied_activity_assignment, 
+    Approval_assignment, 
+    Assembly_component_relationship, 
+    Certification, 
+    Contract, 
+    Contract_relationship, 
+    Date_or_date_time_assignment, 
+    Event, 
+    In_zone, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Justification, 
+    Location, 
+    Organization, 
+    Person, 
+    Person_in_organization, 
+    Product_based_location_identification, 
+    Product_concept, 
+    Product_configuration, 
+    Product_group, 
+    Product_group_membership, 
+    Project, 
+    Requirement_assignment, 
+    Security_classification, 
+    State_relationship, 
+    Verification, 
+    View_definition_relationship);
+END_TYPE; 
+
+TYPE sysm_affected_item_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_affected_item_select WITH 
+   (Analysis_assignment, 
+    Behaviour_description_association, 
+    Group, 
+    Information_usage_right, 
+    Justification_assignment, 
+    Organization_or_person_in_organization_assignment, 
+    Product_group, 
+    Resource_item, 
+    Resource_item_realization, 
+    Resource_property, 
+    State, 
+    State_definition, 
+    Verification);
+END_TYPE; 
+
+TYPE sysm_analysed_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON ds_analysed_item WITH 
+   (Activity_method_relationship, 
+    Activity_property, 
+    Alternate_product_relationship, 
+    Assembly_relationship_substitution, 
+    Behaviour_description_association, 
+    behaviour_item, 
+    behaviour_model, 
+    Condition, 
+    Condition_relationship, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Interface_definition_for, 
+    Product_concept, 
+    Product_design_to_individual, 
+    Product_design_version_to_individual, 
+    Product_group_relationship, 
+    Product_planned_to_realized, 
+    Resource_item_relationship, 
+    Resource_property);
+END_TYPE; 
+
+TYPE sysm_approval_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_approval_item WITH 
+   (Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Applied_information_usage_right, 
+    Condition, 
+    Condition_assignment, 
+    Group, 
+    Group_relationship, 
+    Information_usage_right, 
+    Location_assignment, 
+    Product_group, 
+    Product_group_membership, 
+    Product_group_relationship, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Required_resource_relationship, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_item_realization, 
+    Resource_item_relationship, 
+    Resource_property);
+END_TYPE; 
+
+TYPE sysm_assigned_name_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_assigned_name_select WITH 
+   (Group, 
+    Group_relationship);
+END_TYPE; 
+
+TYPE sysm_assumed_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON ds_assumed_item WITH 
+   (Activity_property, 
+    Applied_activity_method_assignment, 
+    Location, 
+    Location_assignment, 
+    Product_concept, 
+    Product_configuration, 
+    Product_definition_element_relationship, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_property, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_assumption_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON ds_assumption_item WITH 
+   (Location, 
+    Product_concept, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_certification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_certification_item WITH 
+   (Applied_activity_method_assignment, 
+    behaviour_model, 
+    Product_group, 
+    Product_group_relationship, 
+    Resource_item, 
+    Resource_item_realization);
+END_TYPE; 
+
+TYPE sysm_characterized_activity_definition = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON fbb_characterized_activity_definition WITH 
+   (Activity_happening, 
+    Condition, 
+    Condition_relationship, 
+    Required_resource_assignment, 
+    Resource_item_assignment);
+END_TYPE; 
+
+TYPE sysm_collection_assignment_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_collection_assignment_select WITH 
+   (Product_concept, 
+    Product_configuration, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_condition_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_condition_item WITH 
+   (Analysis_assignment, 
+    Evidence, 
+    Justification_assignment, 
+    Requirement_assignment);
+END_TYPE; 
+
+TYPE sysm_condition_parameter_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON fbb_condition_parameter_item WITH 
+   (Activity, 
+    Activity_property, 
+    Activity_property_representation, 
+    Approval, 
+    Approval_assignment, 
+    Calendar_date, 
+    Certification_assignment, 
+    Contract_assignment, 
+    Date_or_date_time_assignment, 
+    Date_time, 
+    Document_assignment, 
+    Evidence, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Organization, 
+    Organization_or_person_in_organization_assignment, 
+    Product_concept, 
+    Product_configuration, 
+    Product_definition_element_relationship, 
+    State, 
+    State_assessment, 
+    State_definition, 
+    Validation, 
+    Verification, 
+    Verification_relationship, 
+    View_definition_relationship, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_date_or_date_time_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_date_or_date_time_item WITH 
+   (Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Condition, 
+    Condition_assignment, 
+    Information_usage_right, 
+    Location_assignment, 
+    Location_representation, 
+    Product_group, 
+    Product_group_membership, 
+    Product_group_relationship, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_item_realization, 
+    Resource_property, 
+    Resource_property_representation);
+END_TYPE; 
+
+TYPE sysm_description_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON description_item WITH 
+   (Activity, 
+    Activity_property, 
+    Activity_property_representation, 
+    Activity_relationship, 
+    Address_assignment, 
+    Alternate_product_relationship, 
+    Analysis_assignment, 
+    Applied_activity_assignment, 
+    Applied_information_usage_right, 
+    Approval, 
+    Approval_assignment, 
+    Approval_relationship, 
+    Assembly_component_relationship, 
+    Assembly_relationship_substitution, 
+    Assumption, 
+    Assumption_assignment, 
+    Assumption_relationship, 
+    Behaviour_description_association, 
+    Breakdown_context, 
+    Breakdown_of, 
+    Certification, 
+    Certification_assignment, 
+    Classification_assignment, 
+    Contract, 
+    Contract_assignment, 
+    Contract_relationship, 
+    Date_or_date_time_assignment, 
+    Defined_state_relationship, 
+    Description_text, 
+    Digital_file, 
+    Document_assignment, 
+    Document_definition_relationship, 
+    Effectivity, 
+    Effectivity_assignment, 
+    Effectivity_relationship, 
+    Event, 
+    Event_assignment, 
+    Event_relationship, 
+    Evidence, 
+    File_relationship, 
+    Geometric_item_specific_usage, 
+    Group, 
+    Group_relationship, 
+    Hardcopy, 
+    In_zone, 
+    Information_right, 
+    Information_usage_right, 
+    Information_usage_right_relationship, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Interface_definition_for, 
+    Item_assumed, 
+    Item_shape, 
+    Justification, 
+    Justification_assignment, 
+    Justification_relationship, 
+    Justification_support_assignment, 
+    Location, 
+    Location_assignment, 
+    Location_relationship, 
+    Location_representation, 
+    Market, 
+    Measure_qualification, 
+    Organization, 
+    Organization_or_person_in_organization_assignment, 
+    Organization_relationship, 
+    Organizational_location_identification, 
+    Person, 
+    Person_in_organization, 
+    Product_concept, 
+    Product_configuration, 
+    Product_definition_element_relationship, 
+    Product_design_to_individual, 
+    Product_design_version_to_individual, 
+    Product_group, 
+    Product_group_membership, 
+    Product_group_relationship, 
+    Product_planned_to_realized, 
+    Project, 
+    Project_assignment, 
+    Project_relationship, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Required_resource_relationship, 
+    Requirement_assignment, 
+    Requirement_satisfied_by, 
+    Requirement_source, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_item_realization, 
+    Resource_item_relationship, 
+    Resource_property, 
+    Resource_property_representation, 
+    Same_as_external_item, 
+    Security_classification, 
+    Security_classification_assignment, 
+    Shape_dependent_property_representation, 
+    Shape_description_association, 
+    Shape_element, 
+    Shape_element_relationship, 
+    State, 
+    State_assertion, 
+    State_assessment, 
+    State_relationship, 
+    State_role, 
+    Time_interval, 
+    Time_interval_relationship, 
+    Time_interval_role, 
+    Uncertainty_qualifier, 
+    Uncertainty_with_unit, 
+    Validation, 
+    Verification, 
+    View_definition_relationship, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_documented_element_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_documented_element_select WITH 
+   (Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Condition, 
+    Condition_assignment, 
+    Condition_parameter, 
+    Document_definition_relationship, 
+    Group, 
+    Group_relationship, 
+    Location, 
+    Location_assignment, 
+    Location_relationship, 
+    Location_representation, 
+    Organizational_location_identification, 
+    Product_group, 
+    Product_group_membership, 
+    Product_group_relationship, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Required_resource_relationship, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_item_realization, 
+    Resource_item_relationship, 
+    Resource_property, 
+    Resource_property_representation);
+END_TYPE; 
+
+TYPE sysm_effectivity_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_effectivity_item WITH 
+   (Applied_activity_method_assignment, 
+    Condition_assignment, 
+    Condition_relationship, 
+    Constrained_general_parameter_relationship, 
+    In_zone, 
+    Location_assignment, 
+    Required_resource_assignment, 
+    Required_resource_relationship, 
+    Resource_item_assignment, 
+    Resource_item_relationship, 
+    Resource_property, 
+    Resource_property_representation);
+END_TYPE; 
+
+TYPE sysm_environment_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_environment_item WITH 
+   (Validation, 
+    Verification);
+END_TYPE; 
+
+TYPE sysm_event_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_event_item WITH 
+   (Activity_method_relationship, 
+    Activity_property, 
+    Alternate_product_relationship, 
+    Applied_activity_method_assignment, 
+    Assembly_relationship_substitution, 
+    Condition, 
+    Group, 
+    Market, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Resource_property);
+END_TYPE; 
+
+TYPE sysm_evidence_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON ds_evidence_item WITH 
+   (Activity_method_assignment, 
+    Activity_method_relationship, 
+    Affected_items_assignment, 
+    Alternate_product_relationship, 
+    Applied_activity_method_assignment, 
+    Assembly_relationship_substitution, 
+    Behaviour_description_association, 
+    Breakdown_of, 
+    Condition_assignment, 
+    Description_text_assignment, 
+    Expression_assignment, 
+    Interface_definition_connection, 
+    Interface_definition_for, 
+    Location_assignment, 
+    Product_design_to_individual, 
+    Required_resource_assignment, 
+    Resource_item_assignment, 
+    Task_io_hierarchy, 
+    Time_interval_assignment, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_external_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_external_identification_item WITH 
+   (Required_resource);
+END_TYPE; 
+
+TYPE sysm_groupable_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON groupable_item WITH 
+   (Activity, 
+    Activity_method, 
+    Approval, 
+    Breakdown_of, 
+    Certification, 
+    Condition, 
+    Contract, 
+    Contract_relationship, 
+    Effectivity, 
+    Event, 
+    File, 
+    Group, 
+    Group_relationship, 
+    Interface_connection, 
+    Interface_definition_for, 
+    Justification, 
+    Location, 
+    Product, 
+    Project, 
+    Required_resource, 
+    Resource_item, 
+    Resource_item_realization, 
+    Task_io, 
+    Verification, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_identification_item WITH 
+   (Group, 
+    Group_relationship);
+END_TYPE; 
+
+TYPE sysm_information_usage_right_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON ds_information_usage_right_item WITH 
+   (Activity_property, 
+    Alternate_product_relationship, 
+    Assembly_component_relationship, 
+    Assembly_relationship_substitution, 
+    Breakdown_element_realization, 
+    Document_definition_relationship, 
+    File_relationship, 
+    Group, 
+    Group_relationship, 
+    In_zone, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Interface_definition_for, 
+    Product_configuration, 
+    Required_resource, 
+    Resource_item, 
+    Resource_item_realization, 
+    Task_io, 
+    Work_order);
+END_TYPE; 
+
+TYPE sysm_justification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON ds_justification_item WITH 
+   (Activity_method_assignment, 
+    Activity_method_relationship, 
+    Activity_property, 
+    Affected_items_assignment, 
+    Applied_activity_method_assignment, 
+    Assembly_component_relationship, 
+    Assembly_relationship_substitution, 
+    Behaviour_description_association, 
+    Breakdown_of, 
+    Condition, 
+    Condition_assignment, 
+    Description_text, 
+    Document_definition_relationship, 
+    File_relationship, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Location_assignment, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Required_resource_relationship, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_item_realization, 
+    Resource_item_relationship, 
+    Resource_property, 
+    Task_io_hierarchy, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_justification_support_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON ds_justification_support_item WITH 
+   (Activity_method_assignment, 
+    Activity_property, 
+    Applied_activity_method_assignment, 
+    Assembly_component_relationship, 
+    Document_definition_relationship, 
+    File_relationship, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Location, 
+    Location_assignment, 
+    Resource_property, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_location_assignment_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_location_assignment_select WITH 
+   (Analysis_assignment, 
+    Applied_activity_method_assignment, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_item_realization, 
+    Validation, 
+    Verification);
+END_TYPE; 
+
+TYPE sysm_observed_environment_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_observed_environment_item WITH 
+   (Validation, 
+    Verification);
+END_TYPE; 
+
+TYPE sysm_organization_or_person_in_organization_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_organization_or_person_in_organization_item WITH 
+   (Activity_method_assignment, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Condition, 
+    Condition_assignment, 
+    Information_usage_right, 
+    Location_assignment, 
+    Product_group, 
+    Product_group_membership, 
+    Product_group_relationship, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_item_realization, 
+    Resource_property, 
+    Resource_property_representation, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_project_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_project_item WITH 
+   (Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Product_group, 
+    Product_group_membership, 
+    Product_group_relationship);
+END_TYPE; 
+
+TYPE sysm_property_assignment_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_property_assignment_select WITH 
+   (Location_assignment, 
+    Product_group);
+END_TYPE; 
+
+TYPE sysm_representation_proxy_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON requirement_representation_proxy_select WITH 
+   (State_definition, 
+    State_transition_definition);
+END_TYPE; 
+
+TYPE sysm_required_resource_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON fbb_required_resource_item WITH 
+   (Activity, 
+    Analysis_assignment, 
+    Applied_activity_assignment, 
+    Certification_assignment, 
+    Contract_assignment, 
+    Event, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Interface_definition_for, 
+    Justification, 
+    Organization, 
+    Person_in_organization, 
+    Project, 
+    State_definition, 
+    Verification, 
+    Work_order);
+END_TYPE; 
+
+TYPE sysm_requirement_assignment_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON ds_requirement_assignment_item WITH 
+   (Activity_property, 
+    Alternate_product_relationship, 
+    Applied_activity_method_assignment, 
+    Assembly_component_relationship, 
+    Assembly_relationship_substitution, 
+    Breakdown_element_realization, 
+    In_zone, 
+    Interface_connector_occurrence, 
+    Interface_definition_for, 
+    Product_configuration, 
+    Required_resource_by_reference, 
+    Required_resource_by_requirement, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_requirement_source_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON ds_requirement_source_item WITH 
+   (Alternate_product_relationship, 
+    Applied_activity_method_assignment, 
+    Assembly_component_relationship, 
+    Directed_activity, 
+    In_zone, 
+    Interface_connector_occurrence, 
+    Interface_definition_for, 
+    Product_concept, 
+    Shape_element);
+END_TYPE; 
+
+TYPE sysm_resource_assignment_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON fbb_resource_assignment_item WITH 
+   (Analysis_assignment, 
+    Contract, 
+    Contract_relationship, 
+    Event, 
+    Evidence, 
+    Interface_connector_occurrence, 
+    Location, 
+    Person_in_organization, 
+    Product_group, 
+    Project, 
+    Work_order);
+END_TYPE; 
+
+TYPE sysm_resource_item_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON fbb_resource_item_select WITH 
+   (Location, 
+    Organization, 
+    Person, 
+    Person_in_organization, 
+    Product_group, 
+    Work_order);
+END_TYPE; 
+
+TYPE sysm_same_as_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_same_as_item WITH 
+   (Activity, 
+    Activity_property, 
+    Activity_status, 
+    Address, 
+    Approval, 
+    Approval_status, 
+    Assumption, 
+    Breakdown_context, 
+    Calendar_date, 
+    Certification, 
+    Contract, 
+    Date_time, 
+    Event, 
+    Evidence, 
+    Information_right, 
+    Information_usage_right, 
+    Item_assumed, 
+    Item_usage_effectivity, 
+    Justification, 
+    Language, 
+    Language_indication, 
+    Local_time, 
+    Location, 
+    Location_representation, 
+    Market, 
+    Measure_qualification, 
+    Organization, 
+    Organizational_location_identification, 
+    Person, 
+    Precision_qualifier, 
+    Product_concept, 
+    Regional_coordinate, 
+    Requirement_source, 
+    Security_classification, 
+    State, 
+    State_assertion, 
+    State_assessment, 
+    State_role, 
+    Time_interval, 
+    Time_offset, 
+    Type_qualifier, 
+    Uncertainty_qualifier, 
+    Work_request_status);
+END_TYPE; 
+
+TYPE sysm_security_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_security_classification_item WITH 
+   (Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Product_group, 
+    Product_group_membership, 
+    Product_group_relationship, 
+    Resource_item, 
+    Resource_item_realization);
+END_TYPE; 
+
+TYPE sysm_state_definition_of_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON sbb_state_definition_of_item WITH 
+   (Activity, 
+    Alternate_product_relationship, 
+    Analysis_assignment, 
+    Applied_activity_assignment, 
+    Approval, 
+    Assembly_component_relationship, 
+    Assembly_relationship_substitution, 
+    Assumption, 
+    Breakdown_element_realization, 
+    Certification, 
+    Contract, 
+    Contract_relationship, 
+    Event, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Location, 
+    Organization, 
+    Person_in_organization, 
+    Product_concept, 
+    Product_configuration, 
+    Product_group, 
+    Project, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_item_realization, 
+    Resource_item_relationship, 
+    Security_classification, 
+    State, 
+    Task_io_hierarchy, 
+    Verification, 
+    View_definition_relationship, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE sysm_string_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON syss_string_select WITH 
+   (Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Condition, 
+    Condition_parameter, 
+    Condition_relationship, 
+    Global_location_representation, 
+    Location, 
+    Location_assignment, 
+    Location_relationship, 
+    Organizational_location_identification, 
+    Product_based_location_identification, 
+    Product_group, 
+    Product_group_relationship, 
+    Regional_coordinate, 
+    Regional_grid_location_representation, 
+    Required_resource, 
+    Required_resource_relationship, 
+    Resource_item, 
+    Resource_item_assignment, 
+    Resource_item_realization, 
+    Resource_item_relationship, 
+    Resource_property);
+END_TYPE; 
+
+END_SCHEMA;  -- System_modelling_arm

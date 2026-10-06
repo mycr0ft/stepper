@@ -1,0 +1,17 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.21 2019/06/05 16:40:05 tom Exp
+ ISO TC184/SC4/WG12 N10400 - ISO/TS 10303-1054 Value with unit - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N9726
+*)
+
+SCHEMA Value_with_unit_mim;
+
+USE FROM Maths_value_mim; -- ISO/TS 10303-1092
+
+USE FROM measure_schema; -- ISO-10303-41
+
+USE FROM representation_schema -- ISO-10303-43
+ (uncertainty_measure_with_unit);
+
+END_SCHEMA;

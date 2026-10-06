@@ -1,0 +1,496 @@
+(*
+   $Id: mkmodule.js,v 1.46 2010/02/04 16:48:02 robbod Exp $
+   N10835 - ISO/CD-TS - 10303- pmi_data_quality - EXPRESS ARM*)
+SCHEMA Pmi_data_quality_arm;
+
+USE FROM Annotated_3d_model_data_quality_inspection_result_arm;  -- ISO/TS 10303-1849
+
+USE FROM Associative_draughting_elements_arm;   --  ISO/TS 10303-1311
+
+USE FROM Dimension_tolerance_arm;   --  ISO/TS 10303-1050
+
+USE FROM Geometric_tolerance_arm;   --  ISO/TS 10303-1051
+
+USE FROM Part_shape_arm;   --  ISO/TS 10303-1807
+
+REFERENCE FROM Support_resource_arm 	--  ISO/TS 10303-1800
+    (bag_to_set);
+
+(*
+4.2 ARM type definitions
+*)
+
+TYPE pmidq_inspected_element_select = SELECT BASED_ON inspected_element_select WITH
+  (Datum,
+   Datum_system,
+   Datum_target,
+   General_part_feature,
+   Geometric_dimension,
+   Geometric_tolerance);
+END_TYPE;
+
+TYPE pmidq_inspected_element_type_name = ENUMERATION BASED_ON a3m_data_quality_inspected_element_type_name WITH
+  (pmidqi_datum,
+   pmidqi_datum_pair,
+   pmidqi_datum_system,
+   pmidqi_datum_target,
+   pmidqi_general_part_feature,
+   pmidqi_geometric_dimension,
+   pmidqi_geometric_tolerance,
+   pmidqi_others);
+END_TYPE;
+
+TYPE pmidq_measured_value_select = SELECT BASED_ON a3m_data_quality_measured_value_select WITH
+  (positive_length_measure,
+   positive_plane_angle_measure);
+END_TYPE;
+
+TYPE pmidq_inspected_model_select = SELECT BASED_ON a3m_data_quality_inspected_model_select WITH 
+   (Draughting_model);
+END_TYPE;
+
+TYPE pmidq_measured_data_type_name = ENUMERATION BASED_ON a3m_data_quality_measured_data_type_name WITH
+  (pmidqm_boolean_value,
+   pmidqm_positive_length_measure,
+   pmidqm_positive_plane_angle_measure,
+   pmidqm_others);
+END_TYPE;
+
+(*
+4.2 ARM entity definitions
+*)
+
+ENTITY A3m_pmi_data_quality_criterion
+  ABSTRACT SUPERTYPE OF ( ONEOF (A3m_erroneous_pmi_data, A3m_inapt_pmi_data))
+  SUBTYPE OF (A3m_data_quality_criterion);
+  SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name;
+  SELF\A3m_data_quality_criterion.inspected_elements_types : LIST[1:?] OF pmidq_inspected_element_type_name;
+DERIVE
+  SELF\A3m_data_quality_criterion.accuracy_types : LIST[0:0] OF a3m_data_quality_accuracy_type_name := [];
+  SELF\A3m_data_quality_criterion.location_of_extreme_value_types : LIST[0:0] OF a3m_data_quality_type_name_for_location_of_extreme_value := [];
+WHERE
+   WR1: SIZEOF(bag_to_set(USEDIN(SELF, 
+     'ANNOTATED_3D_MODEL_DATA_QUALITY_CRITERIA_ARM.A3M_DATA_QUALITY_TARGET_ACCURACY_ASSOCIATION.TARGET_TO_ASSOCIATE')
+      )) = 0;
+END_ENTITY;
+
+ENTITY A3m_pmi_data_quality_inspection_result
+  SUBTYPE OF (A3m_data_quality_inspection_result);
+  SELF\A3m_data_quality_inspection_result.criterion_inspected : A3m_pmi_data_quality_criterion;
+WHERE
+   WR1: SIZEOF (QUERY(re <* bag_to_set(USEDIN(SELF,'ANNOTATED_3D_MODEL_DATA_QUALITY_INSPECTION_RESULT_ARM.DATA_QUALITY_INSPECTION_REPORT.INSPECTION_RESULT')) |NOT(pmidq_validate_element_types(re,SELF\A3m_data_quality_inspection_result.criterion_inspected)))) = 0;
+   WR2: SIZEOF (QUERY(re <* bag_to_set(USEDIN(SELF,'ANNOTATED_3D_MODEL_DATA_QUALITY_INSPECTION_RESULT_ARM.DATA_QUALITY_INSPECTION_REPORT.INSPECTION_RESULT')) |NOT(pmidq_validate_measured_type(re,SELF\A3m_data_quality_inspection_result.criterion_inspected)))) = 0;
+   WR3: SIZEOF(bag_to_set(USEDIN(SELF, 
+     'ANNOTATED_3D_MODEL_DATA_QUALITY_CRITERIA_ARM.A3M_DATA_QUALITY_TARGET_ACCURACY_ASSOCIATION.TARGET_TO_ASSOCIATE')
+      )) = 0;
+   WR4: SIZEOF (
+   QUERY(re <* bag_to_set(USEDIN(SELF,'ANNOTATED_3D_MODEL_DATA_QUALITY_INSPECTION_RESULT_ARM.DATA_QUALITY_INSPECTION_REPORT.INSPECTION_RESULT'))
+   |('PMI_DATA_QUALITY_ARM.DATA_QUALITY_INSPECTION_INSTANCE_REPORT' IN TYPEOF(re)) AND (SIZEOF(
+     QUERY(ii <* re.inspected_instances|'PMI_DATA_QUALITY_ARM.A3M_INSTANCE_REPORT_ITEM_WITH_EXTREME_INSTANCES' IN TYPEOF(ii))) <> 0)
+      )) = 0;
+END_ENTITY;
+
+ENTITY A3m_erroneous_pmi_data
+  ABSTRACT SUPERTYPE OF ( ONEOF ( 
+    Erroneous_pmi_representation, 
+    Erroneous_relation_of_pmi_and_feature))
+  SUBTYPE OF (A3m_pmi_data_quality_criterion);
+END_ENTITY;
+
+ENTITY A3m_inapt_pmi_data
+  ABSTRACT SUPERTYPE OF ( ONEOF ( 
+    Inapt_pmi_representation, 
+    Inapt_relation_of_pmi_and_feature))
+  SUBTYPE OF (A3m_pmi_data_quality_criterion);
+  SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+  DERIVE
+    SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+       pmidqm_boolean_value;
+END_ENTITY;
+
+ENTITY Erroneous_pmi_representation
+  ABSTRACT SUPERTYPE OF ( ONEOF ( 
+    Incorrect_datum_reference_by_datum_target, 
+    Incorrect_unit_of_tolerance_value,
+    Duplicated_datum))
+  SUBTYPE OF (A3m_erroneous_pmi_data);
+  SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+  DERIVE
+    SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+       pmidqm_boolean_value;
+END_ENTITY;
+
+ENTITY Erroneous_relation_of_pmi_and_feature
+  ABSTRACT SUPERTYPE OF ( ONEOF ( 
+    No_general_part_feature_association, 
+    Incorrect_relation_of_geometric_tolerance_and_feature, 
+    Incorrect_relation_of_geometric_tolerance_and_datum_feature,
+    Inconsistent_feature_for_range_symbol,
+    Insufficiently_constrained_datum_system,
+    Incorrect_spatial_arrangement_of_datum_targets,
+    Incorrect_geometric_relation_of_datum_and_toleranced_feature,
+    Incorrect_relation_of_geometric_tolerance_modifier_to_feature,
+    Inconsistent_length_between_annotation_value_and_shape,
+    Inconsistent_angle_between_annotation_value_and_shape))
+  SUBTYPE OF (A3m_erroneous_pmi_data);
+END_ENTITY;
+
+ENTITY Inapt_pmi_representation
+  ABSTRACT SUPERTYPE OF ( 
+    Semantic_pmi_without_presentation)
+  SUBTYPE OF (A3m_inapt_pmi_data);
+END_ENTITY;
+
+ENTITY Inapt_relation_of_pmi_and_feature
+  ABSTRACT SUPERTYPE OF ( ONEOF ( 
+    Geometric_tolerance_related_to_edge,
+    General_part_feature_without_pmi))
+  SUBTYPE OF (A3m_inapt_pmi_data);
+END_ENTITY;
+
+ENTITY Duplicated_datum
+  SUBTYPE OF (Erroneous_pmi_representation);
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_datum_pair];
+END_ENTITY;
+
+
+ENTITY Incorrect_datum_reference_by_datum_target
+  SUBTYPE OF (Erroneous_pmi_representation);
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_datum_target];
+END_ENTITY;
+
+ENTITY Incorrect_unit_of_tolerance_value
+  SUBTYPE OF (Erroneous_pmi_representation);
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[2:2] OF pmidq_inspected_element_type_name :=
+    [pmidqi_geometric_dimension, pmidqi_geometric_tolerance];
+END_ENTITY;
+
+ENTITY No_general_part_feature_association
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[4:4] OF pmidq_inspected_element_type_name :=
+    [pmidqi_datum, pmidqi_datum_target, pmidqi_geometric_dimension, pmidqi_geometric_tolerance];
+SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+     pmidqm_boolean_value;
+END_ENTITY;
+
+ENTITY Incorrect_relation_of_geometric_tolerance_and_feature
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_geometric_tolerance];
+SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+     pmidqm_boolean_value;
+END_ENTITY;
+
+ENTITY Incorrect_relation_of_geometric_tolerance_and_datum_feature
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_geometric_tolerance];
+SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+     pmidqm_boolean_value;
+END_ENTITY;
+
+ENTITY Incorrect_relation_of_geometric_tolerance_modifier_to_feature
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_geometric_tolerance];
+SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+     pmidqm_boolean_value;
+END_ENTITY;
+
+ENTITY Insufficiently_constrained_datum_system
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+allowance : length_measure;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_datum_system];
+SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+     pmidqm_boolean_value;
+END_ENTITY;
+
+ENTITY Incorrect_spatial_arrangement_of_datum_targets
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+allowance : length_measure;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_datum];
+SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+     pmidqm_boolean_value;
+END_ENTITY;
+
+ENTITY Incorrect_geometric_relation_of_datum_and_toleranced_feature
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+allowance : length_measure;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_datum];
+SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+     pmidqm_boolean_value;
+END_ENTITY;
+
+ENTITY Inconsistent_length_between_annotation_value_and_shape
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_numerical_test;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_geometric_dimension];
+SELF\A3m_data_quality_criterion.measured_data_type : 
+    pmidq_measured_data_type_name :=
+    pmidqm_positive_length_measure;
+WHERE
+   WR1: ('PMI_DATA_QUALITY_ARM.' + 'A3M_DATA_QUALITY_UPPER_VALUE_LIMIT' IN TYPEOF(SELF\A3m_data_quality_criterion.assessment_specification\a3m_data_quality_assessment_by_numerical_test.threshold)) AND (pmidq_get_value_limit_type(SELF\A3m_data_quality_criterion.assessment_specification\a3m_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY Inconsistent_angle_between_annotation_value_and_shape
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_numerical_test;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_geometric_dimension];
+SELF\A3m_data_quality_criterion.measured_data_type : 
+    pmidq_measured_data_type_name :=
+    pmidqm_positive_plane_angle_measure;
+WHERE
+   WR1: ('PMI_DATA_QUALITY_ARM.' + 'A3M_DATA_QUALITY_UPPER_VALUE_LIMIT' IN TYPEOF(SELF\A3m_data_quality_criterion.assessment_specification\a3m_data_quality_assessment_by_numerical_test.threshold)) AND (pmidq_get_value_limit_type(SELF\A3m_data_quality_criterion.assessment_specification\a3m_data_quality_assessment_by_numerical_test.threshold) = SELF.measured_data_type);
+END_ENTITY;
+
+ENTITY Inconsistent_feature_for_range_symbol
+  SUBTYPE OF (Erroneous_relation_of_pmi_and_feature);
+SELF\A3m_data_quality_criterion.assessment_specification : 
+    A3m_data_quality_assessment_by_logical_test;
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_geometric_tolerance];
+SELF\A3m_data_quality_criterion.measured_data_type : pmidq_measured_data_type_name :=
+     pmidqm_boolean_value;
+END_ENTITY;
+
+
+ENTITY Semantic_pmi_without_presentation
+  SUBTYPE OF (Inapt_pmi_representation);
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[4:4] OF pmidq_inspected_element_type_name :=
+    [pmidqi_datum, pmidqi_datum_target, pmidqi_geometric_dimension, pmidqi_geometric_tolerance];
+END_ENTITY;
+
+
+ENTITY Geometric_tolerance_related_to_edge
+  SUBTYPE OF (Inapt_relation_of_pmi_and_feature);
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_geometric_tolerance];
+END_ENTITY;
+
+ENTITY General_part_feature_without_pmi
+  SUBTYPE OF (Inapt_relation_of_pmi_and_feature);
+DERIVE
+SELF\A3m_data_quality_criterion.inspected_elements_types :
+    LIST[1:1] OF pmidq_inspected_element_type_name :=
+    [pmidqi_general_part_feature];
+END_ENTITY;
+
+
+  FUNCTION pmidq_get_inspected_element_type_name
+    (ei:SET [1:?] OF inspected_element_select):pmidq_inspected_element_type_name;
+     LOCAL
+      type_out : SET OF STRING;
+    END_LOCAL;
+    IF(SIZEOF(ei) > 2) THEN
+      RETURN(pmidqi_others);
+    END_IF;
+    IF(SIZEOF(ei) = 2) THEN
+      IF(TYPEOF(ei[1]) = TYPEOF(ei[2])) THEN
+        type_out := TYPEOF(ei[1]);
+        IF('PMI_DATA_QUALITY_ARM.DATUM' IN type_out) THEN
+           RETURN(pmidqi_datum_pair);
+        END_IF;
+      END_IF;
+    ELSE IF(SIZEOF(ei) = 1) THEN
+      type_out := TYPEOF(ei[1]);
+      IF('PMI_DATA_QUALITY_ARM.DATUM' IN type_out) THEN
+         RETURN(pmidqi_datum);
+      END_IF;
+      IF('PMI_DATA_QUALITY_ARM.DATUM_SYSTEM' IN type_out) THEN
+         RETURN(pmidqi_datum_system);
+      END_IF;
+      IF('PMI_DATA_QUALITY_ARM.DATUM_TARGET' IN type_out) THEN
+         RETURN(pmidqi_datum_target);
+      END_IF;
+      IF('PMI_DATA_QUALITY_ARM.GENERAL_PART_FEATURE' IN type_out) THEN
+         RETURN(pmidqi_general_part_feature);
+      END_IF;
+      IF('PMI_DATA_QUALITY_ARM.GEOMETRIC_DIMENSION' IN type_out) THEN
+         RETURN(pmidqi_geometric_dimension);
+      END_IF;
+      IF('PMI_DATA_QUALITY_ARM.GEOMETRIC_TOLERANCE' IN type_out) THEN
+         RETURN(pmidqi_geometric_tolerance);
+      END_IF;
+    END_IF;
+    END_IF;  
+    RETURN(pmidqi_others);
+   END_FUNCTION;
+
+  FUNCTION pmidq_get_measured_type_name
+    (ei:a3m_data_quality_measured_value_select):pmidq_measured_data_type_name;
+    LOCAL
+      type_out : SET OF STRING;
+    END_LOCAL;
+    type_out := TYPEOF(ei);
+    IF('PMI_DATA_QUALITY_ARM.A3M_DATA_QUALITY_BOOLEAN_VALUE' IN type_out) THEN
+       RETURN(pmidqm_boolean_value);
+    END_IF;
+    IF('PMI_DATA_QUALITY_ARM.POSITIVE_LENGTH_MEASURE' IN type_out) THEN
+       RETURN(pmidqm_positive_length_measure);
+    END_IF;
+    IF('PMI_DATA_QUALITY_ARM.POSITIVE_PLANE_ANGLE_MEASURE' IN type_out) THEN
+       RETURN(pmidqm_positive_plane_angle_measure);
+    END_IF;
+    RETURN(pmidqm_others);
+   END_FUNCTION;
+
+
+ FUNCTION  pmidq_get_value_limit_type(sdqvlts : a3m_data_quality_value_limit_type_select) : pmidq_measured_data_type_name;
+	LOCAL
+      sdqvr : A3m_data_quality_value_range;
+      sdqvl : A3m_data_quality_value_limit;
+      type_out : SET OF STRING :=[];
+    END_LOCAL;
+
+    IF('PMI_DATA_QUALITY_ARM.A3M_DATA_QUALITY_VALUE_RANGE' IN TYPEOF(sdqvlts)) THEN
+      sdqvr := sdqvlts;
+      type_out := TYPEOF (sdqvr.lower_limit.value_component);
+    ELSE
+      IF('PMI_DATA_QUALITY_ARM.A3M_DATA_QUALITY_VALUE_LIMIT' IN TYPEOF(sdqvlts)) THEN
+        sdqvl := sdqvlts;
+        type_out := TYPEOF (sdqvl.value_component);
+      END_IF;
+    END_IF;
+    IF('PMI_DATA_QUALITY_ARM.POSITIVE_LENGTH_MEASURE' IN type_out) THEN
+       RETURN(pmidqm_positive_length_measure);
+    END_IF;
+    IF('PMI_DATA_QUALITY_ARM.POSITIVE_PLANE_ANGLE_MEASURE' IN type_out) THEN
+       RETURN(pmidqm_positive_plane_angle_measure);
+    END_IF;
+    RETURN(pmidqm_others);
+ END_FUNCTION;
+
+ FUNCTION  pmidq_validate_element_types(ir:Data_quality_inspection_report;cr:A3m_pmi_data_quality_criterion):LOGICAL;
+    LOCAL
+      aqicri : A3m_data_quality_inspection_criterion_report_item;
+      aqiiri : A3m_data_quality_inspection_instance_report_item;
+      aqirie : A3m_instance_report_item_with_extreme_instances;
+      dqicr : Data_quality_inspection_criterion_report;
+      dqiir : Data_quality_inspection_instance_report;
+      pietn : LIST [1:?] OF pmidq_inspected_element_type_name;
+    END_LOCAL;
+    pietn := cr.inspected_elements_types;
+    -- Data_quality_inspection_instance_report
+    IF('PMI_DATA_QUALITY_ARM.DATA_QUALITY_INSPECTION_INSTANCE_REPORT' IN TYPEOF(ir)) THEN
+      dqiir := ir;
+      REPEAT i := 1 TO SIZEOF(dqiir.inspected_instances);
+    --   > A3m_data_quality_inspection_instance_report_item.representative_measured_value
+        IF('PMI_DATA_QUALITY_ARM.A3M_DATA_QUALITY_INSPECTION_INSTANCE_REPORT_ITEM'
+           IN TYPEOF(dqiir.inspected_instances[i])) THEN
+           aqiiri := dqiir.inspected_instances[i];
+           IF(NOT(pmidq_get_inspected_element_type_name(aqiiri.inspected_elements) IN pietn)) THEN
+             RETURN(FALSE);
+           END_IF;
+        END_IF;
+      END_REPEAT;
+    END_IF;
+  RETURN(TRUE);
+ END_FUNCTION;
+ 
+ FUNCTION  pmidq_validate_measured_type(ir:Data_quality_inspection_report;cr:A3m_pmi_data_quality_criterion):LOGICAL;
+    LOCAL
+      aqicri : A3m_data_quality_inspection_criterion_report_item;
+      aqiiri : A3m_data_quality_inspection_instance_report_item;
+      aqirie : A3m_instance_report_item_with_extreme_instances;
+      dqicr : Data_quality_inspection_criterion_report;
+      dqiir : Data_quality_inspection_instance_report;
+      pmdtn : pmidq_measured_data_type_name;
+    END_LOCAL;
+    pmdtn := cr.measured_data_type;
+    -- Data_quality_inspection_criterion_report
+    IF('PMI_DATA_QUALITY_ARM.DATA_QUALITY_INSPECTION_CRITERION_REPORT' IN TYPEOF(ir)) THEN
+      dqicr := ir;
+      REPEAT i := 1 TO SIZEOF(dqicr.statistical_values);
+    -- A3m_data_quality_inspection_criterion_report_item.representative_measured_value
+        IF('PMI_DATA_QUALITY_ARM.A3M_DATA_QUALITY_INSPECTION_CRITERION_REPORT_ITEM'
+           IN TYPEOF(dqicr.statistical_values[i])) THEN
+           aqicri := dqicr.statistical_values[i];
+           IF(pmidq_get_measured_type_name(aqicri.representative_measured_value) <> pmdtn) THEN
+             RETURN(FALSE);
+           END_IF;
+        END_IF;
+      END_REPEAT;
+    END_IF;
+    -- Data_quality_inspection_instance_report
+    IF('PMI_DATA_QUALITY_ARM.DATA_QUALITY_INSPECTION_INSTANCE_REPORT' IN TYPEOF(ir)) THEN
+      dqiir := ir;
+      REPEAT i := 1 TO SIZEOF(dqiir.inspected_instances);
+    --   > A3m_data_quality_inspection_instance_report_item.representative_measured_value
+        IF('PMI_DATA_QUALITY_ARM.A3M_DATA_QUALITY_INSPECTION_INSTANCE_REPORT_ITEM'
+           IN TYPEOF(dqiir.inspected_instances[i])) THEN
+           aqiiri := dqiir.inspected_instances[i];
+           IF(pmidq_get_measured_type_name(aqiiri.representative_measured_value) <> pmdtn) THEN
+             RETURN(FALSE);
+           END_IF;
+        END_IF;
+    --   >     A3m_instance_report_item_with_extreme_instances
+        IF('PMI_DATA_QUALITY_ARM.A3M_INSTANCE_REPORT_ITEM_WITH_EXTREME_INSTANCES'
+           IN TYPEOF(dqiir.inspected_instances[i])) THEN
+           aqirie := dqiir.inspected_instances[i];
+           REPEAT j := 1 TO SIZEOF(aqirie.extreme_instances);
+             IF(pmidq_get_measured_type_name(aqirie.extreme_instances[j].measured_value) <> pmdtn) THEN
+               RETURN(FALSE);
+             END_IF;
+           END_REPEAT;
+        END_IF;
+      END_REPEAT;
+    END_IF;
+  RETURN(TRUE);
+ END_FUNCTION;
+
+END_SCHEMA;

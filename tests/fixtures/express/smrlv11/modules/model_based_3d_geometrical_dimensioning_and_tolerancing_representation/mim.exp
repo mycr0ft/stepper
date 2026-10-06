@@ -1,0 +1,40 @@
+(*
+   $Id: mim.exp,v 1.6 2015/09/24 11:01:19 lothartklein Exp $
+   ISO TC184/SC4/WG12 N7922 - ISO/TS 10303-1816 Model based 3d geometrical dimensioning and tolerancing representation - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7359
+*)
+
+SCHEMA Model_based_3d_geometrical_dimensioning_and_tolerancing_representation_mim;
+
+USE FROM Description_assignment_mim; -- ISO/TS 10303-1473
+USE FROM Geometric_tolerance_mim; -- ISO/TS 10303-1051
+USE FROM Part_shape_mim;
+USE FROM Product_and_manufacturing_information_with_nominal_3d_models_mim;
+
+TYPE  mb3gdtsr_description_item = SELECT BASED_ON description_item WITH 
+  (dimensional_location,
+  geometric_tolerance);
+END_TYPE;
+
+  TYPE  mb3gdtsr_identification_item = SELECT BASED_ON identification_item WITH 
+    (dimensional_location,
+    geometric_tolerance);
+  END_TYPE;
+
+  TYPE mb3gdtsr_multi_language_attribute_item = SELECT BASED_ON multi_language_attribute_item WITH 
+    (dimensional_location,
+  geometric_tolerance);
+  END_TYPE;
+  
+  TYPE mb3gdtsr_attribute_language_item = SELECT BASED_ON attribute_language_item WITH 
+    (dimensional_location,
+  	geometric_tolerance);
+  END_TYPE;  
+
+TYPE mb3dgdtr_geometric_model_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON
+geometric_model_item WITH (
+  connected_face_set,
+  edge_loop);
+END_TYPE;
+
+END_SCHEMA;

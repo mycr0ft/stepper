@@ -1,0 +1,107 @@
+(*
+   ISO TC184/SC4/WG12 N11207 - ISO/TS 10303-1825 extended_person_organization - EXPRESS MIM
+*)
+
+SCHEMA Extended_person_organization_mim;
+
+USE FROM basic_attribute_schema  -- ISO 10303-41
+  (description_attribute_select,
+   generic_attribute,
+   generic_attribute_list_assignment,
+   generic_attribute_list_select,
+   generic_attribute_select,
+   name_attribute,
+   name_attribute_select,
+   role_select);
+
+USE FROM Classification_assignment_mim;    -- ISO/TS 10303-1114
+
+USE FROM Description_assignment_mim;    -- ISO/TS 10303-1473
+
+USE FROM External_item_identification_assignment_mim;    -- ISO/TS 10303-1128
+
+USE FROM Identification_assignment_mim;    -- ISO/TS 10303-1021
+
+USE FROM Multi_linguism_mim;    -- ISO/TS 10303-1105
+
+USE FROM Person_organization_mim;    -- ISO/TS 10303-1011
+
+USE FROM person_organization_schema  -- ISO 10303-41
+(address,
+   organization,
+   person,
+   person_and_organization);
+
+TYPE epo_attribute_language_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON attribute_language_item WITH
+  (generic_attribute);
+END_TYPE;
+
+TYPE epo_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON classification_item WITH
+  (address,
+   compound_person_name,
+   compound_person_name_assignment,
+   generic_attribute);
+END_TYPE;
+
+TYPE epo_description_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON description_attribute_select WITH
+  (generic_attribute);
+END_TYPE;
+
+TYPE epo_description_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON description_item WITH
+  (address_component,
+   compound_address);
+END_TYPE;
+
+TYPE epo_external_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON external_identification_item WITH
+  (address_component,
+   compound_address);
+END_TYPE;
+
+TYPE epo_generic_attribute_list_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON generic_attribute_list_select WITH
+  (name_attribute);
+END_TYPE;
+
+TYPE epo_generic_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON generic_attribute_select WITH
+  (address,
+   generic_attribute);
+END_TYPE;
+
+TYPE epo_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON identification_item WITH
+  (address_component,
+   compound_address);
+END_TYPE;
+
+TYPE epo_multi_language_attribute_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON multi_language_attribute_item WITH
+  (generic_attribute);
+END_TYPE;
+
+TYPE epo_name_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON name_attribute_select WITH
+  (person);
+END_TYPE;
+
+TYPE epo_role_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON role_select WITH
+  (generic_attribute);
+END_TYPE;
+
+ENTITY address_component
+SUBTYPE OF (generic_attribute);
+END_ENTITY;
+
+ENTITY compound_address
+SUBTYPE OF (address);
+END_ENTITY;
+
+ENTITY compound_person_name
+SUBTYPE OF (generic_attribute_list_assignment);
+END_ENTITY;
+
+ENTITY compound_person_name_assignment
+SUBTYPE OF (name_attribute);
+END_ENTITY;
+
+ENTITY person_name_component
+SUBTYPE OF (generic_attribute);
+END_ENTITY;
+
+END_SCHEMA;  -- Extended_person_organization_mim
+

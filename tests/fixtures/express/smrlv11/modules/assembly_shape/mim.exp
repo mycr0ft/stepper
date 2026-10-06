@@ -1,0 +1,15 @@
+(*
+   $Id: mim.exp,v 1.4 2015/09/24 11:01:19 lothartklein Exp $
+   ISO TC184/SC4/WG12 N7898 - ISO/TS 10303-1808 Assembly shape - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7335
+*)
+
+SCHEMA Assembly_shape_mim;
+
+USE FROM Item_definition_structure_mim;  --        ISO/TS 10303-1345
+USE FROM Part_shape_mim; 
+USE FROM product_property_definition_schema   -- ISO 10303-41
+  (component_path_shape_aspect); 
+
+
+END_SCHEMA;

@@ -1,0 +1,31 @@
+(*
+ ISO TC184/SC4/WG12 N10784 - ISO/TS 10303-1357 Selected item - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N3163
+*) 
+
+
+SCHEMA Selected_item_arm;
+
+USE FROM Classification_assignment_arm;    --  ISO/TS 10303-1114
+
+TYPE selected_item_context_items = EXTENSIBLE GENERIC_ENTITY SELECT ;
+END_TYPE;
+
+TYPE selected_item_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON classification_item;
+END_TYPE;
+
+ENTITY Selected_item
+SUBTYPE OF (Class);
+END_ENTITY;
+
+ENTITY Selected_item_assignment
+SUBTYPE OF (Classification_assignment);
+  item_context : SET [1 : ?] OF selected_item_context_items;
+  SELF\Classification_assignment.assigned_class : Selected_item;
+  SELF\Classification_assignment.items RENAMED item : SET [1 : 1] OF selected_item_select;
+DERIVE
+  SELF\Classification_assignment.role : STRING := 'Selected item';
+END_ENTITY;
+
+END_SCHEMA;  -- Selected_item_arm
+

@@ -1,0 +1,97 @@
+(*
+ ISO TC184/SC4/WG12 N10770 - ISO/TS 10303-1295 AP239 properties - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N7256
+*)
+
+
+SCHEMA Ap239_properties_arm;
+
+USE FROM Ap239_management_resource_information_arm;    -- ISO/TS 10303-1289
+
+USE FROM Document_assignment_arm;    -- ISO/TS 10303-1122
+
+USE FROM Extended_measure_representation_arm;    -- ISO/TS 10303-1106
+
+USE FROM External_properties_arm;    -- ISO/TS 10303-1129
+
+USE FROM External_unit_arm;    -- ISO/TS 10303-1780
+
+USE FROM Independent_property_representation_arm;    -- ISO/TS 10303-1038
+
+USE FROM Product_view_definition_properties_arm;    -- ISO/TS 10303-1034
+
+
+TYPE ap239_props_approval_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON approval_item WITH 
+   (Assigned_property, 
+    Independent_property, 
+    Independent_property_relationship);
+END_TYPE; 
+
+TYPE ap239_props_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON classification_item WITH 
+   (Assigned_property, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Independent_property_representation, 
+    Property_representation, 
+    Representation, 
+    Representation_context, 
+    Representation_item, 
+    Unit, 
+    Value_with_unit);
+END_TYPE; 
+
+TYPE ap239_props_classified_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON classified_attribute_select WITH 
+   (Assigned_property, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Independent_property_representation, 
+    Property_representation, 
+    Representation, 
+    Representation_context, 
+    Representation_item, 
+    Unit, 
+    Value_with_unit);
+END_TYPE; 
+
+TYPE ap239_props_date_or_date_time_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON date_or_date_time_item WITH 
+   (Assigned_property, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Independent_property_representation, 
+    Property_representation, 
+    Representation);
+END_TYPE; 
+
+TYPE ap239_props_documented_element_select = SELECT BASED_ON documented_element_select WITH 
+   (Assigned_property, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Independent_property_representation, 
+    Property_representation, 
+    Representation, 
+    Representation_item);
+END_TYPE; 
+
+TYPE ap239_props_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON identification_item WITH 
+   (Assigned_property, 
+    Independent_property, 
+    Independent_property_relationship);
+END_TYPE; 
+
+TYPE ap239_props_organization_or_person_in_organization_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON organization_or_person_in_organization_item WITH 
+   (Assigned_property, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Independent_property_representation, 
+    Property_representation, 
+    Representation);
+END_TYPE; 
+
+TYPE ap239_props_string_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON string_select WITH 
+   (Assigned_property, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Representation_item);
+END_TYPE; 
+
+END_SCHEMA;  -- Ap239_properties_arm

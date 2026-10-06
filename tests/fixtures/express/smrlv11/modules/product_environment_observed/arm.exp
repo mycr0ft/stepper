@@ -1,0 +1,71 @@
+(*
+ ISO TC184/SC4/WG12 N11174 - ISO/TS 10303-1401 Product environment observed - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N7273
+*) 
+    
+
+SCHEMA Product_environment_observed_arm;
+
+USE FROM Product_environment_definition_arm;    -- ISO/TS 10303-1400
+
+
+TYPE env_obs_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON classification_item WITH 
+   (Observed_environment, 
+    Observed_environment_assignment, 
+    Observed_environment_version, 
+    Observed_environment_view_definition_relationship);
+END_TYPE; 
+
+TYPE env_obs_identification_assignment = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON identification_item WITH 
+   (Observed_environment, 
+    Observed_environment_assignment, 
+    Observed_environment_version, 
+    Observed_environment_view_definition_relationship);
+END_TYPE; 
+
+TYPE observed_environment_item = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+ENTITY Observed_environment
+  SUBTYPE OF (Product);
+END_ENTITY;
+
+ENTITY Observed_environment_assignment;
+  environment : Observed_environment_view;
+  item : observed_environment_item;
+END_ENTITY;
+
+ENTITY Observed_environment_to_definition;
+  defined_environment : Environment_definition;
+  observed_environment : Observed_environment;
+END_ENTITY;
+
+ENTITY Observed_environment_to_definition_version;
+  defined_environment_version : Environment_definition_version;
+  observed_environment_version : Observed_environment_version;
+END_ENTITY;
+
+ENTITY Observed_environment_to_definition_view;
+  defined_environment_view : Observed_environment_view;
+  observed_environment_view : Environment_definition_view;
+END_ENTITY;
+
+ENTITY Observed_environment_version
+  SUBTYPE OF (Product_version);
+  SELF\Product_version.of_product RENAMED of_environment : Observed_environment;
+END_ENTITY;
+
+ENTITY Observed_environment_view
+  SUBTYPE OF (Product_view_definition);
+  SELF\Product_view_definition.defined_version RENAMED observed_environment_version : Observed_environment_version;
+END_ENTITY;
+
+ENTITY Observed_environment_view_definition_relationship
+  SUBTYPE OF (View_definition_relationship);
+  SELF\View_definition_relationship.relating_view RENAMED relating_environment : Observed_environment_view;
+  SELF\View_definition_relationship.related_view RENAMED related_environment : Observed_environment_view;
+END_ENTITY;
+
+END_SCHEMA;  -- Product_environment_observed_arm
+
+

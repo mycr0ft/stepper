@@ -1,0 +1,96 @@
+(*
+$Id: mathematical_description_of_distribution_schema.exp,v 1.4 2014/03/04 00:30:38 thomasrthurman Exp $
+ISO 10303 TC184/SC4/WG12 N3251
+
+EXPRESS Source:
+ISO 10303-51 ed1 Mathematical representation - Mathematical description of distribution schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-51 ed1 Mathematical representation - Mathematical description of distribution schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA mathematical_description_of_distribution_schema '{iso standard 10303 part(51) version(1) object(1) mathematical_description_of_distribution_schema(2)}';
+
+REFERENCE FROM mathematical_context_schema   -- ISO 10303-51
+  (maths_space_context); 
+
+REFERENCE FROM mathematical_functions_schema   -- ISO 10303-50
+  (maths_function); 
+
+REFERENCE FROM process_property_schema   -- ISO 10303-49
+  (action_property,
+   resource_property); 
+
+REFERENCE FROM product_property_definition_schema   -- ISO 10303-41
+  (property_definition,
+   general_property_relationship); 
+
+REFERENCE FROM support_resource_schema   -- ISO 10303-41
+  (identifier,
+   label,
+   text); 
+
+
+TYPE property_distribution_select = EXTENSIBLE SELECT
+   (action_property, 
+    general_property_relationship, 
+    property_definition, 
+    resource_property);
+END_TYPE; 
+
+ENTITY maths_space_context_relationship;
+  id : identifier;
+  name : label;
+  description : OPTIONAL text;
+  relating_context : maths_space_context;
+  related_context : maths_space_context;
+END_ENTITY;
+
+ENTITY maths_space_context_relationship_description;
+  id : identifier;
+  name : label;
+  description : OPTIONAL text;
+  described_relationship : maths_space_context_relationship;
+  describing_relationship : maths_function;
+END_ENTITY;
+
+ENTITY normalized_property_distribution_description;
+  id : identifier;
+  name : label;
+  description : OPTIONAL text;
+  abstract_function : maths_function;
+  domain_context : maths_space_context;
+  normalization_basis : property_distribution_select;
+  physical_function : property_distribution_select;
+END_ENTITY;
+
+ENTITY property_distribution_description;
+  id : identifier;
+  name : label;
+  description : OPTIONAL text;
+  abstract_function : maths_function;
+  domain_context : maths_space_context;
+  physical_function : property_distribution_select;
+  range_context : maths_space_context;
+END_ENTITY;
+
+END_SCHEMA;  -- mathematical_description_of_distribution_schema

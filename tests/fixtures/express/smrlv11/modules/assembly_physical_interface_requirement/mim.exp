@@ -1,0 +1,31 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.29 2019/01/23 18:13:46 brandon Exp
+   ISO TC184/SC4/WG12 N10303 - ISO/TS 10303-1647 Assembly physical interface requirement - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N8111
+*)
+
+
+SCHEMA Assembly_physical_interface_requirement_mim;
+
+USE FROM Assembly_functional_interface_requirement_mim;	-- ISO/TS 10303-1635
+USE FROM Layered_3d_shape_mim;	-- ISO/TS 10303-1694
+USE FROM Printed_physical_layout_template_mim; -- ISO/TS 10303-1737
+USE FROM product_structure_schema(specified_higher_usage_occurrence); -- ISO/TS 10303-44
+
+  TYPE apir_requirement_assigned_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON requirement_assigned_item WITH 
+    (predefined_requirement_view_definition,
+    shape_aspect); 
+  END_TYPE; 
+
+  TYPE apir_document_reference_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON document_reference_item WITH 
+    (protocol_physical_layer_definition); 
+  END_TYPE; 
+  
+  ENTITY protocol_requirement_allocation_to_part_terminal
+    SUBTYPE OF (requirement_assignment);
+  END_ENTITY;
+
+END_SCHEMA;
+
+

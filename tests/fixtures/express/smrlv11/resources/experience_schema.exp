@@ -1,0 +1,95 @@
+(*
+$Id: experience_schema.exp,v 1.19 2014/03/04 00:30:35  Exp $
+ISO 10303 TC184/SC4/WG12 N8369
+
+EXPRESS Source:
+ISO 10303-41 ed4 Fundamentals of product description and support - Experience schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-41 ed4 Fundamentals of product description and support - Experience schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA experience_schema '{iso standard 10303 part(41) version(4) object(1) experience_schema(10)}';
+  REFERENCE FROM support_resource_schema (identifier, label, text, bag_to_set);
+  ENTITY experience;
+    id : identifier;
+    name : label;
+    description : OPTIONAL text;
+  END_ENTITY;
+
+  ENTITY experience_relationship;
+    id : identifier;
+    name : label;
+    description : OPTIONAL text;
+    relating_experience : experience;
+    related_experience : experience;
+  END_ENTITY;
+
+  ENTITY experience_type;
+    id : identifier;
+    name : label;
+    description : OPTIONAL text;
+  END_ENTITY;
+
+  ENTITY experience_type_relationship;
+    id : identifier;
+    name : label;
+    description : OPTIONAL text;
+    relating_experience_type : experience_type;
+    related_experience_type : experience_type;
+  END_ENTITY;
+
+  FUNCTION acyclic_experience_relationship (relation : experience_relationship; relatives : SET OF experience; specific_relation : STRING):BOOLEAN;
+    LOCAL
+      x : SET OF experience_relationship;
+    END_LOCAL;
+
+    IF relation.relating_experience IN relatives THEN
+      RETURN (FALSE);
+    END_IF;
+    x := QUERY(expr <* bag_to_set(USEDIN(relation.relating_experience, 'EXPERIENCE_SCHEMA.' + 'EXPERIENCE_RELATIONSHIP.' + 'RELATED_EXPERIENCE')) | specific_relation IN TYPEOF(expr));
+    REPEAT i := 1 TO HIINDEX(x);
+      IF NOT acyclic_experience_relationship(x[i], relatives + relation.relating_experience, specific_relation) THEN
+        RETURN (FALSE);
+      END_IF;
+    END_REPEAT;
+    RETURN (TRUE);
+  END_FUNCTION;
+
+  FUNCTION acyclic_experience_type_relationship (relation : experience_type_relationship; relatives : SET OF experience_type; specific_relation : STRING):BOOLEAN;
+    LOCAL
+      x : SET OF experience_type_relationship;
+    END_LOCAL;
+
+    IF relation.relating_experience_type IN relatives THEN
+      RETURN (FALSE);
+    END_IF;
+    x := QUERY(exptyp <* bag_to_set(USEDIN(relation.relating_experience_type, 'EXPERIENCE_SCHEMA.' + 'EXPERIENCE_TYPE_RELATIONSHIP.' + 'RELATED_EXPERIENCE_TYPE')) | specific_relation IN TYPEOF(exptyp));
+    REPEAT i := 1 TO HIINDEX(x);
+      IF NOT acyclic_experience_type_relationship(x[i], relatives + relation.relating_experience_type, specific_relation) THEN
+        RETURN (FALSE);
+      END_IF;
+    END_REPEAT;
+    RETURN (TRUE);
+  END_FUNCTION;
+
+END_SCHEMA;

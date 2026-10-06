@@ -1,0 +1,15 @@
+(* 
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.8 2009/08/11 14:37:28 abhpf Exp
+   ISO_TC184/SC4/WG3_N2516_-_ISO/TS_10303-1448_System_behaviour_-_EXPRESS_ARM
+   Supersedes_ISO_TC184/SC4/WG3_N2335
+*)
+
+SCHEMA System_behaviour_arm;
+
+USE FROM Function_based_behaviour_arm;
+
+USE FROM State_based_behaviour_arm;
+
+END_SCHEMA;
+

@@ -1,0 +1,34 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.14 2012/10/11 05:49:12 liutkuviene Exp
+   ISO TC184/SC4/WG12 N8144 - ISO/TS 10303-1676 Functional decomposition to design - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7542
+*)
+
+
+SCHEMA Functional_decomposition_to_design_mim;
+
+USE FROM Change_management_mim;	-- ISO/TS 10303-1661
+USE FROM Physical_unit_design_view_mim;	-- ISO/TS 10303-1728
+USE FROM Network_functional_design_view_mim;	-- ISO/TS 10303-1704	
+
+TYPE fdtd_change_management_object = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON change_management_object WITH 
+	(product_definition_relationship,
+	property_definition_relationship);
+END_TYPE;
+
+TYPE fdtd_groupable_item = SELECT BASED_ON groupable_item WITH 
+   (component_functional_unit);
+END_TYPE; 
+
+ENTITY design_composition_path
+  SUBTYPE OF (applied_group_assignment, product_definition);
+END_ENTITY;
+
+ENTITY reference_composition_path
+  SUBTYPE OF (applied_group_assignment, product_definition);
+END_ENTITY;
+
+END_SCHEMA;
+
+

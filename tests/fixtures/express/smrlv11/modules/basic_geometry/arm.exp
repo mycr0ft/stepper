@@ -1,0 +1,188 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.29 2019/04/03 14:35:04 kevin Exp
+ISO TC184/SC4/WG12 N10421 - ISO/TS 10303-1652 Basic geometry - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N7828
+*) 
+
+SCHEMA Basic_geometry_arm;
+
+USE FROM Elemental_geometric_shape_arm;    -- ISO/TS 10303-1004
+USE FROM Parametric_representation_arm;    -- ISO/TS 10303-1813
+
+ENTITY Bounded_curve
+   ABSTRACT SUPERTYPE
+   SUBTYPE OF (Curve);
+END_ENTITY;
+
+ENTITY Bounded_surface
+   ABSTRACT SUPERTYPE
+   SUBTYPE OF (Surface);
+END_ENTITY;
+
+ENTITY Circle
+   SUBTYPE OF (Conic);
+   radius   : positive_length_measure;
+END_ENTITY;
+
+ENTITY Conic
+   SUPERTYPE OF (ONEOF(Circle, Ellipse, Hyperbola, Parabola))
+   SUBTYPE OF (Curve);
+   position: Axis_placement;
+END_ENTITY;
+
+ ENTITY  Conical_surface
+   SUBTYPE OF (Surface);
+   position : Axis_placement_3d;
+   radius     : positive_length_measure;
+   semi_angle : plane_angle_measure;
+END_ENTITY;
+
+
+ENTITY Curve
+  SUPERTYPE OF (ONEOF(Conic, Line))
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Cylindrical_surface
+   SUBTYPE OF (Surface);
+   position : Axis_placement_3d;
+   radius : positive_length_measure;
+END_ENTITY;
+
+ENTITY Degenerate_pcurve
+  SUBTYPE OF (Point);
+  basis_surface : Surface;
+  reference_to_curve : Definitional_representation;
+WHERE
+  WR1: SIZEOF(reference_to_curve\Representation.items) = 1;
+  WR2: 'BASIC_GEOMETRY_ARM.CURVE' IN TYPEOF (reference_to_curve\Representation.items[1]);
+END_ENTITY;
+
+ENTITY Ellipse
+   SUBTYPE OF(Conic);
+   first_semi_axis: positive_length_measure;
+   second_semi_axis: positive_length_measure;
+END_ENTITY;
+ 
+ENTITY Extruded_surface
+   SUBTYPE OF (Swept_surface);
+   extrusion_axis      : Direction;
+END_ENTITY;
+
+ENTITY Hyperbola
+   SUBTYPE OF(Conic);
+   semi_axis: positive_length_measure;
+   imaginary_semi_axis: positive_length_measure;
+END_ENTITY;
+
+
+ENTITY Line
+  SUBTYPE OF (Curve);
+   point: Cartesian_point;
+   line_direction: Direction;
+END_ENTITY;
+
+ENTITY Parabola
+   SUBTYPE OF(Conic);
+   focal_distance: length_measure;
+WHERE
+   WR1: focal_distance <> 0.0;
+END_ENTITY;
+
+ENTITY Plane
+  SUBTYPE OF (Surface);
+  position: Axis_placement_3d;
+END_ENTITY;
+
+ENTITY Point_on_curve
+  SUBTYPE OF (Point);
+  supporting_curve : Curve;
+END_ENTITY;
+
+ENTITY Point_on_surface
+  SUBTYPE OF (Point);
+  supporting_surface : Surface;
+END_ENTITY;
+
+ENTITY Spherical_surface
+   SUBTYPE OF (Surface);
+   position : Axis_placement_3d;
+   radius   : positive_length_measure;
+END_ENTITY;
+ 
+ 
+ENTITY Surface
+  SUPERTYPE OF (ONEOF(Conical_surface, Cylindrical_surface, Plane, Spherical_surface, Swept_surface, Toroidal_surface))
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Surface_of_revolution
+  SUBTYPE OF (Swept_surface);
+      axis_direction : Direction;
+      axis_point :     Cartesian_point;
+END_ENTITY;
+
+ENTITY Swept_surface
+   SUPERTYPE OF (ONEOF(Extruded_surface, Surface_of_revolution))
+   SUBTYPE OF (Surface);
+   swept_curve : Curve;
+END_ENTITY;
+
+
+ENTITY Toroidal_surface
+   SUBTYPE OF (Surface);
+   position : Axis_placement_3d;
+   radius : positive_length_measure;
+   minor_radius : positive_length_measure;
+END_ENTITY;
+
+ENTITY Cylindrical_point
+    SUBTYPE OF (Cartesian_point);
+    r : positive_length_measure;
+    theta : plane_angle_measure;
+    z : length_measure;
+DERIVE
+    SELF\Cartesian_point.coordinates : LIST [3:3] OF length_measure := [r*cos(theta), r*sin(theta), z];
+END_ENTITY;
+
+ENTITY Spherical_point
+    SUBTYPE OF (Cartesian_point);
+    r : positive_length_measure;
+    theta : plane_angle_measure;
+    phi : plane_angle_measure;
+DERIVE
+    SELF\Cartesian_point.coordinates : LIST [3:3] OF length_measure := [r*sin(theta)*cos(phi), r*sin(theta)*sin(phi), r*cos(theta)];
+END_ENTITY;
+
+ENTITY Polar_point
+  SUBTYPE OF (Cartesian_point);
+  r : positive_length_measure;
+  theta : plane_angle_measure;
+DERIVE
+  SELF\Cartesian_point.coordinates : LIST[2:2] OF length_measure := [r*cos(theta), r*sin(theta)];
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT alternate_geometry_items FOR Detailed_geometric_model_element;
+  ONEOF (Direction,
+         Axis_placement,
+         Cartesian_transformation_2d,
+         Cartesian_transformation_3d,
+         Curve,
+         Surface);
+END_SUBTYPE_CONSTRAINT;
+
+SUBTYPE_CONSTRAINT point_subtypes FOR Point;
+  ONEOF (Cartesian_point,
+         Degenerate_pcurve,
+         Point_on_curve,
+         Point_on_surface);
+END_SUBTYPE_CONSTRAINT;
+
+SUBTYPE_CONSTRAINT cartesian_point_subtypes FOR Cartesian_point;
+  ONEOF (Cylindrical_point,
+         Polar_point,
+         Spherical_point);
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;  -- Basic_geometry_arm

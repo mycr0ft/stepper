@@ -1,0 +1,20 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.9 2008/10/11 11:02:23 abhpf Exp
+   ISO TC184/SC4/WG12 N5860 - ISO/TS 10303-1784 External analysis representation - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N4574
+*) 
+
+SCHEMA External_analysis_representation_arm;
+
+USE FROM Analysis_representation_arm;
+
+USE FROM File_identification_arm;
+
+ENTITY External_analysis_model
+SUBTYPE OF (Analysis_model);
+  external_file : Digital_file;
+END_ENTITY;
+
+END_SCHEMA;
+

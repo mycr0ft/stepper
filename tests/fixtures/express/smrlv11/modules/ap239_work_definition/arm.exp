@@ -1,0 +1,328 @@
+(*
+ISO TC184/SC4/WG12 N10778 - ISO/TS 10303-1307 AP239 work definition - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N7261
+*) 
+
+
+SCHEMA Ap239_work_definition_arm;
+
+USE FROM Activity_characterized_arm;    -- ISO/TS 10303-1272
+
+USE FROM Activity_method_characterized_arm;    -- ISO/TS 10303-1298
+
+USE FROM Activity_method_implementation_arm;    -- ISO/TS 10303-1261
+
+USE FROM Ap239_task_specification_resourced_arm;    -- ISO/TS 10303-1306
+
+USE FROM Resource_management_characterized_arm;    -- ISO/TS 10303-1282
+
+USE FROM Scheme_arm;    -- ISO/TS 10303-1260
+
+USE FROM Work_order_characterized_arm;    -- ISO/TS 10303-1286
+
+USE FROM Work_request_characterized_arm;    -- ISO/TS 10303-1285
+
+
+TYPE wd_activity_item = SELECT BASED_ON activity_item WITH 
+   (Activity, 
+    Activity_method, 
+    Activity_property, 
+    Applied_activity_assignment, 
+    Applied_state_assignment, 
+    Assigned_property, 
+    Contract, 
+    Descriptive_document_property, 
+    Effectivity, 
+    Envelope, 
+    Event, 
+    File, 
+    Independent_property, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Location, 
+    Location_representation, 
+    Managed_resource, 
+    Message, 
+    Numerical_document_property, 
+    Observation_consequence, 
+    Organization, 
+    Person, 
+    Person_in_organization, 
+    Position, 
+    Position_group, 
+    Product, 
+    Product_concept, 
+    Product_configuration, 
+    Product_group, 
+    Product_version, 
+    Product_version_relationship, 
+    Product_view_definition, 
+    Project, 
+    Resource_as_realized, 
+    Resource_event, 
+    Resource_item, 
+    Resource_property, 
+    State, 
+    State_relationship, 
+    View_definition_relationship);
+END_TYPE; 
+
+TYPE wd_activity_realization_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON activity_realization_select WITH 
+   (Scheme, 
+    Scheme_version, 
+    Task_element, 
+    Task_method, 
+    Task_method_version);
+END_TYPE; 
+
+TYPE wd_affected_item_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON affected_item_select WITH 
+   (Activity_method, 
+    Activity_property, 
+    Assigned_property, 
+    Contract, 
+    File, 
+    Interface_connection, 
+    Interface_connector_occurrence, 
+    Interface_definition_connection, 
+    Organization, 
+    Person, 
+    Person_in_organization, 
+    Product, 
+    Product_group, 
+    Product_version, 
+    Product_view_definition, 
+    Resource_item, 
+    Resource_property, 
+    View_definition_relationship);
+END_TYPE; 
+
+TYPE wd_approval_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON approval_item WITH 
+   (Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_certification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON certification_item WITH 
+   (Activity, 
+    Activity_method, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_condition_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON condition_item WITH 
+   (Activity, 
+    Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_assignment, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_contract_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON contract_item WITH 
+   (Activity, 
+    Activity_method, 
+    Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_assignment, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_date_or_date_time_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON date_or_date_time_item WITH 
+   (Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_documented_element_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON documented_element_select WITH 
+   (Activity, 
+    Activity_method, 
+    Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_assignment, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_effectivity_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON effectivity_item WITH 
+   (Activity, 
+    Activity_method, 
+    Applied_activity_assignment, 
+    Work_order);
+END_TYPE; 
+
+TYPE wd_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON identification_item WITH 
+   (Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_justification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON justification_item WITH 
+   (Activity, 
+    Activity_method, 
+    Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_assignment, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_justification_support_item = SELECT BASED_ON justification_support_item WITH 
+   (Activity, 
+    Activity_method, 
+    Activity_method_assignment, 
+    Applied_activity_assignment, 
+    Applied_activity_method_assignment, 
+    Applied_state_assignment, 
+    Applied_state_definition_assignment, 
+    Contract, 
+    Document, 
+    Document_definition, 
+    Document_version, 
+    Event, 
+    Project, 
+    State, 
+    State_definition, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE wd_location_assignment_select = SELECT BASED_ON location_assignment_select WITH 
+   (Activity, 
+    Activity_method_assignment, 
+    Applied_activity_assignment, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_organization_or_person_in_organization_item = SELECT BASED_ON organization_or_person_in_organization_item WITH 
+   (Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_product_breakdown_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON product_item WITH 
+   (Product_group);
+END_TYPE; 
+
+TYPE wd_project_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON project_item WITH 
+   (Activity, 
+    Activity_method, 
+    Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_assignment, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_property_assignment = SELECT BASED_ON property_assignment_select WITH 
+   (Applied_activity_assignment);
+END_TYPE; 
+
+TYPE wd_required_resource_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON required_resource_item WITH 
+   (Activity, 
+    Activity_method, 
+    Applied_activity_assignment, 
+    Event);
+END_TYPE; 
+
+TYPE wd_scheme_entry_item_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON scheme_entry_item_select WITH 
+   (Activity, 
+    Applied_activity_assignment, 
+    Event, 
+    Resource_event);
+END_TYPE; 
+
+TYPE wd_scheme_subject_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON scheme_subject_select WITH 
+   (Activity, 
+    Activity_method, 
+    Applied_activity_assignment, 
+    Contract, 
+    Location, 
+    Managed_resource, 
+    Organization, 
+    Organization_type, 
+    Person, 
+    Person_in_organization, 
+    Product, 
+    Product_group, 
+    Product_version, 
+    Product_view_definition, 
+    Project, 
+    Required_resource, 
+    Resource_as_realized, 
+    Resource_item, 
+    Type_of_person);
+END_TYPE; 
+
+TYPE wd_scheme_version_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON scheme_version_select WITH 
+   (Activity, 
+    Activity_method, 
+    Applied_activity_assignment, 
+    Contract, 
+    Location, 
+    Managed_resource, 
+    Organization, 
+    Organization_type, 
+    Person, 
+    Person_in_organization, 
+    Product, 
+    Product_group, 
+    Product_version, 
+    Product_view_definition, 
+    Project, 
+    Required_resource, 
+    Resource_as_realized, 
+    Resource_item, 
+    Type_of_person);
+END_TYPE; 
+
+TYPE wd_security_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON security_classification_item WITH 
+   (Activity, 
+    Activity_method, 
+    Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_assignment, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_state_definition_of_item = SELECT BASED_ON state_definition_of_item WITH 
+   (Activity, 
+    Applied_activity_assignment, 
+    Scheme, 
+    Scheme_version, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE wd_state_of_item = SELECT BASED_ON state_of_item WITH 
+   (Activity, 
+    Activity_method, 
+    Applied_activity_assignment, 
+    Location, 
+    Managed_resource, 
+    Product_concept, 
+    Work_order, 
+    Work_request);
+END_TYPE; 
+
+TYPE wd_string_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON string_select WITH 
+   (Activity_method_realization, 
+    Activity_method_realization_relationship, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment);
+END_TYPE; 
+
+TYPE wd_work_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON work_item WITH 
+   (Activity, 
+    Activity_method, 
+    Applied_activity_assignment, 
+    Applied_activity_method_assignment, 
+    Event);
+END_TYPE; 
+
+END_SCHEMA;  -- Ap239_work_definition_arm

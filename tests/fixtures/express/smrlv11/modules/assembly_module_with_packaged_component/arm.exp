@@ -1,0 +1,29 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.5 2017/04/07 15:43:26 kevletu Exp
+    ISO TC184/SC4/WG12 N9522 - ISO/TS 10303-1829 Assembly module with packaged component - EXPRESS ARM
+ *)
+
+SCHEMA Assembly_module_with_packaged_component_arm;
+
+USE FROM Altered_package_arm;	-- ISO/TS 10303-1601
+USE FROM Assembly_module_design_arm;	-- ISO/TS 10303-1636
+USE FROM Packaged_part_black_box_model_arm;	-- ISO/TS 10303-1710
+	
+ENTITY Packaged_component
+  SUBTYPE OF (Physical_component, Single_instance);
+  SELF\Definition_based_product_occurrence.derived_from : Packaged_part;
+  selected_package_alternate               : OPTIONAL Altered_package;
+INVERSE
+  access_mechanism : SET[0:?] OF packaged_component_join_terminal FOR associated_definition;
+END_ENTITY;
+
+ENTITY Packaged_component_join_terminal
+  SUBTYPE OF (Physical_component_terminal);
+  SELF\Component_feature.definition           : Packaged_part_join_terminal;
+  SELF\Component_feature.associated_definition : Packaged_component;
+WHERE
+  WR1 : NOT EXISTS(SELF\Shape_element.description);
+END_ENTITY;
+
+END_SCHEMA;

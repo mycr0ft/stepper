@@ -1,0 +1,15 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.13 2009/08/11 07:57:32 robbod Exp
+ISO TC184/SC4/WG12 N6066 - ISO/TS 10303-1017 Product identification - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N2926
+*) 
+
+
+SCHEMA Product_identification_mim;
+
+USE FROM product_definition_schema   -- ISO 10303-41
+  (product); 
+
+
+END_SCHEMA;  -- Product_identification_mim

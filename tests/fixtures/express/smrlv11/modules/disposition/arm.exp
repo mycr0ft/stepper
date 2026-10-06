@@ -1,0 +1,26 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.11 2008/10/11 10:59:44 abhpf Exp
+   ISO TC184/SC4/WG12 N5851 - ISO/TS 10303-1493 Disposition - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N4565
+*) 
+
+SCHEMA Disposition_arm;
+
+USE FROM Approval_arm;    -- ISO/TS 10303-1012
+
+USE FROM Identification_assignment_arm;    -- ISO/TS 10303-1021
+
+
+TYPE disposition_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON identification_item WITH 
+   (Disposition);
+END_TYPE; 
+
+ENTITY Disposition
+  SUBTYPE OF (Approval);
+  name : STRING;
+END_ENTITY;
+
+END_SCHEMA;  -- Disposition_arm
+
+

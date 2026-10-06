@@ -1,0 +1,20 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.18 2012/10/06 20:09:56 liutkuviene Exp
+ISO TC184/SC4/WG12 N7709 - ISO/TS 10303-1121 Document and version identification - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N6577
+*) 
+
+
+SCHEMA Document_and_version_identification_mim;
+
+USE FROM Product_identification_mim;    -- ISO/TS 10303-1017
+
+USE FROM Product_version_mim;    -- ISO/TS 10303-1018
+
+USE FROM product_definition_schema   -- ISO 10303-41
+  (product_category,
+   product_related_product_category); 
+
+END_SCHEMA;  -- Document_and_version_identification_mim
+

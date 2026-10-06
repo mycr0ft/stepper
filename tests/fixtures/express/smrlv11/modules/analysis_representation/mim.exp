@@ -1,0 +1,18 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.11 2009/07/21 21:55:32 thomasrthurman Exp
+   ISO TC184/SC4/WG12 N5837 - ISO/TS 10303-1785 Analysis representation - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N4551
+*)
+
+SCHEMA Analysis_representation_mim;
+
+USE FROM Foundation_representation_mim;    -- ISO/TS 10303-1006
+
+USE FROM systems_engineering_representation_schema   -- ISO 10303-61
+  (analysis_model,
+   analysis_representation_context); 
+
+
+END_SCHEMA;  -- Analysis_representation_mim
+

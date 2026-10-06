@@ -1,0 +1,21 @@
+(*
+   $Id: mim.exp,v 1.13 2012/10/06 20:09:56 liutkuviene Exp $
+   ISO TC184/SC4/WG12 N7766 - ISO/TS 10303-1721 Physical component feature - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N6493
+*)
+
+
+SCHEMA Physical_component_feature_mim;
+	USE FROM Component_feature_mim;	-- ISO/TS 10303-1657
+
+ ENTITY physical_component_feature
+    SUBTYPE OF (component_feature);
+  END_ENTITY;
+
+  ENTITY physical_component_terminal
+    SUBTYPE OF (component_terminal,
+ 			physical_component_feature);
+  END_ENTITY;
+	
+END_SCHEMA;
+

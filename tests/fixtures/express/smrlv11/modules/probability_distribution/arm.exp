@@ -1,0 +1,45 @@
+(*
+   ISO TC184/SC4/WG12 N11084 - ISO/TS 10303-1274 Probability distribution - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N5893
+*) 
+
+
+SCHEMA Probability_distribution_arm;
+
+USE FROM Classification_assignment_arm;    -- ISO/TS 10303-1114
+
+USE FROM Probability_arm;    -- ISO/TS 10303-1252
+
+TYPE probability_distribution_classification = SELECT BASED_ON classification_item WITH
+  (Probability_distribution);
+END_TYPE;
+
+ENTITY Distribution_by_value
+SUBTYPE OF (Probability_distribution);
+  defined_function : LIST [1 : ?] OF Function_value_pair;
+  distribution_function : STRING;
+END_ENTITY;
+
+ENTITY Function_value_pair;
+  function_value : Numerical_item_with_unit;
+  variable_value : Numerical_item_with_unit;
+END_ENTITY;
+
+ENTITY Parameterized_distribution
+SUBTYPE OF (Probability_distribution);
+  has_parameters : OPTIONAL LIST [1 : ?] OF Numerical_item_with_unit;
+  parameterization_name : STRING;
+WHERE
+  WR1: SIZEOF(has_parameters) = SIZEOF(QUERY(param <* has_parameters | EXISTS(param.name)));
+END_ENTITY;
+
+ENTITY Probability_distribution ABSTRACT SUPERTYPE
+SUBTYPE OF (Probability_generator);
+  SELF\Representation_item.name RENAMED distribution_name : OPTIONAL label;
+  is_continuous : BOOLEAN;
+  mean : Numerical_item_with_unit;
+  variance : REAL;
+END_ENTITY;
+
+END_SCHEMA;  -- Probability_distribution_arm
+

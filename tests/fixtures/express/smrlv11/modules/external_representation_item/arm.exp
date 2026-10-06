@@ -1,0 +1,30 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.6 2012/10/11 19:05:10 thomasrthurman Exp
+ ISO TC184/SC4/WG12 N7777 - ISO/TS 10303-1779 External representation item - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N5383
+*)
+
+SCHEMA External_representation_item_arm;
+
+USE FROM External_library_arm; -- ISO/TS 10303-1778
+
+USE FROM Foundation_representation_arm; -- ISO/TS 10303-1006
+
+  ENTITY External_representation_item
+    SUBTYPE OF (Representation_item);
+      id              : STRING;
+      external_source : External_source;
+  END_ENTITY;
+
+  ENTITY External_string_representation_item
+    SUBTYPE OF (External_representation_item);
+  END_ENTITY;
+
+  ENTITY Externally_defined_representation
+    SUBTYPE OF (Representation);
+    SELF\Representation.items : SET [1:?] OF External_representation_item;
+    external_source : External_source;
+  END_ENTITY;
+  
+END_SCHEMA;

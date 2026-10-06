@@ -1,0 +1,19 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.5 2012/10/11 05:49:08 liutkuviene Exp
+   ISO TC184/SC4/WG12 N7814 - ISO/TS 10303-1523 Shape data quality criteria - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7185
+*)
+
+SCHEMA Shape_data_quality_criteria_mim;
+  USE FROM Product_data_quality_criteria_mim;
+  USE FROM Qualified_measure_mim;
+  USE FROM Shape_data_quality_inspection_result_mim;
+  USE FROM Shape_data_quality_criteria_schema;
+  USE FROM representation_schema
+  (compound_item_definition, 
+   representation_item,
+   compound_representation_item, 
+   list_representation_item, 
+   set_representation_item); 
+END_SCHEMA;

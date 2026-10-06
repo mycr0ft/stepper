@@ -1,0 +1,16 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.4 2006/04/18 22:37:30 thendrix Exp
+ ISO TC184/SC4/WG12 N4300 - ISO/TS 10303-1116 Pdm material aspects - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N2614
+*)
+
+SCHEMA Pdm_material_aspects_mim;
+USE FROM Generic_material_aspects_mim; -- ISO/TS 10303-1681
+
+USE FROM File_identification_mim;
+USE FROM Part_view_definition_mim;
+USE FROM Product_as_individual_mim;
+
+END_SCHEMA;
+

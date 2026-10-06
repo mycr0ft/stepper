@@ -1,0 +1,246 @@
+(* ISO TC184/SC4/WG12 N11228 - ISO/TS 10303-1853 datum_and_datum_systems - EXPRESS MIM *)
+
+SCHEMA Datum_and_datum_systems_mim;
+USE FROM Derived_shape_element_mim;
+USE FROM Extended_measure_representation_mim;
+USE FROM product_property_definition_schema
+  (property_definition,
+   product_definition_shape,
+   shape_aspect);
+USE FROM product_property_representation_schema
+  (property_definition_representation,
+   shape_representation);
+USE FROM shape_aspect_definition_schema
+  (common_datum,
+   common_datum_list,
+   contacting_feature,
+   datum,
+   datum_feature,
+   datum_reference_modifier_with_value,
+   datum_reference,
+   datum_reference_compartment,
+   datum_reference_element,
+   datum_system,
+   datum_target,
+   derived_shape_aspect,
+   general_datum_reference,
+   referenced_modified_datum,
+   shape_aspect_deriving_relationship,
+   simple_datum_reference_modifier);
+
+USE FROM shape_tolerance_schema
+   (datum_system_or_reference);
+
+USE FROM Value_with_unit_extension_mim;
+REFERENCE FROM support_resource_schema
+  (bag_to_set);
+
+ENTITY feature_for_datum_target_relationship
+  SUBTYPE OF (shape_aspect_relationship);
+  SELF\shape_aspect_relationship.related_shape_aspect : datum_target;
+UNIQUE
+  UR1: related_shape_aspect;
+WHERE
+  WR1: relating_shape_aspect.of_shape :=: related_shape_aspect.of_shape;
+  WR2: relating_shape_aspect\shape_aspect.product_definitional = TRUE;
+END_ENTITY;
+
+ENTITY line_and_point_on_plane
+  SUBTYPE OF (line_on_plane_pcurve, point_on_plane);
+DERIVE
+  SELF\pcurve.basis_surface             : plane := SELF\point_on_surface.basis_surface;
+END_ENTITY;
+
+ENTITY line_on_plane_pcurve
+  SUBTYPE OF (pcurve);
+  SELF\pcurve.basis_surface : plane;
+WHERE
+  WR1: 'GEOMETRY_SCHEMA.LINE' IN TYPEOF(SELF\pcurve.reference_to_curve\representation.items[1]);
+END_ENTITY;
+
+ENTITY placed_datum_target_feature
+  SUBTYPE OF (datum_target);
+DERIVE
+  representation_associations : SET [0 : ?] OF property_definition_representation := get_shape_aspect_property_definition_representations(SELF);
+WHERE
+  WR1: SELF.description IN ['point','line','rectangle','circle','circular curve'];
+  WR2: SIZEOF(QUERY(pdr
+                    <* representation_associations
+                    | 'SHAPE_ASPECT_DEFINITION_SCHEMA.SHAPE_REPRESENTATION_WITH_PARAMETERS' IN
+                      TYPEOF(pdr.used_representation))) =
+       1;
+  WR3: valid_datum_target_parameters(SELF);
+END_ENTITY;
+
+ENTITY point_on_line
+  SUBTYPE OF (point_on_curve);
+  SELF\point_on_curve.basis_curve : line;
+END_ENTITY;
+
+ENTITY point_on_plane
+  SUBTYPE OF (point_on_surface);
+  SELF\point_on_surface.basis_surface : plane;
+END_ENTITY;
+
+FUNCTION get_shape_aspect_property_definition_representations(s_a_instance : shape_aspect) : SET OF property_definition_representation;
+LOCAL
+  pd_set  : SET OF property_definition                := [];
+  pdr_set : SET OF property_definition_representation := [];
+END_LOCAL;
+  pd_set := bag_to_set(USEDIN(s_a_instance, 'PRODUCT_PROPERTY_DEFINITION_SCHEMA.PROPERTY_DEFINITION.DEFINITION'));
+  IF (SIZEOF(pd_set) < 1)
+  THEN
+    RETURN(pdr_set);
+  END_IF;
+  REPEAT i := 1 TO HIINDEX(pd_set);
+    pdr_set := pdr_set +
+               (QUERY(pdr
+                      <* USEDIN(pd_set[i],
+                                'PRODUCT_PROPERTY_REPRESENTATION_SCHEMA.PROPERTY_DEFINITION_REPRESENTATION.DEFINITION')
+                      | 'PRODUCT_PROPERTY_REPRESENTATION_SCHEMA.SHAPE_DEFINITION_REPRESENTATION' IN TYPEOF(pdr)));
+  END_REPEAT;
+  RETURN(pdr_set);
+END_FUNCTION;
+
+RULE valid_datum_geometry_correlation FOR (datum, geometric_item_specific_usage, geometric_representation_item);
+LOCAL
+  pass : BOOLEAN := TRUE;
+  gisu_cgr_set : SET OF geometric_item_specific_usage := [];
+  gisu_set : SET OF geometric_item_specific_usage := [];
+  gisu_tcgr_set : SET OF geometric_item_specific_usage := [];
+END_LOCAL;
+
+  REPEAT i := 1 TO HIINDEX(datum);
+(* If we require to constrain a gisu so that no more than one cgr can reference a datum we use the following.
+Otherwise it is unnecessary.
+*)
+    gisu_cgr_set := bag_to_set(QUERY(gcs <* (USEDIN(datum[i], 'SHAPE_PROPERTY_ASSIGNMENT_MIM.GEOMETRIC_ITEM_SPECIFIC_USAGE.DEFINITION')) | 
+                                                    ['CONSTRUCTIVE_GEOMETRY_REPRESENTATION'] IN TYPEOF(gcs\geometric_item_specific_usage.used_representation)));
+    IF (SIZEOF(gisu_cgr_set) > 1) THEN
+     pass := FALSE;  
+    END_IF;
+
+(* If we require to constrain a gisu so that no more than one tcgr can reference a datum we use the following.
+Otherwise it is unnecessary.
+*)
+    gisu_tcgr_set := bag_to_set(QUERY(tgcs <* (USEDIN(datum[i], 'SHAPE_PROPERTY_ASSIGNMENT_MIM.GEOMETRIC_ITEM_SPECIFIC_USAGE.DEFINITION')) | 
+                                                    ['TESSELLATED_CONSTRUCTIVE_GEOMETRY_REPRESENTATION'] IN TYPEOF(tgcs\geometric_item_specific_usage.used_representation)));
+    IF (SIZEOF(gisu_tcgr_set) > 1) THEN
+     pass := FALSE;  
+    END_IF;
+
+--permitted type specification for cgr
+    gisu_set := bag_to_set(USEDIN(datum[i], 'SHAPE_PROPERTY_ASSIGNMENT_MIM.GEOMETRIC_ITEM_SPECIFIC_USAGE.DEFINITION'));
+   REPEAT j := 1 TO HIINDEX(gisu_set);
+        CASE TRUE OF
+          (['CONSTRUCTIVE_GEOMETRY_REPRESENTATION'] IN TYPEOF(gisu_set[i]\geometric_item_specific_usage.used_representation)) :
+         BEGIN
+            IF(SIZEOF( ['GEOMETRY_SCHEMA.LINE',
+             'GEOMETRY_SCHEMA.POINT',
+             'GEOMETRY_SCHEMA.PLANE',
+             'DATUM_AND_DATUM_SYSTEMS_MIM.LINE_AND_POINT_ON_PLANE',
+             'DATUM_AND_DATUM_SYSTEMS_MIM.LINE_ON_PLANE_PCURVE',
+             'DATUM_AND_DATUM_SYSTEMS_MIM.POINT_ON_LINE',
+             'DATUM_AND_DATUM_SYSTEMS_MIM.POINT_ON_PLANE'] * TYPEOF(gisu_set[i]\geometric_item_specific_usage.identified_item)) = 1) THEN pass := TRUE;
+            END_IF;
+         END;
+         OTHERWISE: pass := FALSE;  
+        END_CASE;
+(*
+--permitted type specification for tcgr
+        CASE TRUE OF
+      (['TESSELLATED_CONSTRUCTIVE_GEOMETRY_REPRESENTATION'] IN TYPEOF(gisu_set[i]\geometric_item_specific_usage.used_representation)) :
+         BEGIN
+            IF(SIZEOF( ['TESSELLATED_CONSTRUCTIVE_GEOMETRY_REPRESENTATION.TESSELLATED_LINE',
+             'TESSELLATED_CONSTRUCTIVE_GEOMETRY_REPRESENTATION.TESSELLATED_POINT',
+             'TESSELLATED_CONSTRUCTIVE_GEOMETRY_REPRESENTATION.TESSELLATED_PLANE',
+             'TESSELLATED_CONSTRUCTIVE_GEOMETRY_REPRESENTATION.TESSELLATED_LINE_AND_POINT_ON_PLANE',
+             'TESSELLATED_CONSTRUCTIVE_GEOMETRY_REPRESENTATION.TESSELLATED_LINE_ON_PLANE_PCURVE',
+             'TESSELLATED_CONSTRUCTIVE_GEOMETRY_REPRESENTATION.TESSELLATED_POINT_ON_LINE',
+             'TESSELLATED_CONSTRUCTIVE_GEOMETRY_REPRESENTATION.TESSELLATED_POINT_ON_PLANE'] * TYPEOF(gisu_set[i]\geometric_item_specific_usage.identified_item)) = 1) THEN pass := TRUE;
+            END_IF;
+         END;
+         OTHERWISE: pass := FALSE;  
+        END_CASE;
+*)
+   END_REPEAT;
+  END_REPEAT;
+WHERE
+  WR1: pass;
+END_RULE;
+
+FUNCTION valid_datum_target_parameters(pdf : placed_datum_target_feature) : BOOLEAN;
+LOCAL
+  rep_set                   : SET OF representation := [];
+  parameter_representations : SET OF representation;
+END_LOCAL;
+  REPEAT i := 1 TO HIINDEX(pdf.representation_associations);
+    rep_set := rep_set + pdf.representation_associations[i].used_representation;
+  END_REPEAT;
+  parameter_representations := QUERY(rep
+                                     <* rep_set
+                                     | ('SHAPE_ASPECT_DEFINITION_SCHEMA.SHAPE_REPRESENTATION_WITH_PARAMETERS' IN
+                                        TYPEOF(rep)));
+  IF (SIZEOF(QUERY(srwp
+                   <* parameter_representations
+                   | (SIZEOF(QUERY(i
+                                   <* srwp.items
+                                   | (i.name = 'orientation') AND ('GEOMETRY_SCHEMA.PLACEMENT' IN TYPEOF(i)))) =
+                      1))) <>
+      1)
+  THEN
+    RETURN(FALSE);
+  END_IF;
+  CASE pdf\shape_aspect.description OF
+    'point' : RETURN(SIZEOF(QUERY(srwp <* parameter_representations | (SIZEOF(srwp.items) = 1))) = 1);
+    'circle', 'circular curve' : RETURN((SIZEOF(QUERY(srwp <* parameter_representations | (SIZEOF(srwp.items) = 2))) =
+                                         1) AND
+                                        (SIZEOF(QUERY(srwp
+                                                      <* parameter_representations
+                                                      | (SIZEOF(QUERY(i
+                                                                      <* srwp.items
+                                                                      | (i.name = 'target diameter') AND
+                                                                        (SIZEOF(['QUALIFIED_MEASURE_SCHEMA.MEASURE_REPRESENTATION_ITEM',
+                                                                                 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT'] *
+                                                                                TYPEOF(i)) =
+                                                                         2))) =
+                                                         1))) =
+                                         1));
+    'line' : RETURN(SIZEOF(QUERY(srwp
+                                 <* parameter_representations
+                                 | (SIZEOF(QUERY(i
+                                                 <* srwp.items
+                                                 | (i.name = 'target length') AND
+                                                   (SIZEOF(['QUALIFIED_MEASURE_SCHEMA.MEASURE_REPRESENTATION_ITEM',
+                                                            'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT'] *
+                                                           TYPEOF(i)) =
+                                                    2))) =
+                                    1))) =
+                    1);
+    'rectangle' : RETURN((SIZEOF(QUERY(srwp <* parameter_representations | (SIZEOF(srwp.items) = 3))) = 1) AND
+                         (SIZEOF(QUERY(srwp
+                                       <* parameter_representations
+                                       | (SIZEOF(QUERY(i
+                                                       <* srwp.items
+                                                       | (i.name = 'target length') AND
+                                                         (SIZEOF(['QUALIFIED_MEASURE_SCHEMA.MEASURE_REPRESENTATION_ITEM',
+                                                                  'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT'] *
+                                                                 TYPEOF(i)) =
+                                                          2))) =
+                                          1))) =
+                          1) AND
+                         (SIZEOF(QUERY(srwp
+                                       <* parameter_representations
+                                       | (SIZEOF(QUERY(i
+                                                       <* srwp.items
+                                                       | (i.name = 'target width') AND
+                                                         (SIZEOF(['QUALIFIED_MEASURE_SCHEMA.MEASURE_REPRESENTATION_ITEM',
+                                                                  'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT'] *
+                                                                 TYPEOF(i)) =
+                                                          2))) =
+                                          1))) =
+                          1));
+    OTHERWISE: RETURN(FALSE);
+  END_CASE;
+END_FUNCTION;
+END_SCHEMA;

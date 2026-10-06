@@ -1,0 +1,100 @@
+(*
+    ISO TC184/SC4/WG12 N11270 - ISO/TS 10303-1845 Wire and cable design connectivity - EXPRESS ARM
+    Supersedes ISO TC184/SC4/WG12 N10123
+ *)
+
+SCHEMA Wire_and_cable_design_connectivity_arm;  
+
+USE FROM General_design_connectivity_arm; -- ISO/TS 10303-1844
+
+TYPE wacdc_part_category = ENUMERATION BASED_ON part_category WITH 
+   (cable,
+    flat_cable,
+    wire);
+END_TYPE; 
+
+ENTITY Cable_occurrence
+  SUBTYPE OF (Product_occurrence_with_quantity);
+INVERSE
+  terminal_location_groups : SET [0:?] OF Cable_occurrence_terminal_location_group FOR associated_definition;
+WHERE
+  WR1: SIZEOF(QUERY(t <* terminal_location_groups | t.element_name = 'end a')) <= 1;
+  WR2: SIZEOF(QUERY(t <* terminal_location_groups | t.element_name = 'end b')) <= 1;
+  WR3: SIZEOF(QUERY(ct <* USEDIN(SELF, 'GENERAL_DESIGN_CONNECTIVITY_ARM.OCCURRENCE_TERMINAL.ASSOCIATED_DEFINITION') | 
+    NOT ('WIRE_AND_CABLE_DESIGN_CONNECTIVITY_ARM.CABLE_OCCURRENCE_TERMINAL_LOCATION_GROUP' IN TYPEOF(ct)) )) = 0;
+  WR4: raw_material_by_length IN SELF\Definition_based_product_occurrence.derived_from.defined_version.of_product\Part_with_additional_categories.categories;
+  WR5: cable IN SELF\Definition_based_product_occurrence.derived_from.defined_version.of_product\Part_with_additional_categories.categories;
+END_ENTITY;
+
+ENTITY Cable_occurrence_terminal_location_group
+  SUBTYPE OF (Occurrence_terminal); 
+  SELF\Shape_element.associated_definition : Cable_occurrence;
+INVERSE
+  terminals : SET[0:?] OF Cable_occurrence_terminal FOR associated_definition;
+WHERE
+  WR1: (SELF\Shape_element.element_name = 'end a') OR 
+       (SELF\Shape_element.element_name = 'end b') OR
+       (SELF\Shape_element.element_name[1:13] = 'intermediate');
+END_ENTITY;
+
+ENTITY Cable_occurrence_terminal
+  SUBTYPE OF (Occurrence_terminal);
+   SELF\Shape_element.associated_definition : Cable_occurrence_terminal_location_group;
+   SELF\Occurrence_terminal.associated_transport_feature : Wire_occurrence_identification;
+END_ENTITY;
+
+ENTITY Occurrence_marking_property
+  SUBTYPE OF (Assigned_property);
+  SELF\Assigned_property.described_element : Product_occurrence;
+DERIVE
+  SELF\Assigned_property.name : STRING := 'occurrence marking property';
+END_ENTITY;
+
+ENTITY Wire_colour_based_identification_code
+  SUBTYPE OF (Independent_property);
+END_ENTITY;
+
+ENTITY Wire_occurrence_identification
+  SUBTYPE OF (Occurrence_transport_feature);  
+  code : OPTIONAL Wire_colour_based_identification_code;
+END_ENTITY;
+
+ENTITY Wire_part_identification
+  SUBTYPE OF (Part_transport_feature);  
+  code : OPTIONAL Wire_colour_based_identification_code;
+  insulated : OPTIONAL BOOLEAN;
+END_ENTITY;
+
+ENTITY Wire_occurrence
+  SUBTYPE OF (Product_occurrence_with_quantity);
+INVERSE
+  terminals : SET [0:?] OF Wire_occurrence_terminal FOR associated_definition;
+WHERE
+  WR1: SIZEOF(QUERY(t <* terminals | t.element_name = 'end a')) <= 1;
+  WR2: SIZEOF(QUERY(t <* terminals | t.element_name = 'end b')) <= 1;
+  WR3: SIZEOF(QUERY(ct <* USEDIN(SELF, 'GENERAL_DESIGN_CONNECTIVITY_ARM.OCCURRENCE_TERMINAL.ASSOCIATED_DEFINITION') | 
+    NOT ('WIRE_AND_CABLE_DESIGN_CONNECTIVITY_ARM.WIRE_OCCURRENCE_TERMINAL' IN TYPEOF(ct)) )) = 0;
+  WR4: raw_material_by_length IN SELF\Definition_based_product_occurrence.derived_from.defined_version.of_product\Part_with_additional_categories.categories;
+  WR5: wire IN SELF\Definition_based_product_occurrence.derived_from.defined_version.of_product\Part_with_additional_categories.categories;
+  WR6: SIZEOF(QUERY(t <* terminals | t.associated_transport_feature <> terminals[1].associated_transport_feature)) = 0;
+END_ENTITY;
+
+ENTITY Wire_occurrence_terminal
+  SUBTYPE OF (Occurrence_terminal);
+   SELF\Shape_element.associated_definition : Wire_occurrence;
+   SELF\Occurrence_terminal.associated_transport_feature : Wire_occurrence_identification;
+WHERE
+  WR1: (SELF\Shape_element.element_name = 'end a') OR 
+       (SELF\Shape_element.element_name = 'end b') OR
+       (SELF\Shape_element.element_name[1:13] = 'intermediate');
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT wacdc_occurrence_terminal_subtypes FOR Occurrence_terminal;
+  ONEOF (Cable_occurrence_terminal, Cable_occurrence_terminal_location_group, Wire_occurrence_terminal);
+END_SUBTYPE_CONSTRAINT;
+
+SUBTYPE_CONSTRAINT wacdc_product_occurrence_with_quantity_subtypes FOR Product_occurrence_with_quantity;
+  ONEOF (Cable_occurrence, Wire_occurrence);
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;

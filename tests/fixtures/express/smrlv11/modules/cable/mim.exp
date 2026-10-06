@@ -1,0 +1,21 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.27 2017/04/26 16:30:06 kevletu Exp
+   ISO TC184/SC4/WG12 N8120  - ISO/TS 10303-1653 Cable - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7524
+*)
+SCHEMA Cable_mim;
+
+	USE FROM Assembly_module_with_packaged_connector_component_mim;	-- ISO/TS 10303-1645
+
+ENTITY cable_terminal
+  SUBTYPE OF (shape_aspect);
+    SELF\shape_aspect.of_shape : cable_usage_view;
+END_ENTITY;
+
+ENTITY cable_usage_view
+ SUBTYPE OF (physical_unit);
+END_ENTITY;
+
+END_SCHEMA;
+

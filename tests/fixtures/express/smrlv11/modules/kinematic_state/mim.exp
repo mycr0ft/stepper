@@ -1,0 +1,12 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.4 2015/09/24 11:01:19 lothartklein Exp
+   ISO TC184/SC4/WG12 N7907 - ISO/TS 10303-1798 Kinematic state - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7344
+*)
+
+SCHEMA Kinematic_state_mim;
+USE FROM Kinematic_structure_mim;
+USE FROM kinematic_state_schema;
+
+END_SCHEMA;

@@ -1,0 +1,34 @@
+(*
+   ISO TC184/SC4/WG12 N11081 - ISO/TS 10303-1252 Probability - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N5890
+*) 
+
+SCHEMA Probability_arm;
+
+USE FROM External_representation_item_arm;    -- ISO/TS 10303-1779
+
+USE FROM Measure_representation_arm;    -- ISO/TS 10303-1118
+
+TYPE probability_item = SELECT 
+  (External_representation_item,
+   Numerical_item_with_unit,
+   String_representation_item);
+END_TYPE;
+
+ENTITY Probability
+  SUBTYPE OF (Representation);
+  SELF\Representation.items : SET[1:1] OF probability_item;
+END_ENTITY;
+
+ENTITY Probability_derived
+SUBTYPE OF (Numerical_item_with_unit);
+  derives_from : Probability_generator;
+  has_parameter : OPTIONAL LIST [1 : ?] OF Numerical_item_with_unit;
+END_ENTITY;
+
+ENTITY Probability_generator ABSTRACT SUPERTYPE
+SUBTYPE OF (Representation_item);
+END_ENTITY;
+
+END_SCHEMA;  -- Probability_arm
+

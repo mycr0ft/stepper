@@ -1,0 +1,19 @@
+(*
+   ISO TC184/SC4/WG12 N11363 - ISO/TS 10303-1811 Product and manufacturing information with nominal 3d models - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N9371
+*)
+SCHEMA Product_and_manufacturing_information_with_nominal_3d_models_mim;
+
+USE FROM Advanced_boundary_representation_mim; -- ISO/TS 10303-1514
+USE FROM Compound_shape_representation_mim; -- ISO/TS 10303-1327
+USE FROM Construction_geometry_mim; -- ISO/TS 10303-1131
+USE FROM Design_product_data_management_mim; -- ISO/TS 10303-1628
+USE FROM Faceted_boundary_representation_mim; -- ISO/TS 10303-1512
+USE FROM Hybrid_boundary_representation_mim; -- ISO/TS 10303-1513
+USE FROM Manifold_subsurface_mim; -- ISO/TS 10303-1702
+USE FROM Part_view_definition_mim; -- ISO/TS 10303-1023
+USE FROM Shape_property_assignment_mim; -- ISO/TS 10303-1032
+USE FROM Tessellated_boundary_representation_mim; -- ISO/TS 10303-1515
+USE FROM Tessellated_manifold_subsurface_shape_representation_mim; -- ISO/TS 10303-1504
+USE FROM Tessellated_manifold_surface_shape_representation_mim; -- ISO/TS 10303-1503
+END_SCHEMA;

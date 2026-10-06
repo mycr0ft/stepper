@@ -1,0 +1,74 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.20 2009/12/18 14:52:13 robbod Exp
+ISO TC184/SC4/WG12 N6068 - ISO/TS 10303-1267 Required resource - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N3118
+*) 
+
+
+SCHEMA Required_resource_arm;
+
+USE FROM Classification_assignment_arm;    -- ISO/TS 10303-1114
+
+USE FROM Requirement_identification_and_version_arm;    -- ISO/TS 10303-1140
+
+USE FROM Resource_item_arm;    -- ISO/TS 10303-1268
+
+USE FROM Value_with_unit_arm;    -- ISO/TS 10303-1054
+
+
+TYPE required_resource_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON classification_item WITH 
+   (Required_resource, 
+    Required_resource_assignment, 
+    Required_resource_relationship);
+END_TYPE; 
+
+TYPE required_resource_item = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+TYPE resource_requirement_select = EXTENSIBLE SELECT
+   (Requirement_version);
+END_TYPE; 
+
+ENTITY Required_resource
+  ABSTRACT SUPERTYPE OF (ONEOF (Required_resource_by_reference,
+                                Required_resource_by_requirement,
+                                Required_resource_by_resource_item));
+  name : STRING;
+  description : OPTIONAL STRING;
+  required_quantity : OPTIONAL Value_with_unit;
+END_ENTITY;
+
+ENTITY Required_resource_assignment;
+  assigned_resource : Required_resource;
+  item : required_resource_item;
+END_ENTITY;
+
+ENTITY Required_resource_by_reference
+  SUBTYPE OF (Required_resource);
+  item : resource_item_select;
+END_ENTITY;
+
+ENTITY Required_resource_by_requirement
+  SUBTYPE OF (Required_resource);
+END_ENTITY;
+
+ENTITY Required_resource_by_resource_item
+  SUBTYPE OF (Required_resource);
+  resource_item : Resource_item;
+END_ENTITY;
+
+ENTITY Required_resource_relationship;
+  name : STRING;
+  description : OPTIONAL STRING;
+  relating : Required_resource;
+  related : Required_resource;
+END_ENTITY;
+
+ENTITY Required_resource_requirement;
+  item : resource_requirement_select;
+  resource_requirement : Required_resource_by_requirement;
+END_ENTITY;
+
+END_SCHEMA;  -- Required_resource_arm
+

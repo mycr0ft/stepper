@@ -1,0 +1,18 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.19 2009/08/11 07:57:31 robbod Exp
+ISO TC184/SC4/WG12 N6065 - ISO/TS 10303-1017 Product identification - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N2925
+*) 
+
+
+SCHEMA Product_identification_arm;
+
+
+ENTITY Product;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+END_ENTITY;
+
+END_SCHEMA;  -- Product_identification_arm

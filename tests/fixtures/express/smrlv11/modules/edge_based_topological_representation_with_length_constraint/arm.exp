@@ -1,0 +1,93 @@
+(*
+   $Id: arm.exp,v 1.9 2021/07/21 15:59:38 kevin Exp $
+    ISO TC184/SC4/WG12 N11263  - ISO/TS 10303-1830 Edge_based_topological_representation_with_length_constraint - EXPRESS ARM
+    Supersedes ISO TC184/SC4/WG12 N10949
+*)
+
+SCHEMA Edge_based_topological_representation_with_length_constraint_arm;
+
+USE FROM Basic_geometric_topology_arm; -- ISO/TS 10303-1323
+USE FROM Basic_geometry_arm; -- ISO/TS 10303-1652
+USE FROM Elemental_topology_arm; -- ISO/TS 10303-1005
+USE FROM Geometric_constraints_arm; -- ISO/TS 10303-1789
+
+REFERENCE FROM Foundation_representation_arm(  -- ISO/TS 10303-1006
+  item_in_context,
+  using_representations
+);
+
+TYPE edge_based_weighted_graph_representation_items = SELECT
+    (Connected_edge_set,
+     Path,
+     Vertex_point);
+END_TYPE; 
+
+ENTITY Bounded_curve_with_length
+   SUBTYPE OF (Bounded_curve, Dimensioned_curve_length_constraint);
+DERIVE
+  SELF\Curve_length_constraint.constrained_elements : SET [1:?] OF Bounded_curve_with_length := [ SELF ];
+WHERE
+WR1: SIZEOF (['B_SPLINE_GEOMETRY_ARM.B_SPLINE_CURVE',
+	      'BASIC_CURVE_ARM.TRIMMED_CURVE',
+	      'BASIC_CURVE_ARM.COMPOSITE_CURVE'] * TYPEOF(SELF)) = 0;
+END_ENTITY;
+
+ENTITY Edge_based_topological_representation_with_length_constraint
+   SUBTYPE OF (Representation);
+   SELF\Representation.context_of_items : Geometric_coordinate_space; 
+   SELF\Representation.items : SET[1:?] OF edge_based_weighted_graph_representation_items;
+DERIVE
+   single_set : SET[1:1] OF Connected_edge_set := QUERY( item <* SELF.items| ('ELEMENTAL_TOPOLOGY_ARM.CONNECTED_EDGE_SET' IN TYPEOF(item)) );
+WHERE
+   WR1: SIZEOF(QUERY ( it <* SELF.items | 'ELEMENTAL_TOPOLOGY_ARM.CONNECTED_EDGE_SET' IN TYPEOF(it)) ) = 1;
+   WR2: NOT ('ELEMENTAL_TOPOLOGY_ARM.CONNECTED_EDGE_SUB_SET' IN TYPEOF (single_set[1])) 
+    XOR item_in_context(single_set[1]\connected_edge_sub_set.parent_edge_set, SELF\representation.context_of_items);
+   WR3: ('ELEMENTAL_TOPOLOGY_ARM.CONNECTED_EDGE_SUB_SET' IN TYPEOF (single_set[1])) 
+    XOR ( 
+      SIZEOF ( 
+        QUERY ( ed <* single_set[1].connected_edges | NOT ('EDGE_BASED_TOPOLOGICAL_REPRESENTATION_WITH_LENGTH_CONSTRAINT_ARM.EDGE_BOUNDED_CURVE_WITH_LENGTH' IN TYPEOF(ed)) )
+      ) = 0
+    ); 
+   WR4: NOT ('ELEMENTAL_TOPOLOGY_ARM.CONNECTED_EDGE_SUB_SET' IN TYPEOF(single_set[1]) ) 
+    XOR (
+      SIZEOF ( 
+        QUERY ( ed <* single_set[1].connected_edges  | NOT ( 
+          ('EDGE_BASED_TOPOLOGICAL_REPRESENTATION_WITH_LENGTH_CONSTRAINT_ARM.EDGE_BOUNDED_CURVE_WITH_LENGTH' IN TYPEOF(ed) ) OR
+          ('ELEMENTAL_TOPOLOGY_ARM.SUBEDGE' IN TYPEOF(ed) )
+                                                 ) 
+        )
+      ) = 0
+    ); 
+   WR5: 
+     SIZEOF ( 
+       QUERY ( pa <* SELF.items | ('ELEMENTAL_TOPOLOGY_ARM.PATH' IN TYPEOF(pa))
+         AND NOT ( 
+           SIZEOF ( 
+             QUERY ( oe <* pa\path.edge_list 
+               | NOT (oe.edge_definition IN single_set[1].connected_edges )
+                 OR
+                 NOT (oe.edge_definition\subedge.parent_edge IN single_set[1].connected_edges )
+             )
+           ) = 0 
+         )
+       ) 
+     ) = 0;
+   WR6: 
+     SIZEOF ( 
+       QUERY ( vp <* SELF.items | ('ELEMENTAL_TOPOLOGY_ARM.VERTEX_POINT' IN TYPEOF(vp) )
+         AND NOT ( 'BASIC_GEOMETRY_ARM.POINT_ON_CURVE' IN TYPEOF(vp.vertex_geometry) )
+       ) 
+     ) = 0;
+END_ENTITY;
+
+ENTITY Edge_bounded_curve_with_length
+  SUBTYPE OF (Edge_curve);
+  SELF\edge.edge_start : Vertex_point;
+  SELF\edge.edge_end : Vertex_point;
+  SELF\edge_curve.edge_geometry : Bounded_curve_with_length;
+WHERE
+  WR1: TYPEOF(SELF\edge.edge_start.vertex_geometry) = TYPEOF(Representation_item('') || Detailed_geometric_model_element() || Point());
+  WR2: TYPEOF(SELF\edge.edge_end.vertex_geometry) = TYPEOF(Representation_item('') || Detailed_geometric_model_element() || Point());
+END_ENTITY;
+
+END_SCHEMA;

@@ -1,0 +1,15 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.5 2009/09/03 18:58:02 darla Exp
+ ISO/CD-TS - 10303-1387 WG12 N6738 product_analysis - EXPRESS MIM*)
+
+SCHEMA Product_analysis_mim;
+
+USE FROM Analysis_product_relationships_mim;
+
+USE FROM Independent_property_mim;
+
+USE FROM Product_analysis_schema;
+
+END_SCHEMA;
+

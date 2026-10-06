@@ -1,0 +1,40 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.19 2016/10/20 11:53:01 kevletu Exp
+ ISO TC184/SC4/WG12 N9281 - ISO/TS 10303-1041 Product view definition relationship - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N2939
+*)
+
+
+SCHEMA Product_view_definition_relationship_arm;
+
+USE FROM Product_view_definition_arm;    -- ISO/TS 10303-1019
+USE FROM Product_view_definition_reference_arm; -- ISO/TS 10303-1738
+
+TYPE as_product_view_definition_or_reference = SELECT (
+    Product_view_definition, 
+    Generic_product_view_definition_reference);
+END_TYPE;
+
+TYPE contextual_shape_type_enumeration = EXTENSIBLE ENUMERATION OF ( 
+  unspecified); 
+END_TYPE;
+                
+ENTITY View_definition_relationship;
+  id : OPTIONAL STRING;
+  relation_type : OPTIONAL STRING;
+  description : OPTIONAL STRING;
+  relating_view : as_product_view_definition_or_reference;
+  related_view : as_product_view_definition_or_reference;
+  shape_type : OPTIONAL contextual_shape_type_enumeration; 
+  primary_shape_representation : OPTIONAL shape_model;
+  auxiliary_shape_representations : OPTIONAL SET[1:?] OF shape_model;
+WHERE
+  WR1: NOT (EXISTS(auxiliary_shape_representations)) OR EXISTS(primary_shape_representation);
+END_ENTITY;
+
+ENTITY View_definition_usage
+  SUBTYPE OF (View_definition_relationship);
+END_ENTITY;
+
+END_SCHEMA;  -- Product_view_definition_relationship_arm

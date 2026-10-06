@@ -1,0 +1,34 @@
+(*
+ $Id: mim.exp,v 1.21 2019/06/06 17:24:06 kevin Exp $
+ ISO TC184/SC4/WG12 N10266 - ISO/TS 10303-1030 Property assignment - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N8042
+*) 
+
+
+SCHEMA Property_assignment_mim;
+
+USE FROM Activity_mim;      -- ISO/TS 10303-1047
+
+USE FROM basic_attribute_schema   -- ISO 10303-41
+  (id_attribute,
+   id_attribute_select); 
+
+USE FROM Foundation_representation_mim;    -- ISO/TS 10303-1006
+
+USE FROM Independent_property_mim;    -- ISO/TS 10303-1036
+
+USE FROM material_property_definition_schema  -- ISO 10303-45
+  (property_definition_relationship);
+
+USE FROM product_property_definition_schema   -- ISO 10303-41
+  (general_property_association,
+   property_definition); 
+
+USE FROM product_property_representation_schema   -- ISO 10303-41
+  (property_definition_representation); 
+
+TYPE pa_action_items = SELECT BASED_ON action_items WITH
+  (property_definition_relationship);
+END_TYPE;
+
+END_SCHEMA;  -- Property_assignment_mim

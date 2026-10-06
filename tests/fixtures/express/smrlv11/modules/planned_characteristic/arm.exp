@@ -1,0 +1,76 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.27 2019/04/03 14:35:06 kevin Exp
+   ISO TC184/SC4/WG12 N10424 - ISO/TS 10303-1733 Planned characteristic - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N8277
+*)
+
+SCHEMA Planned_characteristic_arm;
+
+	USE FROM Group_arm; --  ISO/TS 10303-1113
+	USE FROM Production_rule_arm;	-- ISO/TS 10303-1739
+	USE FROM Requirement_assignment_arm;	-- ISO/TS 10303-1233
+	USE FROM Process_plan_arm; -- ISO/TS 10303-1803
+ 
+  TYPE evaluation_result_value = ENUMERATION OF
+    (pass,
+     fail,
+     undefined);
+  END_TYPE;
+
+  TYPE evaluation_type = ENUMERATION OF
+    (not_evaluatable,
+     invalid,
+     valid,
+     to_be_evaluated);
+  END_TYPE;
+  
+  TYPE evaluation_activity_select = SELECT 
+     (Activity,
+      Process_operation_occurrence);
+  END_TYPE;  
+
+  TYPE pc_groupable_item = SELECT BASED_ON groupable_item WITH (
+    Evaluated_characteristic);
+  END_TYPE;
+
+  ENTITY Evaluated_characteristic
+    SUPERTYPE OF (Rule_based_evaluated_characteristic);
+      id : OPTIONAL STRING;
+      name : OPTIONAL STRING;
+      description : OPTIONAL STRING;
+      planned_product_data          : Planned_characteristic;
+      measured_product_data 		: Measured_characteristic;
+      product_data_status           : evaluation_type;
+      evaluation_result             : evaluation_result_value;
+	  evaluation_activity           : OPTIONAL evaluation_activity_select;
+  END_ENTITY;
+
+  ENTITY Evaluation_view_definition
+    SUBTYPE OF (Product_view_definition);
+      evaluated_product_definition : Product_view_definition;
+      evaluation_data              : SET[1:?] OF Evaluated_characteristic;
+    WHERE
+      WR1 : TYPEOF(SELF) <> TYPEOF(evaluated_product_definition);
+  END_ENTITY;
+
+  ENTITY Planned_characteristic;
+      reference_requirement              : Requirement_assignment;
+      planned_coordinated_characteristic : Property_representation;
+  WHERE
+    WR1: planned_coordinated_characteristic.property.described_element :=: reference_requirement.assigned_requirement; 
+  END_ENTITY;
+  
+ ENTITY Measured_characteristic;
+       id                                  : OPTIONAL STRING;
+       description                         : OPTIONAL STRING;
+       measurement_activity                : OPTIONAL evaluation_activity_select;
+       measured_coordinated_characteristic : Property_representation; 
+ END_ENTITY;
+
+  ENTITY Rule_based_evaluated_characteristic
+    SUBTYPE OF (Evaluated_characteristic);
+      evaluating_rule : Rule_definition;
+  END_ENTITY;
+  
+END_SCHEMA;

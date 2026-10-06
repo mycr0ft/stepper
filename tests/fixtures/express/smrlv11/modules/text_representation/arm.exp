@@ -1,0 +1,68 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.21 2012/10/11 05:49:03 liutkuviene Exp
+   ISO TC184/SC4/WG12 N8068 - ISO/TS 10303-1750 Text representation - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N7077
+*)
+
+SCHEMA Text_representation_arm;
+
+USE FROM Text_appearance_arm; -- ISO/TS 10303-1136
+USE FROM Associative_text_arm; -- ISO/TS 10303-1132 
+
+  TYPE tr_text_or_composite_text = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON text_or_composite_text WITH (
+    Annotation_text_character);
+  END_TYPE;
+  
+  TYPE tr_composite_text_element_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON composite_text_element_select WITH (
+    Annotation_text_character);
+  END_TYPE; 
+
+  TYPE tr_font_select  = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON font_select WITH
+    (Text_font);
+  END_TYPE;
+  
+  TYPE label1 = label;
+   WHERE
+    WR1 : LENGTH(SELF) = 1; 
+  END_TYPE;
+  
+  ENTITY Annotation_text_character 
+    SUBTYPE OF (Detailed_geometric_model_element);
+    replicated_model : Character_glyph_symbol; 
+    source           : Axis_placement;
+    target           : Axis_placement;
+  END_ENTITY;
+
+  ENTITY Character_glyph_font_usage; 
+    character : Character_glyph_symbol;
+    font      : Text_font;
+  END_ENTITY;
+
+  ENTITY Character_glyph_symbol
+    SUBTYPE OF (Representation);
+      SELF\Representation.name RENAMED character : label1; 
+  END_ENTITY; 
+
+  ENTITY Text_font; 
+    id           : STRING; 
+    name         : STRING; 
+    description  : STRING;
+   INVERSE          
+    glyphs: SET [1:?] OF Character_glyph_font_usage FOR font;
+  END_ENTITY;
+
+  ENTITY Text_font_family; 
+    id           : STRING; 
+    name         : STRING; 
+    description  : STRING;
+   INVERSE          
+    fonts: SET [1:?] OF Text_font_in_family FOR family;
+  END_ENTITY; 
+
+  ENTITY Text_font_in_family;
+    font   : Text_font;
+    family : Text_font_family;
+  END_ENTITY;
+
+END_SCHEMA;

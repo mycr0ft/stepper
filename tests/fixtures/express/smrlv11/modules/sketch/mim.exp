@@ -1,0 +1,18 @@
+(*
+  $Id: mim.exp,v 1.8 2021/09/01 12:23:48 kevin Exp $
+  ISO TC184/SC4/WG12 N10996 - ISO/TS 10303-1792 Sketch - EXPRESS MIM
+  Supersedes ISO TC184/SC4/WG12 N7856
+*)
+
+SCHEMA Sketch_mim;
+
+USE FROM Geometric_constraints_mim;
+USE FROM geometric_model_schema (                 -- ISO 10303-42
+                   face_based_surface_model,
+                   shell_based_surface_model,
+                   surface_model); 
+USE FROM Solid_model_mim; -- ISO/TS 10303-1793
+
+USE FROM sketch_schema;  -- ISO 10303-108
+
+END_SCHEMA;

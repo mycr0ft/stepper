@@ -1,0 +1,111 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.14 2012/10/19 17:55:06 darla Exp
+ISO TC184/SC4/WG12 N6713 - ISO/TS 10303-1377 Cfd_model_arm - EXPRESS ARM
+
+*) 
+
+
+SCHEMA Cfd_model_arm;
+
+USE FROM Analysis_arm;           --ISO/TS 10303-1372
+
+USE FROM Cfd_conditions_arm;     --ISO/TS 10303-1375
+
+USE FROM Cfd_equations_arm;      --ISO/TS 10303-1376
+
+USE FROM Cfd_results_arm;        --ISO/TS 10303-1378
+
+USE FROM Cfd_specified_general_property_arm;--ISO/TS 10303-1379
+
+USE FROM Mesh_connectivity_arm;   --ISO/TS 10303-1384
+
+USE FROM Mesh_topology_arm;
+
+TYPE coordinate_data_name = EXTENSIBLE ENUMERATION OF 
+  (coordinate_x,
+   coordinate_y,
+   coordinate_z,
+   coordinate_r,
+   coordinate_theta,
+   coordinate_phi,
+   coordinate_normal,
+   coordinate_tangential,
+   coordinate_xi,
+   coordinate_eta,
+   coordinate_zeta,
+   coordinate_transform);
+END_TYPE;
+
+ENTITY Fd_step
+SUBTYPE OF (Mbna_step);
+  SELF\Mbna_step.equations : SET [0 : ?] OF Flow_equation_set; 
+  SELF\Mbna_step.zones : LIST [0 : ?] OF Fd_zone;
+END_ENTITY;
+
+ENTITY Fd_zone
+SUBTYPE OF (Mbna_zone);
+  SELF\Mbna_zone.conditions : SET [0 : ?] OF Fd_zone_bc;
+  SELF\Mbna_zone.equations : SET [0 : ?] OF Flow_equation_set;
+END_ENTITY;
+
+ENTITY Grid_coordinates
+SUBTYPE OF (Model_property_distribution);
+  SELF\Model_property_distribution.domain : Model_product_domain_with_mesh;
+  SELF\Model_property_distribution.range : Specified_general_property;
+END_ENTITY;
+
+ENTITY Grid_coordinates_with_rind
+SUBTYPE OF (Grid_coordinates);
+  rind_planes : Rind;
+END_ENTITY;
+
+ENTITY Mbna_model
+  SUBTYPE OF (Model_product_domain);
+  SELF\Model_product_domain.temporal_parts : LIST OF Mbna_step;
+  equations : SET OF Mbna_equation_set;  
+INVERSE
+  history : SET OF Mbna_history for domain;  
+END_ENTITY;
+
+ENTITY Mbna_state
+  SUBTYPE OF (model_state_domain);
+END_ENTITY;  
+
+ENTITY Mbna_step
+  SUBTYPE OF (Model_action_domain);
+  SELF\Model_action_domain.final : Mbna_state;
+  equations : SET OF Mbna_equation_set;  
+  refstate : SET OF Mbna_reference_state;
+  zones : LIST OF Mbna_zone;
+INVERSE
+  history : SET OF Mbna_history for domain;  
+END_ENTITY;
+
+ENTITY Mbna_structured_zone
+SUBTYPE OF (Mbna_zone);
+  SELF\Model_product_domain_with_mesh.model_mesh : Structured_mesh;
+END_ENTITY;
+
+ENTITY Mbna_unstructured_zone
+SUBTYPE OF (Mbna_zone);
+  SELF\Model_product_domain_with_mesh.model_mesh : Unstructured_mesh;
+END_ENTITY;
+
+ENTITY Mbna_zone
+  ABSTRACT SUPERTYPE OF (ONEOF
+    (Mbna_structured_zone, Mbna_unstructured_zone))
+  SUBTYPE OF (Model_product_domain_with_mesh);
+  conditions         : SET OF Mbna_zone_bc;
+  equations          : SET OF Mbna_equation_set;
+  grid_connectivity  : OPTIONAL Multiple_mesh_block;
+  rstate             : SET OF Mbna_reference_state;
+INVERSE
+  coordinates : SET OF Grid_coordinates FOR domain;
+  field_data  : SET OF Mbna_discrete_data FOR domain;
+  history     : SET OF Mbna_history FOR domain;
+  solution    : SET OF Mbna_solution FOR domain;
+END_ENTITY;
+
+END_SCHEMA;
+

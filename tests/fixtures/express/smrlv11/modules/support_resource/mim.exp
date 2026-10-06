@@ -1,0 +1,9 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.4 2012/10/11 05:49:06 liutkuviene Exp
+   ISO TC184/SC4/WG12 N8060 - ISO/TS 10303-1800 Support resource - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7473
+*)
+SCHEMA Support_resource_mim;
+	USE FROM support_resource_schema;
+END_SCHEMA;

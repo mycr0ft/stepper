@@ -1,0 +1,53 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.13 2012/11/09 21:40:58 thomasrthurman Exp
+ ISO TC184/SC4/WG12 N8259 - ISO/TS 10303-1057 Effectivity - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N8002
+*)
+   
+SCHEMA Effectivity_arm;
+
+USE FROM Time_interval_arm;  -- ISO/TS 10303-1065
+USE FROM Value_with_unit_arm;  -- ISO/TS 10303-1054
+
+   
+ENTITY Dated_effectivity
+  SUBTYPE OF (Effectivity);
+  start_bound : OPTIONAL date_or_event;
+  end_bound   : OPTIONAL date_or_event;
+WHERE
+  WR1: EXISTS(start_bound) OR EXISTS(end_bound);
+END_ENTITY;
+
+ENTITY Effectivity
+  SUPERTYPE OF (ONEOF (Serial_effectivity, Dated_effectivity, Lot_effectivity, Time_interval_effectivity));
+  id             : STRING;
+  name           : STRING;
+  description    : OPTIONAL STRING;
+END_ENTITY;
+
+ENTITY Effectivity_relationship;
+  relation_type : STRING;
+  description   : OPTIONAL STRING;
+  relating_effectivity  : Effectivity;
+  related_effectivity  : Effectivity;
+END_ENTITY;
+
+ENTITY Lot_effectivity
+  SUBTYPE OF (Effectivity);
+  lot_id    : STRING;
+  lot_size  : Value_with_unit;
+END_ENTITY;
+
+ENTITY Serial_effectivity
+  SUBTYPE OF (Effectivity);
+  start_id : STRING;
+  end_id   : OPTIONAL STRING;
+END_ENTITY;
+
+ENTITY Time_interval_effectivity
+  SUBTYPE OF (Effectivity);
+  effectivity_period : Time_interval;
+END_ENTITY;   
+   
+END_SCHEMA;

@@ -1,0 +1,34 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.2 2012/10/11 05:49:13 liutkuviene Exp
+   ISO TC184/SC4/WG12 N7768 - ISO/TS 10303-1823 Product view definition reference - EXPRESS ARM*)
+
+SCHEMA Product_view_definition_reference_arm;
+
+	USE FROM Support_resource_arm; -- ISO/TS 10303-1800
+	USE FROM External_item_identification_assignment_arm;	-- ISO/TS 10303-1128
+	USE FROM Product_view_definition_arm;	-- ISO/TS 10303-1019
+
+ 	TYPE pie_external_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON external_identification_item WITH  
+		(Generic_product_view_definition_reference);
+	END_TYPE;
+
+  ENTITY Generic_product_view_definition_reference
+    ABSTRACT SUPERTYPE OF ( ONEOF ( Product_view_definition_reference, 
+                  Product_view_definition_reference_with_local_representation) );
+    source : External_source_identification;
+  END_ENTITY;
+
+  ENTITY Product_view_definition_reference
+    SUBTYPE OF (Generic_product_view_definition_reference);
+    product_id : identifier;
+    product_definition_formation_id : identifier;
+    product_definition_id : identifier;
+    id_owning_organization_name : OPTIONAL label;
+  END_ENTITY;
+
+  ENTITY Product_view_definition_reference_with_local_representation
+    SUBTYPE OF (Generic_product_view_definition_reference, Product_view_definition);
+  END_ENTITY;
+
+END_SCHEMA;

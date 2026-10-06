@@ -1,0 +1,173 @@
+(*
+$Id: process_property_schema.exp,v 1.4 2015/06/29 19:32:44 dgnedwards Exp $
+ISO 10303 TC184/SC4/WG12 N8548
+
+EXPRESS Source:
+ISO 10303-49 ed1 Process structure and properties - Process property schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-49 ed1 Process structure and properties - Process property schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA process_property_schema '{iso standard 10303 part(49) version(1) object(1) process_property_schema(3)}';
+
+REFERENCE FROM action_schema
+    (action, 
+     action_method,
+     action_method_relationship,
+     action_relationship,
+     action_resource,
+     action_resource_relationship,
+     acyclic_action_relationship);
+
+REFERENCE FROM product_property_definition_schema
+    (characterized_product_definition,
+     property_definition, 
+     shape_definition);
+
+REFERENCE FROM support_resource_schema
+    (identifier,
+     label,
+     text);
+
+TYPE characterized_action_definition = SELECT
+   (action,
+   action_method,
+   action_method_relationship,
+   action_relationship);
+END_TYPE;
+
+TYPE characterized_resource_definition = SELECT
+  (action_resource,
+   action_resource_relationship,
+   action_resource_requirement,
+   action_resource_requirement_relationship);
+END_TYPE;
+
+TYPE property_or_shape_select = SELECT
+     (property_definition,
+      shape_definition);
+END_TYPE;
+
+ENTITY action_property;
+  name        : label;
+  description : text;
+  definition  : characterized_action_definition;
+END_ENTITY;
+
+ENTITY product_definition_process
+  SUBTYPE OF (action);
+  identification : identifier;
+INVERSE 
+  product_definitions : SET [1:?] OF process_product_association FOR process;
+END_ENTITY;
+
+ENTITY process_product_association;
+  name            : label;
+  description     : text;
+  defined_product : characterized_product_definition;
+  process         : product_definition_process;
+END_ENTITY;
+
+ENTITY property_process
+  SUBTYPE OF (action);
+  identification : identifier;
+INVERSE
+  properties : SET [1:?] OF process_property_association FOR process;
+END_ENTITY;
+
+ENTITY process_property_association;
+  name              : label;
+  description       : text;
+  process           : property_process;
+  property_or_shape : property_or_shape_select;
+END_ENTITY;
+
+ENTITY replacement_relationship
+  SUBTYPE OF (action_relationship);
+WHERE
+  WR1: acyclic_action_relationship (SELF,
+       [SELF\action_relationship.related_action],
+       'PROCESS_PROPERTY_SCHEMA.REPLACEMENT_RELATIONSHIP');
+END_ENTITY;
+
+ENTITY resource_property;
+  name        : label;
+  description : text;
+  resource    : characterized_resource_definition;
+END_ENTITY;
+
+ENTITY action_resource_requirement;
+  name        : label;
+  description : text;
+  kind        : resource_requirement_type;
+  operations  : SET [1:?] OF characterized_action_definition;
+END_ENTITY;
+
+ENTITY action_property_relationship;
+  name                     : label;
+  description              : text;
+  relating_action_property : action_property;
+  related_action_property  : action_property;
+WHERE
+  WR1: relating_action_property :<>: related_action_property;
+END_ENTITY;
+
+ENTITY requirement_for_action_resource
+  SUBTYPE OF (action_resource_requirement);
+  resources : SET [1:?] OF action_resource;
+END_ENTITY;
+
+ENTITY resource_property_relationship;
+  name                       : label;
+  description                : text;
+  relating_resource_property : resource_property;
+  related_resource_property  : resource_property;
+WHERE
+  WR1: relating_resource_property :<>: related_resource_property;
+END_ENTITY;
+
+ENTITY action_resource_requirement_relationship;
+  name                                 : label;
+  description                          : text;
+  relating_action_resource_requirement : action_resource_requirement;
+  related_action_resource_requirement  : action_resource_requirement;
+WHERE
+  WR1: relating_action_resource_requirement :<>: 
+       related_action_resource_requirement;
+END_ENTITY;
+
+ENTITY resource_requirement_type;
+  name        : label;
+  description : text;
+END_ENTITY;
+
+ENTITY resource_requirement_type_relationship;
+  name                      : label;
+  description               : text;
+  relating_requirement_type : resource_requirement_type;
+  related_requirement_type  : resource_requirement_type;
+WHERE
+  WR1: relating_requirement_type :<>: related_requirement_type;
+END_ENTITY;
+
+END_SCHEMA; -- process_property_schema

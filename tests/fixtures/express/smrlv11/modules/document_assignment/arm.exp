@@ -1,0 +1,40 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.14 2012/10/06 20:09:56 liutkuviene Exp
+ISO TC184/SC4/WG12 N7714 - ISO/TS 10303-1122 Document assignment - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N7106
+*)
+
+
+SCHEMA Document_assignment_arm;
+
+USE FROM Document_and_version_identification_arm;    -- ISO/TS 10303-1121
+
+USE FROM Document_definition_arm;    -- ISO/TS 10303-1123
+
+USE FROM File_identification_arm;    -- ISO/TS 10303-1127
+
+
+TYPE assigned_document_select = SELECT
+   (Document, 
+    Document_definition, 
+    Document_version, 
+    File);
+END_TYPE; 
+
+TYPE documented_element_select = EXTENSIBLE GENERIC_ENTITY SELECT
+  (Product_view_definition);
+END_TYPE; 
+
+ENTITY Document_assignment;
+  assigned_document : assigned_document_select;
+  is_assigned_to : SET[1:?] OF documented_element_select;
+  role : STRING;
+END_ENTITY;
+
+ENTITY Partial_document_assignment
+  SUBTYPE OF (Document_assignment);
+  document_portion : STRING;
+END_ENTITY;
+
+END_SCHEMA;  -- Document_assignment_arm

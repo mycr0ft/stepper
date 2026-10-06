@@ -1,0 +1,152 @@
+(*
+$Id: annotated_3d_model_data_quality_inspection_result_schema.exp,v 1.4 2021/03/22 04:36:53 ftanaka Exp $
+ISO 10303 TC184/SC4/WG12 N10812
+
+EXPRESS Source:
+ISO 10303-59 ed3 Quality of product shape data - Annotated 3d model data quality inspection result schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2021  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-59 ed3 Quality of product shape data - Annotated 3d model data quality inspection result schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA annotated_3d_model_data_quality_inspection_result_schema '{iso standard 10303 part(59) version(3) object(1) annotated_3d_model_data_quality_inspection_result_schema(7)}';
+
+  REFERENCE FROM annotated_3d_model_data_quality_criteria_schema
+    (a3m_data_quality_criterion,
+     summary_stats_value_type);
+     
+  REFERENCE FROM geometric_model_schema
+    (triangulated_face);
+     
+  REFERENCE FROM geometry_schema
+    (geometric_representation_item);
+
+  REFERENCE FROM product_data_quality_inspection_result_schema
+    (data_quality_inspection_criterion_report_item,
+     data_quality_inspection_instance_report_item,
+     data_quality_inspection_result,
+     data_quality_inspection_result_representation,
+     data_quality_inspection_result_with_judgement);
+
+  REFERENCE FROM representation_schema
+    (representation,
+     representation_item,
+     using_items);
+
+  TYPE a3m_data_quality_inspected_model_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE;
+
+  TYPE a3m_data_quality_measured_value_select = EXTENSIBLE SELECT;
+  END_TYPE;
+
+  TYPE a3m_location_of_extreme_value_select = EXTENSIBLE SELECT;
+  END_TYPE;
+
+  ENTITY a3m_data_quality_inspected_model_and_the_result; 
+      inspected_model : a3m_data_quality_inspected_model_select;
+      inspection_result : a3m_data_quality_inspection_result_representation; 
+  END_ENTITY;
+
+  ENTITY a3m_data_quality_inspection_criterion_report_item
+    SUBTYPE OF(data_quality_inspection_criterion_report_item);
+      representative_measured_value : a3m_data_quality_measured_value_select;
+      value_type_to_report : summary_stats_value_type; 
+  END_ENTITY;
+
+  ENTITY a3m_data_quality_inspection_instance_report_item
+    SUBTYPE OF(data_quality_inspection_instance_report_item);
+      representative_measured_value : a3m_data_quality_measured_value_select;
+      value_type_to_report: summary_stats_value_type;
+  END_ENTITY; 
+  
+  ENTITY a3m_data_quality_inspection_result
+    ABSTRACT SUPERTYPE
+    SUBTYPE OF (data_quality_inspection_result_with_judgement);
+      SELF\data_quality_inspection_result.criterion_inspected : a3m_data_quality_criterion;
+  END_ENTITY;
+
+  ENTITY a3m_data_quality_inspection_result_representation
+    SUBTYPE OF(data_quality_inspection_result_representation);
+    WHERE
+      WR1: SIZEOF( QUERY( q <* SELF\representation.items|
+                               'ANNOTATED_3D_MODEL_DATA_QUALITY_INSPECTION_RESULT_SCHEMA.' + 
+                               'A3M_DATA_QUALITY_INSPECTION_RESULT' IN TYPEOF(q))) > 0;
+      WR2: SIZEOF(USEDIN(SELF, 'ANNOTATED_3D_MODEL_DATA_QUALITY_INSPECTION_RESULT_SCHEMA.' + 
+                               'A3M_DATA_QUALITY_INSPECTED_MODEL_AND_THE_RESULT.'+ 'INSPECTION_RESULT'))>0;
+  END_ENTITY;
+
+  ENTITY a3m_extreme_instance
+    SUBTYPE OF (representation_item);
+      locations_of_extreme_value : SET[1:?] OF a3m_location_of_extreme_value_select;
+      measured_value : a3m_data_quality_measured_value_select;
+  END_ENTITY;
+
+  ENTITY a3m_instance_report_item_with_extreme_instances
+    SUBTYPE OF(a3m_data_quality_inspection_instance_report_item);
+      extreme_instances: LIST [1:?] OF a3m_extreme_instance;
+  END_ENTITY; 
+  
+  ENTITY adjacent_triangle_pair
+    SUBTYPE OF (triangulated_face_element);
+      triangle_id2 : INTEGER;
+    WHERE
+      WR1: (triangle_id2 > 0) AND (triangle_id2 <= SIZEOF(SELF\triangulated_face_element.base_face.triangles));
+      WR2: triangle_id2 <> SELF\triangulated_face_element.triangle_id;
+  END_ENTITY;
+  
+  ENTITY adjacent_triangulated_face_pair
+    SUBTYPE OF (geometric_representation_item);
+      face1 : triangulated_face;
+      face2 : triangulated_face;
+   WHERE
+      WR1: face1 <> face2;
+  END_ENTITY;
+  
+  ENTITY representative_triangle
+    SUBTYPE OF (triangulated_face_element);
+  END_ENTITY;
+  
+  ENTITY triangle_edge
+    SUBTYPE OF (triangulated_face_element);
+      start_vertex_id : INTEGER;
+    WHERE
+      WR1: (1 <= start_vertex_id) AND (start_vertex_id <= 3);
+  END_ENTITY;
+
+  ENTITY triangle_vertex
+    SUBTYPE OF (triangulated_face_element);
+      vertex_id : INTEGER;
+    WHERE
+      WR1: (1 <= vertex_id) AND (vertex_id <= 3);
+  END_ENTITY;
+
+  ENTITY triangulated_face_element
+    ABSTRACT SUPERTYPE OF (
+      ONEOF (representative_triangle, triangle_edge, triangle_vertex, adjacent_triangle_pair))
+    SUBTYPE OF (geometric_representation_item);
+      triangle_id : INTEGER;
+      base_face : triangulated_face;
+    WHERE
+      WR1: (triangle_id > 0) AND (triangle_id <= SIZEOF(base_face.triangles));
+  END_ENTITY;
+
+END_SCHEMA;

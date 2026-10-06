@@ -1,0 +1,99 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.19 2019/01/23 19:40:15 rick Exp
+   ISO TC184/SC4/WG12 N10173 - ISO/TS 10303-1814 Machining features - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N9619
+*)
+
+SCHEMA Machining_features_mim;
+
+USE FROM Elemental_geometric_shape_mim; -- ISO/TS 10303-1004
+USE FROM Feature_and_connection_zone_mim;   -- ISO/TS 10303-1671
+USE FROM Group_mim;   -- ISO/TS 10303-1113
+USE FROM machining_feature_schema; -- ISO 10303-113
+USE FROM Measure_representation_mim;   -- ISO/TS 10303-1118
+USE FROM Specification_document_mim;   -- ISO/TS 10303-1747
+USE FROM Value_with_unit_mim;   -- ISO/TS 10303-1054
+
+TYPE mf_groupable_item = SELECT BASED_ON groupable_item WITH (
+  instanced_feature,
+  replicate_feature,
+  transition_feature);
+END_TYPE;
+
+ENTITY face_shape_representation_relationship
+  SUBTYPE OF (representation_relationship);
+      WHERE
+      WR1: ('MACHINING_FEATURE_SCHEMA.FACE_SHAPE_REPRESENTATION' 
+            IN TYPEOF(SELF.rep_1));
+      WR2: ('MACHINING_FEATURE_SCHEMA.FACE_SHAPE_REPRESENTATION' 
+            IN TYPEOF(SELF.rep_2));
+END_ENTITY;
+
+RULE chamfer_requires_faces FOR (chamfer,
+property_definition_representation);
+WHERE
+WR1: (SIZEOF (QUERY (cf <* chamfer |
+NOT (1 = SIZEOF (QUERY (pdr <* property_definition_representation |
+((pdr\property_definition_representation.definition\property_definition.definition = cf) AND
+('MACHINING_FEATURE_SCHEMA.FACE_SHAPE_REPRESENTATION'
+IN TYPEOF (pdr.used_representation)) AND
+(pdr.used_representation.name = 'chamfer face'))
+)))
+))=0);
+END_RULE;
+
+RULE chamfer_offset_requires_faces FOR
+(chamfer_offset, property_definition_representation);
+WHERE
+WR1: (SIZEOF (QUERY (co <* chamfer_offset |
+NOT (1 = SIZEOF (QUERY (pdr <* property_definition_representation |
+((pdr\property_definition_representation.definition\property_definition.definition = co) AND
+('MACHINING_FEATURE_SCHEMA.FACE_SHAPE_REPRESENTATION' IN TYPEOF (pdr.used_representation)) AND
+( ((pdr\property_definition_representation.definition\property_definition.definition.description = 'first offset') AND
+(pdr.used_representation.name = 'first face shape'))
+OR
+((pdr\property_definition_representation.definition\property_definition.definition.description = 'second offset') AND
+(pdr.used_representation.name = 'second face shape'))
+))
+)))
+))=0);
+END_RULE;
+
+RULE edge_round_requires_faces FOR
+(edge_round, property_definition_representation);
+WHERE
+WR1: (0 = SIZEOF (QUERY (er <* edge_round |
+NOT (1 = SIZEOF (QUERY (pdr <* property_definition_representation |
+((pdr\property_definition_representation.definition\property_definition.definition = er) AND
+('MACHINING_FEATURE_SCHEMA.FACE_SHAPE_REPRESENTATION'
+IN TYPEOF (pdr.used_representation)) AND
+(pdr.used_representation.name = 'edge round face'))
+)))
+)));
+WR2: (SIZEOF (QUERY (er <* edge_round |
+NOT (1 = SIZEOF (QUERY (pdr <* property_definition_representation |
+((pdr\property_definition_representation.definition\property_definition.definition = er) AND
+('MACHINING_FEATURE_SCHEMA.FACE_SHAPE_REPRESENTATION'
+IN TYPEOF (pdr.used_representation)) AND
+(pdr.used_representation.name = 'first face shape'))
+)))
+))=0);
+WR3: (SIZEOF (QUERY (er <* edge_round |
+NOT (1 = SIZEOF (QUERY (pdr <* property_definition_representation |
+((pdr\property_definition_representation.definition\property_definition.definition = er) AND
+('MACHINING_FEATURE_SCHEMA.FACE_SHAPE_REPRESENTATION'
+IN TYPEOF (pdr.used_representation)) AND
+(pdr.used_representation.name = 'second face shape'))
+)))
+))=0);
+END_RULE;
+
+RULE transition_feature_on_part_boundary FOR
+(transition_feature);
+WHERE
+WR1: SIZEOF (QUERY (tf <* transition_feature |
+NOT (tf.product_definitional))) = 0;
+END_RULE;
+
+END_SCHEMA;

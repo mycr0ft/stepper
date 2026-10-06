@@ -1,0 +1,133 @@
+(*
+$Id: mesh_connectivity_schema.exp,v 1.7 2014/03/04 00:30:38 thomasrthurman Exp $
+ISO 10303 TC184/SC4/WG12 N8316
+
+EXPRESS Source:
+ISO 10303-52 ed1 Mesh-based topology - Mesh connectivity schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-52 ed1 Mesh-based topology - Mesh connectivity schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA mesh_connectivity_schema '{iso standard 10303 part(52) version(3) object(1) mesh_connectivity_schema(1)}';
+  REFERENCE FROM mesh_topology_schema                            -- ISO 10303-52
+    (mesh,
+     unstructured_mesh,
+     structured_mesh,
+     mesh_location,
+     indices_group,
+     indices_range);
+  REFERENCE FROM mathematical_description_of_distribution_schema -- ISO 10303-51
+    (property_distribution_description);
+  REFERENCE FROM mathematical_functions_schema                   -- ISO 10303-50
+    (listed_real_data);
+  REFERENCE FROM support_resource_schema                         -- ISO 10303-41
+    (identifier,
+     label,
+     text);
+
+TYPE mismatched_region_type = EXTENSIBLE ENUMERATION OF
+    (abutting,
+     overset);
+END_TYPE;
+
+ENTITY matched_mesh_connection
+  SUBTYPE OF (mesh_connectivity);
+  SELF\mesh_connectivity.current : structured_mesh;
+  range       : indices_range;
+  donor       : structured_mesh;
+  donor_range : indices_range;
+  transform   : ARRAY [1:SELF\mesh_connectivity.index_count] OF INTEGER;
+WHERE
+  wr1 : current :<>: donor;
+  wr2: ( donor\mesh.index_count = SELF\mesh_connectivity.index_count );  
+  wr3: ( range\indices_range.nindices = SELF\mesh_connectivity.index_count );
+  wr4: ( donor_range\indices_range.nindices = SELF\mesh_connectivity.index_count );
+END_ENTITY;
+
+ENTITY mesh_connectivity
+ ABSTRACT SUPERTYPE OF(ONEOF
+    (matched_mesh_connection,
+        mismatched_mesh_connection));
+  name        : label;
+  description : text;
+  id          : identifier;
+  current     : mesh;
+DERIVE
+  index_count : INTEGER := current.index_count;
+END_ENTITY;
+
+
+ENTITY mesh_overset_hole
+  SUBTYPE OF (mismatched_mesh_connection);
+END_ENTITY;
+
+ENTITY mismatched_donor_mesh
+ ABSTRACT SUPERTYPE OF(ONEOF (structured_donor_mesh, unstructured_donor_mesh));
+ donor: mesh;
+INVERSE
+  connect : mismatched_mesh_region FOR donor;
+END_ENTITY;
+
+ENTITY mismatched_mesh_connection
+ABSTRACT SUPERTYPE OF (ONEOF(mismatched_mesh_region,
+        mesh_overset_hole))
+ SUBTYPE OF (mesh_connectivity);
+  points   : indices_group;
+  gridloc  : mesh_location;
+END_ENTITY;
+
+ENTITY mismatched_mesh_region
+  SUBTYPE OF (mismatched_mesh_connection);
+  donor : mismatched_donor_mesh;
+  kind  : mismatched_region_type;
+WHERE
+  wr1 : donor.donor :<>: SELF\mesh_connectivity.current;
+END_ENTITY;
+
+ENTITY multiple_mesh_block;
+  name           : label; 
+  description    : text;
+  id             : identifier;
+  connectivities : LIST OF mesh_connectivity;
+END_ENTITY;
+
+ENTITY structured_donor_mesh
+  SUBTYPE OF (mismatched_donor_mesh);
+  SELF\mismatched_donor_mesh.donor  : structured_mesh;
+  points : listed_real_data;
+  vsize  : INTEGER;
+DERIVE
+  index_count : INTEGER := donor.index_count;
+END_ENTITY;
+
+ENTITY unstructured_donor_mesh
+  SUBTYPE OF (mismatched_donor_mesh);
+  SELF\mismatched_donor_mesh.donor : unstructured_mesh;
+  cells       : indices_group;
+  interpolant : property_distribution_description;
+  vsize       : INTEGER;
+DERIVE
+  index_count : INTEGER := donor.index_count;
+END_ENTITY;
+
+END_SCHEMA;  -- end of mesh_connectivity_schema

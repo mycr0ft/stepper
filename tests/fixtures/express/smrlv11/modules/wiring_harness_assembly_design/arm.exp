@@ -1,0 +1,223 @@
+(*
+   ISO TC184/SC4/WG12 N11272 - ISO/TS 10303-1828 wiring_harness_assembly_design - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N10570
+ *)
+
+SCHEMA Wiring_harness_assembly_design_arm;
+
+USE FROM Edge_based_topological_representation_with_length_constraint_arm;   -- ISO/TS 10303-1830
+USE FROM Extruded_structure_cross_section_arm;   -- ISO/TS 10303-1827
+USE FROM Wire_and_cable_design_connectivity_arm;   -- ISO/TS 10303-1845
+
+REFERENCE FROM Foundation_representation_arm(using_representations);   -- ISO/TS 10303-1006
+
+TYPE whad_additional_application_domain_enumeration = ENUMERATION BASED_ON 
+  additional_application_domain_enumeration WITH (
+  wire_and_part_list_with_connectivity,
+  wiring_harness_assembly_3d_design,
+  wiring_harness_assembly_design_stick_line,
+  wiring_harness_formboard_drawing,
+  wiring_harness_segment_topology);
+END_TYPE;
+
+TYPE whad_assembly_joint_type_enumeration = ENUMERATION BASED_ON general_assembly_joint_type_enumeration WITH (
+  bolted_connection,                       -- IEV ref 461-19-05 bolted connection
+  circular_compressed_crimped_connection,  -- IEV ref 461-19-02 circular compressed connection
+  crimped_connection,                      -- IEV ref 461-19-01 crimped connection
+  deep_indented_crimped_connection,        -- IEV ref 461-19-04 deep indented connection
+  glued_connection,
+  hexagonal_compressed_crimped_connection, -- IEV ref 461-19-03 hexagonal compressed connection
+  insulation_displacement_connection,      -- IEV ref 581-23-35 insulation displacement connection
+  insulation_piercing_connection,          -- IEV ref 461-19-06 insulation piercing
+  promissory_connection,
+  promissory_connection_for_higher_assembly,
+  promissory_connection_for_installation_constraints,
+  promissory_connection_for_missing_contributors,
+  push_connection,
+  screwed_connection, 
+  snap_connection, 
+  soldered_connection,                     -- IEV ref 581-23-04 soldered connection
+  welded_connection,                       -- IEV ref 581-23-06 welded connection
+  wrapped_connection                       -- IEV ref 581-23-07 wrapped connection
+);
+END_TYPE;
+
+TYPE whad_characterizable_object_shape_type_enumeration = ENUMERATION BASED_ON characterizable_object_shape_type_enumeration WITH (
+	cavity_plug_or_contact_profile,
+	cavity_profile,
+	contact_barrel,
+	contact_profile,
+	insert_profile,
+	pin_profile,
+	plug_profile,
+	slot_profile,
+	socket_profile,
+	wire_profile
+);
+END_TYPE;
+
+TYPE whad_part_category = ENUMERATION BASED_ON part_category WITH (
+  backshell,  
+  busbar,                      -- IEV ref 151-12-30 busbar
+  cable_ferrule,               -- IEV ref 581-27-18 ferrule
+  cable_fixing_device, 
+  cable_support_sleeve,        -- IEV ref 581-27-23	cable support sleeve
+  cavity_plug, 
+  conduit,                     -- IEV ref 442-02-03 conduit
+  connector,                   -- IEV ref 151-12-19 connector  
+  connector_housing,           -- IEV ref 581-27-10 connector housing
+  connector_insert,            -- IEV ref 581-27-11 connector insert
+  connector_kit, 
+  connector_contact,      
+  contact_member,              -- IEV ref 151-12-16
+  corrugated_conduit,          -- IEV ref 442-02-06 corrugated conduit
+  device,                      -- IEV ref 151-11-20 device
+  electrified_backshell, 
+  emi_connector_housing,
+  end_cap,                     -- IEV ref 461-20-07 end cap, sealed (cable) end (USA) 
+  fishnet,
+  fixing_device,               -- IEV ref 442-02-40 fixing device
+  grommet,                     -- IEV ref 581-27-19 grommet 
+  insulation_piercing_connector, -- IEV ref 461-11-08 insulation piercing connector 
+  joint_ferrule,               -- IEV ref 461-17-04 joint ferrule
+  label, 
+  optical_fibre,
+  overbraid,
+  plug,                        -- IEV ref 151-12-21 plug
+  protective_covering,         -- IEV ref 461-05-03 sheath
+  seal, 
+  shield,                      -- IEV ref 461-03-04 shield (of a cable)
+  shield_connector,            -- IEV ref 461-17-12 screen connector; shield connector
+  shielded_connector,          -- IEV ref 581-26-19 shielded connector
+  shrink_boot,
+  socket,                      -- IEV ref 151-12-20 socket
+  spacer,                      -- IEV ref 466-11-01 spacer
+  splice,                      -- IEV ref 581-24-19 splice  + ... 
+  strain_relief_accessory,  
+  tape,                        -- IEV ref 212-15-03 tape
+  terminal_block,              -- IEV ref 581-26-26 terminal block
+  terminal_lug,                -- IEV ref 461-17-01 (terminal) lug
+  wiring_harness 
+);
+END_TYPE;
+
+  TYPE geometry_association_item_select = EXTENSIBLE SELECT (
+    Axis_placement,
+    Cartesian_point,
+    Curve,
+    Edge_curve,
+    Vertex_point
+  );
+  END_TYPE; 
+
+  TYPE topology_association_item_select = SELECT (
+    Edge,
+    Path,
+    Vertex
+  );
+  END_TYPE; 
+
+  TYPE whad_geometric_representation_select = SELECT BASED_ON geometric_representation_select WITH (
+     Edge_based_topological_representation_with_length_constraint);
+  END_TYPE;
+
+  ENTITY Topology_to_geometry_item_association;
+      source : topology_association_item_select; 
+      target : geometry_association_item_select;
+  END_ENTITY;
+
+  ENTITY Topology_to_geometry_model_association
+    SUBTYPE OF (Geometric_model_relationship);
+      associated_elements : SET[1:?] OF Topology_to_geometry_item_association;
+    INVERSE
+      product_context : SET [1:?] OF Contextual_shape_representation FOR
+          shape_representing_relationship;
+    WHERE
+      WR1: NOT ('GEOMETRIC_MODEL_RELATIONSHIP_ARM.DEFINITIONAL_REPRESENTATION_RELATIONSHIP'
+           IN TYPEOF(SELF));
+--IP1: A member of Geometry_to_topology_model_association shall only be provided
+--     in a Wiring_harness_assembly_design.
+--IP2: A member of Geometry_to_topology_model_association shall only be associated
+--     with a member of Assembly_component_relationship.
+  END_ENTITY;    
+
+  ENTITY Geometry_to_topology_item_association;
+      source : geometry_association_item_select;
+      target : topology_association_item_select;
+  END_ENTITY;
+
+  ENTITY Geometry_to_topology_model_association
+    SUBTYPE OF (Geometric_model_relationship);
+    associated_elements : SET[1:?] OF Geometry_to_topology_item_association;
+    INVERSE
+      product_context : SET [1:?] OF Contextual_shape_representation FOR
+          shape_representing_relationship;
+    WHERE
+      WR1: NOT ('GEOMETRIC_MODEL_RELATIONSHIP_ARM.DEFINITIONAL_REPRESENTATION_RELATIONSHIP'
+           IN TYPEOF(SELF));
+--IP1: A member of Geometry_to_topology_model_association shall only be provided
+--     in a Wiring_harness_assembly_design.
+--IP2: A member of Geometry_to_topology_model_association shall only be associated
+--     with a member of Assembly_component_relationship.
+  END_ENTITY;    
+
+SUBTYPE_CONSTRAINT whad_geometric_model_relationship_subtypes FOR Geometric_model_relationship;
+  ONEOF (Geometry_to_topology_model_association, Topology_to_geometry_model_association);
+END_SUBTYPE_CONSTRAINT;
+
+TYPE whad_terminal_joint_type_enumeration = ENUMERATION BASED_ON general_terminal_joint_type_enumeration WITH ( 
+  crimp_terminal,               -- IEV ref 581-22-05 crimp contact
+  fusion_fibre_splice,          -- IEV ref    731-05-06 fusion splice
+  insulation_displacement_terminal, -- IEV ref 581-23-39 insulation displacement termination
+  lug_terminal,                 -- IEV ref 442-06-16 lug terminal
+  mantle_terminal,              -- IEV ref 442-06-14 mantle terminal
+  mechanical_fibre_splice,      -- IEV ref 731-05-07  mechanical splice (for optical that connects 2 ends of fibres, they are not for T connection)
+  non_reusable_insulation_displacement_termination, -- IEV ref 581-23-41 non-reusable insulation displacement termination
+  optical_fibre_splice,          -- IEV ref 731-05-05 optical fibre splice; splice; optical splice (for optical that connects 2 ends of fibres, they are not for T connection)
+  pillar_terminal,              -- IEV ref 442-06-22 pillar terminal
+  pin_terminal,                 -- IEV ref 151-12-18 (581-22-08) pin contact; male contact
+  push_on_contact_terminal,     -- IEV ref 581-27-04 push-on contact 
+  resilient_contact_terminal,   -- IEV ref 581-22-09 resilient contact
+  saddle_terminal,              -- IEV ref 442-06-09 saddle terminal
+  screw_terminal,               -- IEV ref 442-06-08 screw terminal
+  snap_on_contact_terminal,     -- IEV ref 581-22-10 snap-on contact
+  socket_terminal,              -- IEV ref 151-12-17 (581-22-06) socket contact, female_contact
+  solder_terminal,              -- IEV ref 442-06-20 solder terminal     
+  stud_terminal,                -- IEV ref 442-06-23 stud terminal
+  tuning_fork_contact_terminal -- IEV ref 581-22-12 tuning fork contact
+);
+END_TYPE;
+
+ENTITY Wiring_harness_assembly_design
+  SUBTYPE OF (Assembly_definition); 
+  topology : OPTIONAL Edge_based_topological_representation_with_length_constraint;
+END_ENTITY;
+
+ENTITY Harness_segment
+  SUBTYPE OF (Part_shape_element);
+  SELF\Shape_element.associated_definition : Wiring_harness_assembly_design;
+  SELF\Shape_element.identified_item : Edge; 
+  cross_section : OPTIONAL cross_sectional_constituent_element; 
+  forced_length : OPTIONAL Length_data_element;
+UNIQUE
+  UR1: associated_definition, identified_item;
+WHERE
+  WR1: associated_definition.topology IN using_representations(identified_item);
+END_ENTITY;  
+
+ENTITY Harness_node
+  SUBTYPE OF (Part_shape_element);
+  SELF\Shape_element.associated_definition : Wiring_harness_assembly_design;
+  SELF\Shape_element.identified_item : Vertex;
+  attached_feature : OPTIONAL Occurrence_shape_feature; 
+UNIQUE
+  UR1: associated_definition, identified_item;
+WHERE
+  WR1: associated_definition.topology IN using_representations(identified_item);
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT whad_part_shape_element_subtypes FOR Part_shape_element;
+	ONEOF (Harness_segment, Harness_node);
+END_SUBTYPE_CONSTRAINT; 
+
+END_SCHEMA;

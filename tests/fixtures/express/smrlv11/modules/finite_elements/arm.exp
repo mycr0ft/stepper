@@ -1,0 +1,185 @@
+
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.13 2010/02/10 21:33:14 thomasrthurman Exp
+   ISO TC184/SC4/WG12 N6727 - ISO/CD-TS 10303-1383 Finite elements - EXPRESS ARM
+ 
+*)
+
+
+SCHEMA Finite_elements_arm;
+
+USE FROM Analysis_characterized_arm;
+
+USE FROM Analysis_identification_arm;
+
+USE FROM Elemental_geometric_shape_arm;
+
+USE FROM Shape_property_assignment_arm;
+
+USE FROM Value_with_unit_arm;
+
+TYPE definition_element = SELECT 
+  (Curve_element,
+   Shape_element,
+   Surface_element,
+   Volume_element);
+END_TYPE;
+
+TYPE element_property_select = SELECT 
+  (Curve_property,
+   Surface_property);
+END_TYPE;
+
+TYPE fe_model_approval_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON analysis_approval_item WITH
+  (Fea_model);
+END_TYPE;
+
+ENTITY Curve_element
+SUBTYPE OF (Element);
+END_ENTITY;
+
+ENTITY Curve_property;
+  defined_elements : SET [1 : ?] OF Curve_element;
+END_ENTITY;
+
+ENTITY Curve_section_properties;
+  property : Curve_property;
+END_ENTITY;
+
+ENTITY Damping_matrix
+SUBTYPE OF (Matrix);
+END_ENTITY;
+
+ENTITY Directionally_explicit_element
+SUBTYPE OF (Element);
+  associated_matrix : Matrix;
+END_ENTITY;
+
+ENTITY Element
+SUPERTYPE OF (ONEOF(volume_element, surface_element, substructure_element, curve_element, point_element, directionally_explicit_element, explicit_element));
+  description : OPTIONAL Element_description;
+  element_identification : STRING;
+  model_ref : Fea_model;
+  node_list : LIST [1 : ?] OF Node;
+END_ENTITY;
+
+ENTITY Element_description;
+  description : STRING;
+END_ENTITY;
+
+
+ENTITY Element_property_geometric_relationship;
+  geometry_ref : Detailed_geometric_model_element;
+  section_ref : element_property_select;
+END_ENTITY;
+
+ENTITY Element_shape_aspect;
+END_ENTITY;
+
+ENTITY Element_shape_relationship;
+  element_aspect : Element_shape_aspect;
+  element_reference : Element;
+  role : STRING;
+  shape : Detailed_geometric_model_element;
+END_ENTITY;
+
+ENTITY Explicit_element
+SUBTYPE OF (Element);
+  associated_matrix : Matrix;
+END_ENTITY;
+
+ENTITY Fea_model;
+  analysis_type : STRING;
+  cae_filename : OPTIONAL STRING;
+  creating_software : STRING;
+  definition : Analysis_discipline_definition;
+  description : Fea_model_description;
+  identification : STRING;
+  intended_analysis_code : STRING;
+END_ENTITY;
+
+ENTITY Fea_model_description;
+  description : STRING;
+END_ENTITY;
+
+ENTITY Fea_group;
+  description : STRING;
+  elements : OPTIONAL SET [1 : ?] OF Element;
+  group_identification : STRING;
+  nodes : OPTIONAL SET [1 : ?] OF Node;
+END_ENTITY;
+
+ENTITY Fea_group_relationship;
+  relating_group : Fea_group; -- LK: was Group;
+  related_group : Fea_group; -- LK: was Group;
+END_ENTITY;
+
+ENTITY Mass_matrix
+SUBTYPE OF (Matrix);
+END_ENTITY;
+
+ENTITY Matrix
+SUPERTYPE OF (ONEOF(mass_matrix, stiffness_matrix, damping_matrix));
+END_ENTITY;
+
+ENTITY Nodal_results_coordinate_system;
+END_ENTITY;
+
+ENTITY Node;
+  description : OPTIONAL Node_description;
+  location : Detailed_geometric_model_element;
+  model_ref : Fea_model;
+  node_identification : STRING;
+  results_coordinate_space : OPTIONAL Nodal_results_coordinate_system;
+END_ENTITY;
+
+
+ENTITY Node_description;
+  description : STRING;
+END_ENTITY;
+
+ENTITY Node_shape_relationship;
+  node_reference : Node;
+  role : STRING;
+  shape : Detailed_geometric_model_element;
+END_ENTITY;
+
+ENTITY Point_element
+SUBTYPE OF (Element);
+  associated_matrix : Matrix;
+END_ENTITY;
+
+ENTITY Stiffness_matrix
+SUBTYPE OF (Matrix);
+END_ENTITY;
+
+ENTITY Substructure_element
+SUBTYPE OF (Element);
+  substructure_model_ref : Fea_model;
+END_ENTITY;
+
+ENTITY Substructure_node_relationship;
+  relating_node : Node;
+  related_node : Node;
+END_ENTITY;
+
+ENTITY Surface_element
+SUBTYPE OF (Element);
+END_ENTITY;
+
+ENTITY Surface_property;
+  defined_elements : SET [1 : ?] OF Surface_element;
+END_ENTITY;
+
+ENTITY Surface_thickness;
+  property : Surface_property;
+  thickness : length_measure;
+END_ENTITY;
+
+ENTITY Volume_element
+SUBTYPE OF (Element);
+END_ENTITY;
+
+END_SCHEMA;
+

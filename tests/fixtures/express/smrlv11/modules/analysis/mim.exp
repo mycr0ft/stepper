@@ -1,0 +1,11 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.7 2009/09/03 19:19:09 darla Exp
+ISO/CD-TS WG12 N6699- 10303-1372 analysis - EXPRESS MIM*)
+
+SCHEMA Analysis_mim;
+USE FROM analysis_schema; -- ISO 10303-53
+USE FROM Analysis_product_relationships_mim; --ISO 10303-1373
+USE FROM Independent_property_mim; -- ISO 10303-1036
+USE FROM Mesh_topology_mim; --ISO 10303-1386
+END_SCHEMA;

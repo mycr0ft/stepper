@@ -1,0 +1,10 @@
+(*
+ $Id: mim.exp,v 1.11 2006/05/18 11:42:07 liutkuviene Exp $
+ ISO TC184/SC4/WG12 N4372 - ISO/TS 10303-1038 Independent property representation - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N1244
+*)
+SCHEMA Independent_property_representation_mim;
+
+USE FROM Property_assignment_mim;    -- ISO/TS 10303-1030
+
+END_SCHEMA;

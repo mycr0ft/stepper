@@ -1,0 +1,238 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.32 2010/06/10 22:13:11 philsp Exp
+ISO TC184/SC4/WG3 N2739 - ISO/TS 10303-1466 Program management - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG3 N2689
+*) 
+
+
+SCHEMA Program_management_arm;
+
+USE FROM Issue_management_arm;    -- ISO/TS 10303-1489
+
+USE FROM Probability_distribution_arm;    -- ISO/TS 10303-1274
+
+USE FROM Project_management_arm;    -- ISO/TS 10303-1433
+
+USE FROM Risk_management_arm;    -- ISO/TS 10303-1467
+
+
+TYPE prgm_affected_item_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_affected_item_select WITH 
+   (Risk, 
+    Risk_perception_source_assignment);
+END_TYPE; 
+
+TYPE prgm_classified_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_classified_attribute_select WITH 
+   (Issue, 
+    Risk);
+END_TYPE; 
+
+TYPE prgm_collection_member_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_collection_member_select WITH 
+   (Function_value_pair, 
+    Value_function);
+END_TYPE; 
+
+TYPE prgm_condition_evaluation_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_condition_evaluation_item WITH 
+   (Risk_impact_assignment);
+END_TYPE; 
+
+TYPE prgm_condition_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_condition_item WITH 
+   (Issue);
+END_TYPE; 
+
+TYPE prgm_contract_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_contract_item WITH 
+   (Risk_perception_source_assignment);
+END_TYPE; 
+
+TYPE prgm_defined_activities = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_defined_activities WITH 
+   (Issue);
+END_TYPE; 
+
+TYPE prgm_defined_methods = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_defined_methods WITH 
+   (Issue);
+END_TYPE; 
+
+TYPE prgm_effectivity_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_effectivity_item WITH 
+   (Issue, 
+    Issue_consequence, 
+    Risk_impact_assignment, 
+    Risk_perception_source_assignment);
+END_TYPE; 
+
+TYPE prgm_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_identification_item WITH 
+   (Probability_distribution);
+END_TYPE; 
+
+TYPE prgm_information_usage_right_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_information_usage_right_item WITH 
+   (Issue, 
+    Issue_consequence);
+END_TYPE; 
+
+TYPE prgm_observation_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON os_observation_item WITH 
+   (Advisory_note, 
+    Assumption, 
+    Assumption_assignment, 
+    Assumption_relationship, 
+    Function_value_pair, 
+    Item_assumed, 
+    Product_configuration_relationship, 
+    Risk_impact_assignment, 
+    Risk_perception_relationship, 
+    Risk_perception_source_assignment, 
+    Value_function);
+END_TYPE; 
+
+TYPE prgm_observation_recorder = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON observation_recorder WITH 
+   (Person, 
+    Person_in_organization, 
+    Type_of_person_assignment);
+END_TYPE; 
+
+TYPE prgm_observed_context = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_observed_context WITH 
+   (Risk_impact_assignment, 
+    Risk_perception_context, 
+    Risk_perception_source_assignment);
+END_TYPE; 
+
+TYPE prgm_position_group_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_position_group_item WITH 
+   (Issue_consequence, 
+    Risk_impact_assignment, 
+    Risk_perception_source_assignment);
+END_TYPE; 
+
+TYPE prgm_position_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_position_item WITH 
+   (Issue_consequence, 
+    Risk_impact_assignment, 
+    Risk_perception_source_assignment);
+END_TYPE; 
+
+TYPE prgm_position_type_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_position_type_item WITH 
+   (Issue_consequence, 
+    Risk_impact_assignment, 
+    Risk_perception_source_assignment);
+END_TYPE; 
+
+TYPE prgm_product_based_location_representation = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_product_based_location_representation WITH 
+   (Risk_consequence);
+END_TYPE; 
+
+TYPE prgm_project_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_project_item WITH 
+   (Risk_impact_assignment, 
+    Risk_perception_context, 
+    Risk_perception_source_assignment, 
+    Risk_relationship);
+END_TYPE; 
+
+TYPE prgm_required_resource_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_required_resource_item WITH 
+   (Issue);
+END_TYPE; 
+
+TYPE prgm_resource_as_realized_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_resource_as_realized_item WITH 
+   (Risk_impact_assignment, 
+    Risk_perception_context);
+END_TYPE; 
+
+TYPE prgm_risk_impact_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON rm_risk_impact_item WITH 
+   (Activity_method_realization_relationship, 
+    Activity_property, 
+    Breakdown_context, 
+    Breakdown_of, 
+    Issue, 
+    Issue_consequence, 
+    Managed_resource, 
+    Managed_resource_relationship, 
+    Market, 
+    Project, 
+    Project_assignment, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Resource_event, 
+    Resource_property, 
+    Task_method_state_relationship, 
+    Task_objective, 
+    Task_objective_state_relationship);
+END_TYPE; 
+
+TYPE prgm_risk_perception_source_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON rm_risk_perception_source_item WITH 
+   (Activity_property, 
+    Breakdown_context, 
+    Breakdown_of, 
+    Certification_assignment, 
+    Condition_evaluation_parameter, 
+    Contract, 
+    Contract_assignment, 
+    Contract_relationship, 
+    Effectivity_assignment, 
+    Experience_gained, 
+    Experience_instance, 
+    Information_right, 
+    Information_usage_right, 
+    Managed_resource, 
+    Managed_resource_relationship, 
+    Market, 
+    Observation, 
+    Observation_consequence, 
+    Observation_relationship, 
+    Person_or_organization_or_person_in_organization_in_position, 
+    Person_or_organization_or_person_in_organization_in_position_relationship, 
+    Position, 
+    Position_assignment, 
+    Position_group, 
+    Position_group_assignment, 
+    Position_group_relationship, 
+    Position_position_type_assignment, 
+    Position_relationship, 
+    Position_role, 
+    Position_type, 
+    Position_type_assignment, 
+    Position_type_role, 
+    Product_concept, 
+    Product_design_to_individual, 
+    Product_design_version_to_individual, 
+    Product_group, 
+    Product_group_relationship, 
+    Product_planned_to_realized, 
+    Project, 
+    Project_assignment, 
+    Project_relationship, 
+    Qualification_assignment, 
+    Qualification_type, 
+    Required_resource, 
+    Required_resource_assignment, 
+    Resource_as_realized, 
+    Resource_event, 
+    Resource_property, 
+    Selected_item, 
+    Selected_item_assignment, 
+    Task_method_state_relationship, 
+    Task_objective, 
+    Task_objective_state_relationship, 
+    Type_of_person, 
+    Type_of_person_assignment, 
+    Type_of_person_definition, 
+    Type_of_person_definition_relationship, 
+    Type_of_person_definition_required_attributes_relationship, 
+    Work_order, 
+    Work_output, 
+    Work_output_assignment);
+END_TYPE; 
+
+TYPE prgm_security_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_security_classification_item WITH 
+   (Risk_consequence);
+END_TYPE; 
+
+TYPE prgm_state_definition_of_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_state_definition_of_item WITH 
+   (Issue_reference);
+END_TYPE; 
+
+TYPE prgm_state_of_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_state_of_item WITH 
+   (Risk_attitude, 
+    Risk_impact_assignment, 
+    Risk_perception);
+END_TYPE; 
+
+TYPE prgm_type_of_person_item_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON prjm_type_of_person_item_select WITH 
+   (Risk_impact_assignment);
+END_TYPE; 
+
+END_SCHEMA;  -- Program_management_arm

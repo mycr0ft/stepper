@@ -1,0 +1,13 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.5 2015/09/24 11:01:19 lothartklein Exp
+    ISO TC184/SC4/WG12 N7889 - ISO/TS 10303-1809 Default setting association - EXPRESS MIM
+    Supersedes ISO TC184/SC4/WG12 N7326
+*)
+(* UNDER DEVELOPMENT *)
+SCHEMA Default_setting_association_mim;
+
+USE FROM Shape_property_assignment_mim;
+USE FROM Value_with_unit_extension_mim;
+
+END_SCHEMA;

@@ -1,0 +1,12 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.4 2015/09/24 11:01:19 lothartklein Exp
+   ISO TC184/SC4/WG12 N7931 - ISO/TS 10303-1812 Product and manufacturing annotation presentation - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7368
+*)
+
+SCHEMA Product_and_manufacturing_annotation_presentation_mim;
+
+USE FROM Product_and_manufacturing_information_with_nominal_3d_models_mim;
+
+END_SCHEMA;

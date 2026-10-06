@@ -1,0 +1,47 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.16 2017/04/14 07:35:33 verodub Exp
+   ISO TC184/SC4/WG12 N9360 - ISO/TS 10303-1722 Part template - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N8274
+*)
+
+SCHEMA Part_template_arm;
+
+USE FROM Feature_and_connection_zone_arm;	-- ISO/TS 10303-1671
+USE FROM Part_shape_arm;   -- ISO/TS 10303-1807
+
+  TYPE plp_material_item_select = SELECT BASED_ON
+     material_item_select  WITH
+   		(Template_definition);
+  END_TYPE;
+
+  ENTITY Template
+  	SUBTYPE OF (Part);
+    UNIQUE 
+      UR1: SELF\Product.id;
+  END_ENTITY;
+
+  ENTITY Template_definition
+    SUBTYPE OF (Part_view_definition);
+      SELF\Product_view_definition.defined_version : Template_version;
+  END_ENTITY;
+
+  ENTITY Template_version
+ 	SUBTYPE OF (Part_version);
+      SELF\Product_version.of_product : Template;
+  END_ENTITY;
+
+  RULE template_version_constraint FOR (Product_version);
+    WHERE
+      WR1: SIZEOF ( QUERY ( pv <* Product_version | ( NOT ( 'PART_TEMPLATE_ARM.' + 'TEMPLATE_VERSION' IN TYPEOF ( pv) ) ) AND ( 'PART_TEMPLATE_ARM.' + 'TEMPLATE' IN TYPEOF ( pv.of_product) ) ) ) =0 ;
+  END_RULE; 
+
+  RULE template_definition_constraint FOR (Product_view_definition);
+    WHERE
+      WR1: SIZEOF ( QUERY ( pvd <* Product_view_definition | ( NOT ( 'PART_TEMPLATE_ARM.' + 'TEMPLATE_DEFINITION' IN TYPEOF (pvd) ) ) AND ( 'PART_TEMPLATE_ARM.' + 'TEMPLATE_VERSION' IN TYPEOF ( pvd.defined_version) ) ) ) =0 ;
+  END_RULE; 
+
+END_SCHEMA;
+
+
+

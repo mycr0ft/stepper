@@ -1,0 +1,19 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.4 2009/08/11 07:52:38 robbod Exp
+ ISO TC184/SC4/WG12 N6039 - ISO/TS 10303-1398 Identification relationship - EXPRESS ARM
+*) 
+
+
+SCHEMA Identification_relationship_arm;
+
+USE FROM Identification_assignment_arm;    -- ISO/TS 10303-1021
+
+
+ENTITY Identification_relationship;
+  relating_identification_assignment : Identification_assignment;
+  related_identification_assignment : Identification_assignment;
+END_ENTITY;
+
+END_SCHEMA;  -- Identification_relationship_arm
+

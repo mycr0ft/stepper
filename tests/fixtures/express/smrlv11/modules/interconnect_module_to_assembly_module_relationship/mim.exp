@@ -1,0 +1,23 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.23 2012/10/11 05:49:06 liutkuviene Exp
+   ISO TC184/SC4/WG12 N8150 - ISO/TS 10303-1685 Interconnect module to assembly module relationship - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7548
+*)
+
+
+SCHEMA Interconnect_module_to_assembly_module_relationship_mim;
+USE FROM Interconnect_module_connection_routing_mim;	-- ISO/TS 10303-1684
+
+  TYPE imtamr_requirement_assigned_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON requirement_assigned_item WITH 
+    (shape_aspect_relationship);
+  END_TYPE;
+
+  TYPE imtamr_document_reference_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON document_reference_item WITH 
+    (assembly_component,
+     component_feature,
+     descriptive_representation_item,
+     representation);
+  END_TYPE;
+
+END_SCHEMA;

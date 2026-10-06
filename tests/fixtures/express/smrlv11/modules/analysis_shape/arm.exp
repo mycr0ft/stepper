@@ -1,0 +1,35 @@
+
+
+(*"Analysis_shape_arm"
+  Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.11 2009/09/25 19:28:33 darla Exp
+ ISO TC184/SC4/WG12 N6704 - ISO/TS 10303-1374 - EXPRESS ARM
+*)
+SCHEMA Analysis_shape_arm;
+
+USE FROM Analysis_identification_arm;
+
+USE FROM Product_view_definition_arm;
+
+USE FROM Shape_property_assignment_arm;
+
+TYPE cross_section_shape_select = SELECT 
+  (Idealized_analysis_shape,
+   Nominal_design_shape);
+END_TYPE;
+
+ENTITY Idealized_analysis_shape
+SUBTYPE OF (Shape_description_association);
+  analysis_view : Analysis_discipline_definition;
+  basis : Nominal_design_shape;
+  defining_shape : shape_model;
+END_ENTITY;
+
+ENTITY Nominal_design_shape
+SUBTYPE OF (Shape_description_association);
+  defining_shape : shape_model;
+  design_view : Product_view_definition;
+END_ENTITY;
+
+END_SCHEMA;
+

@@ -1,0 +1,78 @@
+(*
+   $Id: arm.exp,v 1.16 2019/04/03 14:35:08 kevin Exp $
+   N11472 - ISO/TS 10303-1827 extruded_structure_cross_section - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N10438
+*)
+
+SCHEMA Extruded_structure_cross_section_arm;
+
+USE FROM General_design_connectivity_arm; -- ISO/TS 10303-1844
+USE FROM Value_with_unit_extension_arm; -- ISO/TS 10303-1753
+
+TYPE twist_direction_enum = ENUMERATION OF (
+  clockwise, 
+  counter_clockwise); 
+END_TYPE;
+
+TYPE outer_or_inner_boundary_enum = ENUMERATION OF (
+  outer_boundary, 
+  inner_boundary); 
+END_TYPE;
+
+TYPE cross_sectional_constituent_element = SELECT (
+  Cross_sectional_part_shape_element,
+  Cross_sectional_occurrence_shape_element);
+END_TYPE;
+
+TYPE part_view_definition_or_cross_sectional_part_shape_element_select = EXTENSIBLE SELECT
+  (Cross_sectional_part_shape_element, 
+  Part_view_definition,
+  Product_specification);
+END_TYPE;
+
+ENTITY Cross_sectional_part_shape_element
+  SUPERTYPE OF (
+    ONEOF( Cross_sectional_group_shape_element, Cross_sectional_alternative_part_shape_element))
+  SUBTYPE OF (General_part_feature); 
+  SELF\Shape_element.associated_definition : part_view_definition_or_cross_sectional_part_shape_element_select;
+  max_cross_section_diameter : OPTIONAL Length_data_element;
+  min_cross_section_diameter : OPTIONAL Length_data_element;
+  minimum_bend_radius : OPTIONAL Length_data_element;
+  outer_or_inner_boundary : OPTIONAL outer_or_inner_boundary_enum;
+WHERE
+  WR1: NOT (EXISTS(outer_or_inner_boundary) AND ('PART_VIEW_DEFINITION_ARM.PART_VIEW_DEFINITION' IN TYPEOF(associated_definition)));
+END_ENTITY;
+
+ENTITY Cross_sectional_occurrence_shape_element
+  SUBTYPE OF (Occurrence_shape_feature);
+  SELF\Occurrence_shape_element.definition : cross_sectional_constituent_element;
+END_ENTITY;
+
+ENTITY Cross_sectional_alternative_part_shape_element
+  SUBTYPE OF (Cross_sectional_part_shape_element); 
+  items : SET[1:?] OF cross_sectional_constituent_element; 
+END_ENTITY;
+
+ENTITY Cross_sectional_group_shape_element
+  SUPERTYPE OF ( ONEOF (Cross_sectional_group_shape_element_with_tubular_cover, Cross_sectional_group_shape_element_with_lacing, Twisted_cross_sectional_group_shape_element) )
+  SUBTYPE OF (Cross_sectional_part_shape_element); 
+  items : SET[1:?] OF cross_sectional_constituent_element; 
+END_ENTITY;
+
+ENTITY Cross_sectional_group_shape_element_with_tubular_cover 
+  SUBTYPE OF (Cross_sectional_group_shape_element);
+  cover : cross_sectional_constituent_element; -- of the covering component;
+END_ENTITY;
+
+ENTITY Cross_sectional_group_shape_element_with_lacing
+  SUBTYPE OF (Cross_sectional_group_shape_element);
+  lacing_material : OPTIONAL Product_occurrence;
+END_ENTITY;
+
+ENTITY Twisted_cross_sectional_group_shape_element
+  SUBTYPE OF (Cross_sectional_group_shape_element);
+  twist_period : OPTIONAL Length_data_element;
+  twist_direction : OPTIONAL twist_direction_enum;
+END_ENTITY;
+
+END_SCHEMA;

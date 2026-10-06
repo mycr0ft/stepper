@@ -1,0 +1,100 @@
+(*
+
+ISO 10303 TC184/SC4/WG12 N2837
+
+EXPRESS Source:
+ISO 10303-55 ed1 Procedural and hybrid representation - Procedural model schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-55 ed1 Procedural and hybrid representation - Procedural model schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA procedural_model_schema '{iso standard 10303 part(55) version(1) object(1) procedural_model_schema(1)}';
+
+REFERENCE FROM support_resource_schema                  -- ISO 10303-41
+  (text);
+
+REFERENCE FROM representation_schema                    -- ISO 10303-43
+  (item_in_context,
+   representation,
+   representation_item,
+   representation_item_relationship,
+   representation_relationship,
+   using_representations);
+
+REFERENCE FROM variational_representation_schema        -- ISO 10303-108
+  (variational_representation);
+
+ENTITY explicit_procedural_representation_relationship
+  SUBTYPE OF (representation_relationship);
+  SELF\representation_relationship.rep_1 : procedural_representation;
+WHERE
+  WR1 : (NOT ('PROCEDURAL_MODEL_SCHEMA.PROCEDURAL_REPRESENTATION' 
+    IN TYPEOF(SELF\representation_relationship.rep_2))) AND 
+    (NOT ('VARIATIONAL_REPRESENTATION_SCHEMA.VARIATIONAL_REPRESENTATION'
+    IN TYPEOF(SELF\representation_relationship.rep_2)));
+  WR2 : SELF\representation_relationship.rep_1.context_of_items :=:
+    SELF\representation_relationship.rep_2.context_of_items;
+END_ENTITY; 
+
+ENTITY explicit_procedural_representation_item_relationship
+  SUBTYPE OF (representation_item_relationship);
+  SELF\representation_item_relationship.relating_representation_item :
+    procedural_representation_sequence;
+WHERE
+  WR1 : NOT ('PROCEDURAL_MODEL_SCHEMA.PROCEDURAL_REPRESENTATION_SEQUENCE'
+    IN TYPEOF(
+      SELF\representation_item_relationship.related_representation_item));
+  WR2 : SIZEOF(QUERY(q <* using_representations(
+    SELF\representation_item_relationship.related_representation_item) |
+    item_in_context(
+      SELF\representation_item_relationship.relating_representation_item,
+      q.context_of_items))) > 0;
+END_ENTITY; 
+
+ENTITY procedural_representation
+  SUBTYPE OF (representation);
+  SELF\representation.items : 
+    SET[1:?] OF procedural_representation_sequence;
+END_ENTITY; 
+
+ENTITY procedural_representation_sequence
+  SUBTYPE OF (representation_item);
+  elements         : LIST[1:?] OF representation_item;
+  suppressed_items : SET[0:?] OF representation_item;
+  rationale        : text;
+WHERE
+  WR1: SIZEOF(QUERY(q <* suppressed_items | NOT (q IN elements))) = 0;
+END_ENTITY;
+
+ENTITY user_selected_elements
+  SUBTYPE OF (representation_item);
+  picked_items : SET[1:?] OF representation_item;
+END_ENTITY; 
+
+ENTITY indirectly_selected_elements
+  SUBTYPE OF (user_selected_elements);
+  indirectly_picked_items : SET[1:?] OF representation_item;
+END_ENTITY; 
+
+END_SCHEMA; -- procedural_model_schema
+

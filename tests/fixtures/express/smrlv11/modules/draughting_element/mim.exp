@@ -1,0 +1,33 @@
+(*
+   ISO TC184/SC4/WG12 N11417 - ISO/TS 10303-1310 Draughting element - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N10718
+*)
+SCHEMA Draughting_element_mim;
+USE FROM Associative_text_mim; -- ISO/TS 10303-1132
+USE FROM Curve_appearance_mim; -- ISO/TS 10303-1003
+USE FROM draughting_element_schema    --  ISO 10303-101
+  (annotation_placeholder_leader_line,
+  annotation_placeholder_occurrence_with_leader_line,
+  annotation_to_annotation_leader_line,
+  annotation_to_model_leader_line,
+  apll_point,
+  apll_point_with_surface,
+  auxiliary_leader_line,
+  annotation_plane,
+  des_apll_point_select,
+  leader_curve,
+  draughting_callout,
+  draughting_callout_relationship,
+  dimension_curve,
+  projection_curve);
+  
+USE FROM mechanical_design_schema( --  ISO 10303-113
+	annotation_placeholder_occurrence);
+USE FROM presentation_definition_schema( --  ISO 10303-46 
+  annotation_fill_area_occurrence);
+USE FROM Topologically_bounded_surface_mim; -- ISO 10303-1511
+
+USE FROM topology_schema --  ISO 10303-42
+    (face_surface);
+ 
+END_SCHEMA;

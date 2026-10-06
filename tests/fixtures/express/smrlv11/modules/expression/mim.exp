@@ -1,0 +1,28 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.25 2014/01/24 14:58:54 darla Exp
+   ISO TC184/SC4/WG12 N8414 - ISO/TS 10303-1342 Expression - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7862
+*)
+
+SCHEMA Expression_mim;
+
+USE FROM Generic_expression_mim;
+USE FROM Numeric_expression_mim;
+
+USE FROM iso13584_expressions_schema(
+	concat_expression,
+	format_function,
+	index_expression,
+	interval_expression,
+	like_expression,
+	simple_string_expression,
+	SQL_mappable_defined_function,
+	string_defined_function,
+	string_expression,
+	string_literal,
+	string_variable,
+	substring_expression
+);
+	
+END_SCHEMA;

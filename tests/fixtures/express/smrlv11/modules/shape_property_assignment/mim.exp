@@ -1,0 +1,42 @@
+(*
+	ISO TC184/SC4/WG12 N11252 - ISO/TS 10303-1032 Shape property assignment - EXPRESS MIM
+	Supersedes ISO TC184/SC4/WG12 N10035
+*)
+
+
+SCHEMA Shape_property_assignment_mim;
+
+(*REFERENCE FROM*) USE FROM Assembly_structure_mim; -- ISO/TS 10303-1026
+(*REFERENCE FROM*) USE FROM External_model_mim; -- ISO/TS 10303-1033
+USE FROM Geometric_model_relationship_mim; -- ISO/TS 10303-1403
+USE FROM Property_assignment_mim; -- ISO/TS 10303-1030
+USE FROM Product_view_definition_relationship_mim; -- ISO/TS 10303-1041
+
+USE FROM basic_attribute_schema   -- ISO 10303-41
+  (id_attribute);
+
+USE FROM product_property_definition_schema   -- ISO 10303-41
+  (characterized_item,
+   characterized_product_definition,
+   product_definition_shape,
+   shape_aspect,
+   shape_aspect_relationship);
+
+USE FROM product_property_representation_schema   -- ISO 10303-41
+  (item_identified_representation_usage,
+   chain_based_item_identified_representation_usage,
+   shape_definition_representation);
+
+USE FROM shape_dimension_schema (   -- ISO 10303-47
+    dimensional_location,
+    dimensional_size);
+
+USE FROM shape_tolerance_schema (  -- ISO 10303-47
+     chain_based_geometric_item_specific_usage,
+     geometric_item_specific_usage_select,
+     geometric_item_specific_usage,
+     geometric_model_item,
+     shape_model);
+     
+
+END_SCHEMA;

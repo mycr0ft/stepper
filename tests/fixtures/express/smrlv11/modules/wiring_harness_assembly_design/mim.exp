@@ -1,0 +1,105 @@
+(*
+   ISO TC184/SC4/WG12 N10571 - ISO/TS 10303-1828 wiring_harness_assembly_design - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N10441
+*)
+
+SCHEMA Wiring_harness_assembly_design_mim;
+
+USE FROM Edge_based_topological_representation_with_length_constraint_mim;   -- ISO/TS 10303-1830
+USE FROM Extruded_structure_cross_section_mim;   -- ISO/TS 10303-1827
+USE FROM representation_schema (	-- ISO 10303-43
+  set_item_defined_transformation);
+USE FROM Wire_and_cable_design_connectivity_mim;   -- ISO/TS 10303-1845
+
+ENTITY harness_node
+	SUBTYPE OF (shape_aspect);
+END_ENTITY;
+
+ENTITY harness_segment
+	SUBTYPE OF (shape_aspect);
+END_ENTITY;
+
+  TYPE geometry_association_item_select = SELECT (
+    cartesian_point,
+    curve,
+    edge_curve,
+    placement,
+    vertex_point);
+  END_TYPE; 
+
+  TYPE topology_association_item_select = SELECT (
+    edge,
+    path,
+    vertex
+  );
+  END_TYPE; 
+
+  ENTITY topology_to_geometry_item_association
+    SUBTYPE OF (item_defined_transformation);
+      SELF\item_defined_transformation.transform_item_1 : topology_association_item_select; 
+      SELF\item_defined_transformation.transform_item_2  : geometry_association_item_select;
+  END_ENTITY;
+
+  ENTITY geometry_to_topology_item_association
+    SUBTYPE OF (item_defined_transformation);
+      SELF\item_defined_transformation.transform_item_1 : geometry_association_item_select;
+      SELF\item_defined_transformation.transform_item_2  : topology_association_item_select;
+  END_ENTITY;
+
+  ENTITY topology_to_geometry_model_association
+    SUBTYPE OF (representation_relationship_with_transformation, shape_representation_relationship);
+      SELF\representation_relationship_with_transformation.transformation_operator : set_item_defined_transformation;
+    DERIVE
+      items : SET OF item_defined_transformation := get_item_defined_transformations(transformation_operator);
+    INVERSE
+      product_context : SET [1:?] OF context_dependent_shape_representation FOR
+          representation_relation;
+   WHERE
+    WR1: SIZEOF(QUERY(it <* items | NOT ('WIRING_HARNESS_ASSEMBLY_DESIGN_MIM.TOPOLOGY_TO_GEOMETRY_ITEM_ASSOCIATION' IN TYPEOF(it)))) = 0;
+    WR2: NOT ('REPRESENTATION_SCHEMA.DEFINITIONAL_REPRESENTATION_RELATIONSHIP' IN TYPEOF (SELF));    
+--  IP1: A member of topology_to_geometry_model_association shall be associated
+--     only with a product_definition whose 
+--          application_context_element.name = 'wiring harness assembly design' 
+   END_ENTITY;    
+
+  ENTITY geometry_to_topology_model_association
+    SUBTYPE OF (representation_relationship_with_transformation, shape_representation_relationship);
+     SELF\representation_relationship_with_transformation.transformation_operator : set_item_defined_transformation;
+    DERIVE
+      items : SET OF item_defined_transformation := get_item_defined_transformations(transformation_operator);
+    INVERSE
+      product_context : SET [1:?] OF context_dependent_shape_representation FOR
+          representation_relation;
+   WHERE
+    WR1: SIZEOF(QUERY(it <* items | NOT ('WIRING_HARNESS_ASSEMBLY_DESIGN_MIM.GEOMETRY_TO_TOPOLOGY_ITEM_ASSOCIATION' IN TYPEOF(it)))) = 0;
+    WR2: NOT ('REPRESENTATION_SCHEMA.DEFINITIONAL_REPRESENTATION_RELATIONSHIP' IN TYPEOF (SELF));    
+--  IP1: A member of geometry_to_topology_model_association shall be associated
+--     only with a product_definition whose 
+--          application_context_element.name = 'wiring harness assembly design' 
+   END_ENTITY;    
+
+
+SUBTYPE_CONSTRAINT whad_item_defined_transformation_subtypes FOR item_defined_transformation;
+  ONEOF (topology_to_geometry_item_association, geometry_to_topology_item_association);
+END_SUBTYPE_CONSTRAINT;
+
+SUBTYPE_CONSTRAINT whad_representation_relationship_with_transformation_subtypes FOR representation_relationship_with_transformation;
+  ONEOF (topology_to_geometry_model_association, geometry_to_topology_model_association);
+END_SUBTYPE_CONSTRAINT;
+
+SUBTYPE_CONSTRAINT whad_shape_aspect_subtypes FOR shape_aspect;
+          ONEOF (harness_node, harness_segment);
+END_SUBTYPE_CONSTRAINT;
+
+ FUNCTION get_item_defined_transformations (input : set_item_defined_transformation): SET OF item_defined_transformation;
+    LOCAL
+      item_set : SET OF item_defined_transformation := [];
+    END_LOCAL;
+  REPEAT i := 1 to HIINDEX(input);
+      item_set := item_set + input[i];
+  END_REPEAT;
+  RETURN(item_set);
+  END_FUNCTION;
+
+
+END_SCHEMA;

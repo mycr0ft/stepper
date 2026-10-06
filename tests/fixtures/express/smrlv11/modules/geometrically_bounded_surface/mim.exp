@@ -1,0 +1,20 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.8 2012/10/11 05:49:04 liutkuviene Exp
+ ISO TC184/SC4/WG12 N7835 - ISO/TS 10303-1507 Geometrically bounded surface - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N7236
+*)
+SCHEMA Geometrically_bounded_surface_mim;
+
+USE FROM aic_geometrically_bounded_surface;
+
+USE FROM Basic_curve_mim;
+
+USE FROM B_spline_geometry_mim;
+
+USE FROM geometry_schema(boundary_curve, curve_bounded_surface); -- ISO 10303-42
+
+USE FROM geometric_model_schema(geometric_set); -- ISO 10303-42 
+
+END_SCHEMA;
+

@@ -1,0 +1,36 @@
+(*
+ $Id: arm.exp,v 1.18 2021/09/21 15:44:22 kevin Exp $
+ ISO TC184/SC4/WG12 N11001 - ISO/TS 10303-1104 Specified product - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N10125
+*)
+
+SCHEMA Specified_product_arm;
+
+USE FROM Configuration_item_arm; -- ISO/TS 10303-1056
+
+USE FROM Product_class_arm; -- ISO/TS 10303-1103
+
+USE FROM Characterizable_object_arm; -- ISO/TS 10303-1765
+
+  ENTITY Product_specification
+    SUBTYPE OF (Characterizable_object, Product_configuration);
+      version_id                              : OPTIONAL STRING;
+      SELF\Product_configuration.item_context : Product_class;
+      defining_specifications                 : SET [0:?] OF Specification;
+      ps_shape_type                           : OPTIONAL product_shape_type_enumeration; 
+  DERIVE
+    SELF\Characterizable_object.name : label := '';
+  WHERE
+      WR1: NOT EXISTS(SELF\Characterizable_object.shape_type);
+      WR2: NOT EXISTS(SELF\Characterizable_object.description);
+  END_ENTITY;
+
+  ENTITY Specification_based_product_version
+    SUBTYPE OF (Product_version);
+    INVERSE
+      specification_source : Item_design_association FOR design;
+    WHERE
+      WR1 : 'SPECIFIED_PRODUCT_ARM.PRODUCT_SPECIFICATION' IN TYPEOF(specification_source.configuration);
+  END_ENTITY;
+  
+END_SCHEMA;

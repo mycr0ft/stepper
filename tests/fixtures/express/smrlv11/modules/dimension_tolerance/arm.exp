@@ -1,0 +1,281 @@
+(*
+$Id: arm.exp,v 1.56 2021/06/11 23:26:40 tom Exp $
+ISO TC184/SC4/WG12 N11299 - ISO/TS 10303-1050 Dimension tolerance - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N10186
+*) 
+
+
+SCHEMA Dimension_tolerance_arm;
+
+USE FROM Activity_arm;   -- ISO/TS 10303-1047
+USE FROM Derived_shape_element_arm;    -- ISO/TS 10303-1130
+USE FROM Datum_and_datum_systems_arm;  -- n tbd
+USE FROM Document_assignment_arm;    -- ISO/TS 10303-1122
+USE FROM Extended_measure_representation_arm;    -- ISO/TS 10303-1106
+USE FROM Value_with_unit_extension_arm;  -- ISO/TS 10303-1753
+
+TYPE adjoining_or_centred = ENUMERATION OF ( 
+  adjoining,
+  centred);
+END_TYPE;
+
+TYPE angle_relator = ENUMERATION OF 
+   (equal,
+    large,
+    small);
+END_TYPE; 
+
+TYPE diameter_qualifier_enumeration = ENUMERATION OF (
+  centre_outer,
+  centre_inner,
+  outer_centre,
+  outer_outer,
+  outer_inner,
+  inner_centre,
+  inner_outer,
+  inner_inner);
+END_TYPE;
+
+TYPE diameter_type = ENUMERATION OF (
+   circular_or_cylindrical_diameter,
+   spherical_diameter,
+   toroidal_minor_diameter,
+   toroidal_major_diameter,
+   toroidal_high_major_diameter,
+   toroidal_low_major_diameter);
+END_TYPE;
+
+TYPE dimension_value_select = SELECT
+   (Dimension_value_with_limitation, 
+    Numerical_item_with_unit, 
+    Tolerance_range, 
+    Value_limit);
+END_TYPE; 
+
+TYPE dt_activity_item = SELECT BASED_ON activity_item WITH (
+  Dimensional_size,
+  Dimensional_location
+);
+END_TYPE;
+
+
+TYPE edge_of_undefined_shape_size_element = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE;
+
+TYPE geometric_dimension_modifier = EXTENSIBLE ENUMERATION OF (
+  two_point_size, -- (LP) 
+  local_size_defined_by_a_sphere, -- (LS)
+  least_square_association_criteria, -- (GG) 
+  maximum_inscribed_association_criteria, -- (GX) 
+  minimum_circumscribed_association_criteria, -- (GN) 
+  circumference_diameter_calculated_size, -- (CC) 
+  area_diameter_calculated_size, -- (CA) 
+  volume_diameter_calculated_size, -- (CV) 
+  maximum_rank_order_size, -- (SX) 
+  minimum_rank_order_size, -- (SN)
+  average_rank_order_size, -- (SA) 
+  median_rank_order_size, -- (SM) 
+  mid_range_rank_order_size, -- (SD) 
+  range_rank_order_size, -- (SR) 
+  any_part_of_the_feature, -- 'APF' 
+  any_cross_section, -- '/0'
+  specific_fixed_cross_section, -- SCS
+  common_tolerance, -- 'CT'
+  free_state_condition, -- (F)
+  statistical, -- ASME only
+  continuous_feature, -- ASME only
+  square, -- ASME only
+  controlled_radius, -- ASME only
+  united_feature_of_size, -- UF
+  standard_deviation_of_sizes, -- (SQ)
+  minimax_association_criteria, -- (GC)
+  global_angular_size_with_minimax_association_criterion, -- (GC)
+  standard_deviation_of_angular_size, -- (SQ)
+  two_line_angular_size_with_minimax_association_criteria, -- (LC)
+  two_line_angular_size_with_least_squares_association_criteria); -- (LG)
+END_TYPE;
+
+TYPE limitation_definition_select = SELECT
+   (Limits_and_fits, 
+    Plus_minus_bounds);
+END_TYPE; 
+
+TYPE radial_type = ENUMERATION OF (
+   circular_or_cylindrical_radius,
+   spherical_radius,
+   toroidal_minor_radius,
+   toroidal_major_radius,
+   toroidal_high_major_radius,
+   toroidal_low_major_radius);
+END_TYPE;
+
+TYPE tolerance_principle_type = ENUMERATION OF (
+  envelope_requirement, 
+  independency, 
+  default);
+END_TYPE;
+
+TYPE undefined_edge_shape_enumeration_direction = ENUMERATION OF ( 
+  true_neighbor,               
+  false_neighbor,
+  both_neighbors);
+END_TYPE;
+
+ENTITY Angular_location
+  SUBTYPE OF (Dimensional_location);
+  angle_selection : angle_relator;
+  orientation : OPTIONAL Axis_placement;
+END_ENTITY;
+
+ENTITY Angular_size
+  SUBTYPE OF (Dimensional_size);
+  full : BOOLEAN;
+  angle_selection : angle_relator;
+END_ENTITY;
+
+ENTITY Curved_distance
+  SUBTYPE OF (Dimensional_location);
+  used_path : Measurement_path;
+END_ENTITY;
+
+ENTITY Curved_size
+  SUBTYPE OF (Dimensional_size);
+END_ENTITY;
+
+ENTITY Diameter_size
+   SUBTYPE OF (Dimensional_size);
+   geometry_type : diameter_type;
+END_ENTITY;
+
+ENTITY Dimensional_size
+  ABSTRACT SUPERTYPE OF (ONEOF (Angular_size,
+                                Curved_size,
+                                Diameter_size,
+                                Edge_of_undefined_shape_size,
+                                Machining_feature_size,
+                                Radial_size,
+                                Thickness_size))
+  SUBTYPE OF (Geometric_dimension);
+  is_applied_to : Shape_element;
+  WHERE
+   WR1: EXISTS(is_applied_to\Shape_element.product_definitional) AND 
+               is_applied_to\Shape_element.product_definitional;
+END_ENTITY;
+
+ENTITY Dimensional_location_with_datum_feature
+   SUBTYPE OF (Datum_feature, Dimensional_location);
+END_ENTITY;
+
+ENTITY Dimensional_size_with_datum_feature
+   SUBTYPE OF (Datum_feature, Dimensional_size);
+   WHERE
+   	WR1: SELF\Dimensional_size.is_applied_to :=: SELF;
+END_ENTITY;
+
+ENTITY Dimension_value_with_limitation;
+  defined_by : limitation_definition_select;
+  limited_value : Numerical_item_with_unit;
+END_ENTITY;
+
+ENTITY Geometric_dimension
+  ABSTRACT SUPERTYPE OF (ONEOF (Dimensional_location,
+                                Dimensional_size));
+  id : STRING;
+  dimension_value : dimension_value_select;
+  notes : SET[0:?] OF STRING;
+  theoretical_exact : BOOLEAN;
+  auxiliary : BOOLEAN;
+  tolerance_principle : tolerance_principle_type;
+  modifiers : LIST [0:?] of UNIQUE geometric_dimension_modifier;
+  unit_length : OPTIONAL Length_data_element;
+END_ENTITY;
+
+ENTITY Limits_and_fits;
+  deviation : STRING;
+  fitting_type : OPTIONAL STRING;
+  grade : STRING;
+END_ENTITY;
+
+ENTITY Linear_distance
+  SUBTYPE OF (Dimensional_location);
+  orientation : OPTIONAL Axis_placement;
+  diameter_qualifier : OPTIONAL diameter_qualifier_enumeration;
+END_ENTITY;
+
+ENTITY Dimensional_location
+  ABSTRACT SUPERTYPE OF (ONEOF (Angular_location,
+                                Curved_distance,
+                                Linear_distance))
+  SUBTYPE OF (Geometric_dimension);
+  description : OPTIONAL STRING;
+  directed : OPTIONAL BOOLEAN;
+  origin : Shape_element;
+  target : Shape_element;
+WHERE
+   WR1: EXISTS(origin\Shape_element.product_definitional) AND 
+        (origin\Shape_element.product_definitional <> UNKNOWN) AND
+        EXISTS(target\Shape_element.product_definitional) AND 
+        (target\Shape_element.product_definitional <> UNKNOWN);
+END_ENTITY;
+
+ENTITY Edge_of_undefined_shape_size
+  SUBTYPE OF (Dimensional_size);
+  orientation : undefined_edge_shape_enumeration_direction;
+  SELF\Dimensional_size.is_applied_to : edge_of_undefined_shape_size_element;
+  SELF\Geometric_dimension.dimension_value : Tolerance_range;
+UNIQUE
+  UR1 : is_applied_to, orientation;
+END_ENTITY;
+
+ENTITY Machining_feature_size
+  SUBTYPE OF (Dimensional_size);
+  considered_attribute: STRING;
+END_ENTITY;
+
+ENTITY Measurement_path;
+  defined_by : Curve;
+  defined_in : Geometric_coordinate_space;
+END_ENTITY;
+
+ENTITY Plus_minus_bounds
+	SUPERTYPE OF (
+		ONEOF (Angle_plus_minus_bounds,
+		Length_plus_minus_bounds));
+  lower_bound : Value_with_unit;
+  upper_bound         : Value_with_unit;
+END_ENTITY;
+
+ENTITY Angle_plus_minus_bounds
+  SUBTYPE OF (Plus_minus_bounds);
+  SELF\Plus_minus_bounds.lower_bound : Angle_data_element;
+  SELF\Plus_minus_bounds.upper_bound : Angle_data_element;
+END_ENTITY;
+
+ENTITY Length_plus_minus_bounds
+  SUBTYPE OF (Plus_minus_bounds);
+  SELF\Plus_minus_bounds.lower_bound : Length_data_element;
+  SELF\Plus_minus_bounds.upper_bound : Length_data_element;
+END_ENTITY;
+
+ENTITY Radial_size
+   SUBTYPE OF (Dimensional_size);
+   radius_type : OPTIONAL adjoining_or_centred;
+   geometry_type : radial_type;
+END_ENTITY;
+
+ENTITY Thickness_size
+  SUBTYPE OF (Dimensional_size);
+  used_path : OPTIONAL Measurement_path;
+END_ENTITY;
+
+ENTITY Tolerance_range;
+  lower_range : Numerical_item_with_unit;
+  upper_range : Numerical_item_with_unit;
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT dimensional_tolerance_constraint FOR Datum_feature;
+  ONEOF(Dimensional_location_with_datum_feature,
+        Dimensional_size_with_datum_feature);
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;  -- Dimension_tolerance_arm

@@ -1,0 +1,16 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.6 2019/01/23 18:22:58 brandon Exp
+   ISO TC184/SC4/WG12 N9693 - ISO/TS 10303-1807 General part feature - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7332
+*)
+
+SCHEMA Part_shape_mim;
+
+USE FROM Part_view_definition_mim;    --  ISO/TS 10303-1023 
+USE FROM product_property_definition_schema(shape_aspect_occurrence);  -- ISO/TS 10303-41
+USE FROM Shape_feature_mim; -- ISO/TS 10303-1764
+USE FROM Shape_property_assignment_mim; -- ISO/TS 10303-1032
+
+
+END_SCHEMA;

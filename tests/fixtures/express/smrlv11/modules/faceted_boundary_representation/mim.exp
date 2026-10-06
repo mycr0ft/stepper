@@ -1,0 +1,22 @@
+(*
+ ISO TC184/SC4/WG12 N11347 - ISO/TS 10303-1512 Faceted boundary representation - EXPRESS MIM
+   supersedes ISO TC184/SC4/WG12 N1286
+*)
+
+
+SCHEMA Faceted_boundary_representation_mim;
+
+USE FROM Elemental_geometric_shape_mim;
+
+USE FROM geometric_model_schema(
+             faceted_brep,
+	     faceted_brep_shape_representation);
+
+USE FROM geometry_schema (
+          plane);
+
+USE FROM topology_schema(
+          poly_loop);
+
+END_SCHEMA;
+

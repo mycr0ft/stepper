@@ -1,0 +1,62 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.6 2015/09/08 15:38:10 sophieherail Exp
+   ISO TC184/SC4/WG12 N8872 - ISO/TS 10303-1520 Product data quality definition - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N7804
+*)
+
+SCHEMA Product_data_quality_definition_arm;
+
+  USE FROM Product_data_quality_criteria_arm;
+
+  USE FROM Product_data_quality_inspection_result_arm;
+
+  USE FROM Product_view_definition_arm;
+
+  USE FROM Date_time_assignment_arm;
+
+  USE FROM Person_organization_assignment_arm;
+
+  TYPE used_quality_representation_select = SELECT
+    (Data_quality_criteria_representation,
+     Data_quality_inspection_result_representation);
+  END_TYPE;
+
+  TYPE pdq_date_or_date_time_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON Date_or_date_time_item WITH
+    (Data_quality_definition);
+  END_TYPE;
+
+  TYPE pdq_organization_or_person_in_organization_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON Organization_or_person_in_organization_item WITH
+    (Data_quality_definition);
+  END_TYPE;
+
+  ENTITY Data_quality_definition;
+      description : STRING;
+  END_ENTITY;
+
+  ENTITY Data_quality_definition_representation_relationship;
+      description         : STRING;
+      definition          : Data_quality_definition;
+      used_representation : used_quality_representation_select;
+  END_ENTITY;
+
+  ENTITY Product_data_and_data_quality_relationship;
+      description  : STRING;
+      product_data : Product_view_definition;
+      data_quality : Data_quality_definition;
+  END_ENTITY;
+
+  ENTITY Software_for_data_quality_check;
+      description      : STRING;
+      software_name    : STRING;
+      software_version : STRING;
+      data_quality     : Data_quality_definition_representation_relationship;
+  END_ENTITY;
+
+  ENTITY Data_quality_definition_relationship;
+      description                      : STRING;
+      relating_data_quality_definition : Data_quality_definition;
+      related_data_quality_definition  : Data_quality_definition;
+  END_ENTITY;
+
+END_SCHEMA;

@@ -1,0 +1,124 @@
+(* 
+$Id: arm.exp,v 1.22 2017/01/23 13:58:18 kevletu Exp $  
+ISO TC184/SC4/WG12 N9339 - ISO/TS 10303-1130 Derived shape element - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N7984
+*) 
+
+
+SCHEMA Derived_shape_element_arm;
+
+USE FROM Construction_geometry_arm;  -- ISO/TS 10303-1131
+USE FROM Shape_property_assignment_arm; -- ISO/TS 10303-1032
+USE FROM Value_with_unit_arm;    -- ISO/TS 10303-1054
+
+TYPE dse_shape_model = SELECT BASED_ON shape_model WITH (
+   Constructive_geometry);
+END_TYPE;
+
+ENTITY Apex
+  SUBTYPE OF (Derived_shape_element);
+END_ENTITY;
+
+ENTITY Centre_axis
+  SUBTYPE OF (Centre_of_symmetry);
+WHERE
+  WR1 : NOT EXISTS(SELF\Shape_element.description);
+END_ENTITY;
+
+ENTITY Centre_of_symmetry
+  SUPERTYPE OF (ONEOF (
+    Centre_axis,
+    Centre_plane,
+    Centre_point,
+    Median_curve,
+    Median_surface))
+  SUBTYPE OF (Derived_shape_element);
+END_ENTITY;
+
+ENTITY Centre_plane
+  SUBTYPE OF (Centre_of_symmetry);
+WHERE
+  WR1 : NOT EXISTS(SELF\Shape_element.description);
+END_ENTITY;
+
+ENTITY Centre_point
+  SUBTYPE OF (Centre_of_symmetry);
+WHERE
+  WR1 : NOT EXISTS(SELF\Shape_element.description);
+END_ENTITY;
+  
+ENTITY Derived_shape_element
+  ABSTRACT SUPERTYPE OF (ONEOF (
+    Apex,
+    Centre_of_symmetry,
+    Geometric_contact,    
+    Extension,
+    Geometric_intersection,
+    Geometric_alignment,
+    Parallel_offset,
+    Perpendicular_to,
+    Tangent))
+  SUBTYPE OF (Shape_element);
+  derived_from : SET[1:?] OF Shape_element;
+END_ENTITY;
+
+ENTITY Geometric_alignment
+  SUBTYPE OF (Derived_shape_element);
+  SELF\Derived_shape_element.derived_from : SET[2:?] OF Shape_element;
+END_ENTITY;
+
+ENTITY Geometric_contact
+  SUBTYPE OF (Derived_shape_element);
+  SELF\Derived_shape_element.derived_from : SET[2:2] OF Shape_element;
+END_ENTITY;
+
+ENTITY Geometric_intersection
+  SUBTYPE OF (Derived_shape_element);
+  SELF\Derived_shape_element.derived_from : SET[2:?] OF Shape_element;
+END_ENTITY;
+
+ENTITY Extension
+  SUBTYPE OF (Derived_shape_element);
+  SELF\Derived_shape_element.derived_from : SET[1:1] OF Shape_element;
+END_ENTITY;
+
+ENTITY Median_curve
+  SUBTYPE OF (Centre_of_symmetry);
+WHERE
+  WR1 : NOT EXISTS(SELF\Shape_element.description);
+END_ENTITY;
+
+ENTITY Median_surface
+  SUBTYPE OF (Centre_of_symmetry);
+WHERE
+  WR1 : NOT EXISTS(SELF\Shape_element.description);
+END_ENTITY;
+
+ENTITY Parallel_offset
+  SUBTYPE OF (Derived_shape_element);
+  SELF\Derived_shape_element.derived_from : SET[1:1] OF Shape_element;
+END_ENTITY;
+
+ENTITY Perpendicular_to
+  SUBTYPE OF (Derived_shape_element);
+  SELF\Derived_shape_element.derived_from : SET[1:1] OF Shape_element;
+END_ENTITY;
+
+ENTITY Tangent_plane
+  SUBTYPE OF (Tangent);
+  WHERE
+    WR1 : NOT EXISTS(SELF\Shape_element.description);
+END_ENTITY;
+
+ENTITY Tangent
+  SUPERTYPE OF (Tangent_plane)
+  SUBTYPE OF (Derived_shape_element);
+  SELF\Derived_shape_element.derived_from : SET[1:1] OF Shape_element;
+END_ENTITY;
+
+ENTITY Offset_shape_element
+  SUBTYPE OF (Derived_shape_element);
+  offset : Value_with_unit;
+END_ENTITY;
+
+END_SCHEMA;

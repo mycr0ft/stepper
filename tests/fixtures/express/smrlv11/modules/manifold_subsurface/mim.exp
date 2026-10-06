@@ -1,0 +1,32 @@
+(*
+   ISO TC184/SC4/WG12 N11360 - ISO/TS 10303-1702 Manifold subsurface - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N8033
+*)
+
+SCHEMA Manifold_subsurface_mim;
+  USE FROM geometric_model_schema -- ISO 10303-42
+       (manifold_subsurface_shape_representation);
+
+  USE FROM geometry_schema    -- ISO  10303-42
+      (cartesian_transformation_operator_3d);
+
+  USE FROM Manifold_surface_mim;	-- ISO/TS 10303-1509
+
+  USE FROM product_property_representation_schema   -- ISO  10303-41
+      (shape_representation);
+
+  USE FROM representation_schema(mapped_item);   -- ISO  10303-43
+
+  USE FROM Topologically_bounded_surface_mim; --ISO/TS 10303-1511:2004
+
+  USE FROM topology_schema  -- ISO  10303-42
+      (closed_shell,
+       connected_face_set,
+       connected_face_sub_set,
+       face,
+       open_shell,
+       subedge,
+       subface);
+
+END_SCHEMA;
+

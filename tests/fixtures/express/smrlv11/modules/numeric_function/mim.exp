@@ -1,0 +1,20 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.22 2017/10/26 15:52:18 verodub Exp
+ ISO TC184/SC4/WG12 N7871 - ISO/TS 10303-1346 Numeric function - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N7227 
+*)
+
+SCHEMA Numeric_function_mim;
+
+USE FROM Elementary_function_mim;   -- ISO/TS 10303-1527
+
+USE FROM Expression_mim;   -- ISO/TS 10303-1342
+
+USE FROM iso13584_expressions_schema(   -- ISO 13584-20
+	int_value_function,
+	length_function,	
+	odd_function,	
+	value_function);
+	
+END_SCHEMA;

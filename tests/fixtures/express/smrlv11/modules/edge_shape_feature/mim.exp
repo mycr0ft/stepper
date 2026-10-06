@@ -1,0 +1,14 @@
+(*
+   $Id: mim.exp,v 1.7 2006/04/24 12:35:31 liutkus Exp $
+   ISO TC184/SC4/WG12 N3967 - ISO/TS 10303-1673 Edge shape feature - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N3415
+*)
+
+
+SCHEMA Edge_shape_feature_mim;
+	USE FROM Layered_2d_shape_mim;	-- ISO/TS 10303-1693
+	USE FROM Characteristic_mim;	-- ISO/TS 10303-1654	
+
+END_SCHEMA;
+
+

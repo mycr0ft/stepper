@@ -1,0 +1,39 @@
+(*
+   $Id: arm.exp,v 1.13 2016/10/20 12:13:26 kevletu Exp $
+   ISO TC184/SC4/WG12 N11462 - ISO/TS 10303-1808 Assembly shape - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N9298
+*)
+
+SCHEMA Assembly_shape_arm;
+
+USE FROM Item_definition_structure_arm;  --        ISO/TS 10303-1345
+USE FROM Part_shape_arm; 
+
+TYPE characterized_product_definition = SELECT (
+    Product_view_definition, 
+    View_definition_relationship,
+    Multi_level_reference_designator);
+END_TYPE;
+
+TYPE internal_or_reflected_shape_element = EXTENSIBLE SELECT (
+    Shape_element,
+    identifier);
+END_TYPE;
+
+TYPE multi_or_next_assembly_usage_occurrence = SELECT (
+    Multi_level_reference_designator,
+    Next_assembly_usage);
+END_TYPE;
+
+ENTITY Component_path_shape_element
+    SUBTYPE OF (Part_shape_element);
+    location : multi_or_next_assembly_usage_occurrence;
+    component_shape_element : internal_or_reflected_shape_element;
+  UNIQUE
+    UR1 : location, component_shape_element;
+  WHERE
+    WR1: NOT('ASSEMBLY_STRUCTURE_ARM.NEXT_ASSEMBLY_USAGE' IN TYPEOF(location)) OR
+      EXISTS(location\Assembly_component_relationship.location_indicator); 
+END_ENTITY;
+
+END_SCHEMA;

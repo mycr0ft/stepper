@@ -1,0 +1,27 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.13 2019/01/10 22:26:10 brandon Exp
+ ISO TC184/SC4/WG12 N10287 - ISO/TS 10303-1259 Activity as realized - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N6105
+*) 
+
+
+SCHEMA Activity_as_realized_arm;
+
+USE FROM Activity_arm;    -- ISO/TS 10303-1047
+
+
+ENTITY Activity_actual
+  SUBTYPE OF (Activity);
+END_ENTITY;
+
+ENTITY Activity_happening
+  SUBTYPE OF (Activity_relationship);
+  SELF\Activity_relationship.relating_activity RENAMED predicted : Activity;
+  SELF\Activity_relationship.related_activity RENAMED actual : Activity_actual;
+WHERE
+  WR1: NOT ('ACTIVITY_AS_REALIZED_ARM.ACTIVITY_ACTUAL' IN TYPEOF(predicted));
+END_ENTITY;
+
+END_SCHEMA;  -- Activity_as_realized_arm
+

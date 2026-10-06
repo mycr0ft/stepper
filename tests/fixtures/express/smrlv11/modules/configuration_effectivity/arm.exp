@@ -1,0 +1,33 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.20 2019/06/07 14:31:24 tom Exp
+ ISO TC184/SC4/WG12 N10324 - ISO/TS 10303-1058 Configuration effectivity - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N6117
+*) 
+
+
+SCHEMA Configuration_effectivity_arm;
+
+USE FROM Assembly_structure_arm;    -- ISO/TS 10303-1026
+
+USE FROM Configuration_item_arm;    -- ISO/TS 10303-1056
+
+USE FROM Effectivity_arm;    -- ISO/TS 10303-1057
+
+USE FROM Part_shape_arm; -- ISO/TS 10303-1807
+
+USE FROM Product_view_definition_relationship_arm;    -- ISO/TS 10303-1041
+
+
+TYPE item_usage_relationship_item = EXTENSIBLE GENERIC_ENTITY SELECT
+   (Assembly_component_relationship, 
+    View_definition_usage);
+END_TYPE; 
+
+ENTITY Item_usage_effectivity;
+  effectivity_domain : Effectivity;
+  item_usage_relationship : item_usage_relationship_item;
+  resolved_configuration : Item_design_association;
+END_ENTITY;
+
+END_SCHEMA;  -- Configuration_effectivity_arm

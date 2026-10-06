@@ -1,0 +1,47 @@
+(*
+   $Id: mim.exp,v 1.8 2021/08/04 15:37:26 kevin Exp $
+   ISO TC184/SC4/WG12 N10952 - ISO/TS - 10303-1838 annotated_3d_model_equivalence_criteria - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N10005
+   *)
+
+SCHEMA Annotated_3d_model_equivalence_criteria_mim;
+
+  USE FROM annotated_3d_model_equivalence_criteria_schema;	--  ISO 10303-62
+ 
+  USE FROM Foundation_representation_mim;	-- ISO/TS 10303-1006
+
+  USE FROM Qualified_measure_mim;	-- ISO/TS 10303-1782
+
+  USE FROM product_data_equivalence_criteria_schema	--  ISO 10303-62
+    (data_equivalence_criterion_assessment_association,
+     data_equivalence_criterion_inspection_association,
+     data_equivalence_report_request,
+     detailed_equivalence_report_request,
+     detailed_equivalence_report_request_with_number_of_instances,
+     summary_report_request_with_number_of_instances);
+
+  USE FROM Product_data_equivalence_definition_mim;	-- ISO/TS 10303-1837
+
+  USE FROM product_data_equivalence_inspection_result_schema	--  ISO 10303-62
+    (inspected_equivalence_element_select);
+ 
+  USE FROM representation_schema	--  ISO 10303-43
+    (compound_representation_item,
+     value_representation_item,
+     set_representation_item); 
+  
+  USE FROM shape_data_quality_criteria_schema 	--  ISO 10303-59
+    (shape_data_quality_lower_value_limit,
+     shape_data_quality_upper_value_limit,
+     shape_data_quality_value_limit,
+     shape_data_quality_value_limit_type_select,
+     shape_data_quality_value_range,
+     shape_measurement_accuracy);
+
+  TYPE a3mc_accuracy_associated_target_select = EXTENSIBLE SELECT
+     BASED_ON accuracy_associated_target_select WITH 
+	(a3m_equivalence_criteria_representation,
+	 a3m_equivalence_criterion);
+  END_TYPE;
+
+END_SCHEMA;

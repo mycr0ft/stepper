@@ -1,0 +1,68 @@
+(*
+$Id: contract_schema.exp,v 1.12 2014/03/04 00:30:32  Exp $
+ISO 10303 TC184/SC4/WG12 N8369
+
+EXPRESS Source:
+ISO 10303-41 ed4 Fundamentals of product description and support - Contract schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-41 ed4 Fundamentals of product description and support - Contract schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA contract_schema '{iso standard 10303 part(41) version(3) object(1) contract_schema(6)}';
+  REFERENCE FROM support_resource_schema (bag_to_set, identifier, label, text);
+  ENTITY contract;
+    name : label;
+    purpose : text;
+    kind : contract_type;
+  END_ENTITY;
+
+  ENTITY contract_relationship;
+    id : identifier;
+    name : label;
+    description : OPTIONAL text;
+    relating_contract : contract;
+    related_contract : contract;
+  END_ENTITY;
+
+  ENTITY contract_type;
+    description : label;
+  END_ENTITY;
+
+  FUNCTION acyclic_contract_relationship (relation : contract_relationship; relatives : SET [1:?] OF contract; specific_relation : STRING):BOOLEAN;
+    LOCAL
+      x : SET OF contract_relationship;
+    END_LOCAL;
+
+    IF relation.relating_contract IN relatives THEN
+      RETURN (FALSE);
+    END_IF;
+    x := QUERY(cont <* bag_to_set(USEDIN(relation.relating_contract, 'CONTRACT_SCHEMA.' + 'CONTRACT_RELATIONSHIP.' + 'RELATED_CONTRACT')) | specific_relation IN TYPEOF(cont));
+    REPEAT i := 1 TO HIINDEX(x);
+      IF NOT acyclic_contract_relationship(x[i], relatives + relation.relating_contract, specific_relation) THEN
+        RETURN (FALSE);
+      END_IF;
+    END_REPEAT;
+    RETURN (TRUE);
+  END_FUNCTION;
+
+END_SCHEMA;

@@ -1,0 +1,12 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.6 2009/09/03 19:12:46 darla Exp
+  ISO/CD-TS WG12 N6711 - 10303-1376 cfd_equations - EXPRESS MIM*)
+
+SCHEMA Cfd_equations_mim;
+
+USE FROM Analysis_mim; -- ISO 10303-1372
+
+USE FROM equations_schema; -- ISO 10303-110
+
+END_SCHEMA;

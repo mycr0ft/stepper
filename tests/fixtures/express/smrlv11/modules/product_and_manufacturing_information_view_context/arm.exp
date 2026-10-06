@@ -1,0 +1,135 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.11 2012/10/11 05:49:17 liutkuviene Exp
+   ISO TC184/SC4/WG12 N7933 - ISO/CD-TS - 10303-1810 Product and manufacturing information view context - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N7370
+*)
+(* UNDER DEVELOPMENT *)
+SCHEMA Product_and_manufacturing_information_view_context_arm;
+
+USE FROM Part_view_definition_arm; -- ISO/TS 10303-1023
+USE FROM Document_assignment_arm; -- ISO/TS 10303-1122
+
+TYPE mbgdt_documented_element_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON documented_element_select  WITH (
+  Model_based_view_context,
+  Gdt_representation_view_context,
+  Model_based_3d_annotation_presentation_view_context);
+END_TYPE;
+
+ENTITY Model_based_view_context 
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'model based product geometry';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.ADDITIONAL_CONTEXTS') ) =0 ; -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.ADDITIONAL_CONTEXT;
+END_ENTITY;
+-- TYPE dimensioning_document = ENUMERATION (ISO, ASME);
+-- END_TYPE;
+
+ENTITY Gdt_representation_view_context 
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'geometrical dimensioning and tolerancing representation';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+--  dimensioning_standard : dimensioning_document := ISO; -- some expression through the documents, see wr4, may help writing further rules
+-- note: when we write the rules we will decide which derived attribute to use
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT') ) =0 ;  -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT;
+  WR2: SIZEOF ( QUERY(pvd <* USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.ADDITIONAL_CONTEXTS') |
+         NOT('PRODUCT_AND_MANUFACTURING_INFORMATION_VIEW_CONTEXT_ARM.MODEL_BASED_VIEW_CONTEXT' IN TYPEOF(pvd.initial_context) ) ) ) = 0 ; 
+        -- Part_view_definition.initial_context shall be of type Model_based_view_context 
+  -- WR4: TRUE; -- must have at least either ISO 1101 or ASME Y14.5 as associated dimension standard document
+END_ENTITY;
+
+ENTITY Model_based_3d_annotation_presentation_view_context
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'model based 3D annotation presentation';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT') ) =0 ;  -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT;
+  WR2: SIZEOF ( QUERY(pvd <* USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.ADDITIONAL_CONTEXTS') |
+         NOT('PRODUCT_AND_MANUFACTURING_INFORMATION_VIEW_CONTEXT_ARM.MODEL_BASED_VIEW_CONTEXT' IN TYPEOF(pvd.initial_context) ) ) ) = 0 ; 
+        -- Part_view_definition.initial_context shall be of type Model_based_view_context 
+  -- WR4: TRUE; -- must have at least either ISO 1101, ISO 16792, ASME Y14.41 or ASME Y14.5 as associated model standard document
+END_ENTITY;
+
+ENTITY Surface_finish_view_context 
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'surface finish';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT') ) =0 ;  -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT;
+END_ENTITY;
+
+ENTITY Machining_feature_view_context 
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'machining feature';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT') ) =0 ;  -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT;
+END_ENTITY;
+
+ENTITY Material_specification_view_context 
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'material specification';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT') ) =0 ;  -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT;
+END_ENTITY;
+
+ENTITY Process_state_view_context 
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'process state';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT') ) =0 ;  -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT;
+END_ENTITY;
+
+ENTITY Kinematic_mechanism_context  
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'kinematic_mechanism';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT') ) =0 ;  -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.INITIAL_CONTEXT;
+END_ENTITY;
+
+ENTITY Kinematic_state_context  
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'kinematic state';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.ADDITIONAL_CONTEXTS') ) =0 ; -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.ADDITIONAL_CONTEXT;
+END_ENTITY;
+
+ENTITY Motion_context  
+  SUBTYPE OF (Part_view_definition_context);
+DERIVE
+  SELF\View_definition_context.application_domain : STRING := 'motion';
+  SELF\View_definition_context.life_cycle_stage : STRING := 'design';
+WHERE
+  WR1: SIZEOF ( USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_ARM.PRODUCT_VIEW_DEFINITION.ADDITIONAL_CONTEXTS') ) =0 ; -- there shall be no users in the role PRODUCT_VIEW_DEFINITION.ADDITIONAL_CONTEXT;
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT pmi_part_view_definition_context FOR Part_view_definition_context;
+  ONEOF (
+    Gdt_representation_view_context, 
+    Kinematic_mechanism_context,
+    Kinematic_state_context,
+    Model_based_view_context, 
+    Model_based_3d_annotation_presentation_view_context,
+    Motion_context,
+    Surface_finish_view_context,
+    Machining_feature_view_context,
+    Material_specification_view_context,
+    Process_state_view_context);
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;

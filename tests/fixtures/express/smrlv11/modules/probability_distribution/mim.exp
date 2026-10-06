@@ -1,0 +1,16 @@
+(*
+   ISO TC184/SC4/WG12 N11085 - ISO/TS 10303-1274 Probability distribution - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N5894
+*) 
+
+SCHEMA Probability_distribution_mim;
+
+USE FROM Classification_assignment_mim;    -- ISO/TS 10303-1114
+
+USE FROM Probability_mim;    -- ISO/TS 10303-1252
+
+TYPE probability_distribution_item = SELECT BASED_ON classification_item WITH 
+   (measure_representation_item);
+END_TYPE; 
+
+END_SCHEMA;  -- Probability_distribution_mim

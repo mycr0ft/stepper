@@ -1,0 +1,23 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.18 2019/05/28 03:17:50 tom Exp
+ ISO TC184/SC4/WG12 N10269 - ISO/TS 10303-1043 Work order - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N8075
+*)
+
+SCHEMA Work_order_mim; 
+
+USE FROM action_schema   -- ISO 10303-41
+  (action_directive,
+   directed_action,
+   directed_action_assignment); 
+USE FROM Activity_mim;    -- ISO/TS 10303-1047
+USE FROM Work_request_mim;    -- ISO/TS 10303-1042
+
+
+ENTITY applied_directed_action_assignment
+	SUBTYPE OF (directed_action_assignment);
+	items : SET[1:?] OF action_request_item;
+END_ENTITY;
+
+END_SCHEMA; 

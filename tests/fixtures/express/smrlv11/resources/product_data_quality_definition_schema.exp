@@ -1,0 +1,78 @@
+(*
+$Id: product_data_quality_definition_schema.exp,v 1.5 2014/03/04 00:30:39 thomasrthurman Exp $
+ISO 10303 TC184/SC4/WG12 N8314
+
+EXPRESS Source:
+ISO 10303-59 ed2 Quality of product shape data - Product data quality definition schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-59 ed2 Quality of product shape data - Product data quality definition schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA product_data_quality_definition_schema '{iso standard 10303 part(59) version(2) object(1) product_data_quality_definition_schema(1)}';
+
+  REFERENCE FROM product_data_quality_criteria_schema
+    (data_quality_criteria_representation);
+
+  REFERENCE FROM product_data_quality_inspection_result_schema
+    (data_quality_inspection_result_representation);
+
+  REFERENCE FROM product_definition_schema
+    (product_definition);
+
+  REFERENCE FROM support_resource_schema (text);
+
+  TYPE used_quality_representation_select = SELECT
+    (data_quality_criteria_representation,
+     data_quality_inspection_result_representation);
+  END_TYPE;
+
+  ENTITY data_quality_definition;
+      description : text;
+  END_ENTITY;
+
+  ENTITY data_quality_definition_representation_relationship;
+      description         : text;
+      definition          : data_quality_definition;
+      used_representation : used_quality_representation_select;
+  END_ENTITY;
+
+  ENTITY product_data_and_data_quality_relationship;
+      description  : text;
+      product_data : product_definition;
+      data_quality : data_quality_definition;
+  END_ENTITY;
+
+  ENTITY data_quality_definition_relationship;
+      description                      : text;
+      relating_data_quality_definition : data_quality_definition;
+      related_data_quality_definition  : data_quality_definition;
+  END_ENTITY;
+
+  ENTITY software_for_data_quality_check;
+      description      : text;
+      software_name    : text;
+      software_version : text;
+      data_quality     : data_quality_definition_representation_relationship;
+  END_ENTITY;
+
+END_SCHEMA;

@@ -1,0 +1,59 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.15 2009/12/23 11:37:49 liutkuviene Exp
+   ISO TC184/SC4/WG12 N6899 - ISO/TS 10303-1672 Fill area style - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N5392
+*)
+
+SCHEMA Fill_area_style_arm;
+
+USE FROM Basic_curve_arm;	-- ISO/TS 10303-1651
+USE FROM Curve_appearance_arm;	-- ISO/TS 10303-1003
+USE FROM Value_with_unit_extension_arm;	-- ISO/TS 10303-1753
+USE FROM Extended_basic_geometry_arm; 	-- ISO/TS 10303-1667 
+
+  ENTITY Solid_fill_area_style;
+    fill_colour : Colour; 
+  END_ENTITY;  
+
+  ENTITY Externally_defined_hatch_style
+    SUBTYPE OF (Hatch_style); 
+  END_ENTITY;
+
+  ENTITY Externally_defined_tile_style
+    SUBTYPE OF (Tile_style); 
+  END_ENTITY;
+
+  ENTITY Hatch_style
+    ABSTRACT SUPERTYPE OF (ONEOF(Externally_defined_hatch_style, User_defined_hatch_style))
+    SUBTYPE OF (Detailed_geometric_model_element);
+  END_ENTITY;
+
+  ENTITY Tile_style
+    ABSTRACT SUPERTYPE OF (ONEOF(Externally_defined_tile_style, User_defined_tile_style))
+	SUBTYPE OF (Detailed_geometric_model_element);
+  END_ENTITY;
+
+  ENTITY User_defined_hatch_style
+    SUBTYPE OF (Hatch_style);
+      hatch_line_appearance         : Curve_appearance;
+      start_of_next_hatch_line      : Vector;
+      point_of_reference_hatch_line : Cartesian_point;
+      pattern_start                 : Cartesian_point;
+      hatch_line_angle              : Angle_data_element;
+    WHERE
+     WR1 : 'STYLED_CURVE_ARM.SOLID_CURVE_FONT' IN TYPEOF(SELF.hatch_line_appearance.font);
+  END_ENTITY;
+
+  ENTITY User_defined_tile_style
+    SUBTYPE OF (Tile_style);
+      first_direction_repeat_factor  : Vector;
+      second_direction_repeat_factor : Vector;
+      tiling_scale                   : INTEGER;
+  END_ENTITY;
+  
+SUBTYPE_CONSTRAINT fas_detailed_geometric_model_element_subtypes FOR Detailed_geometric_model_element;
+          ONEOF (Hatch_style, Tile_style);
+END_SUBTYPE_CONSTRAINT; 
+
+END_SCHEMA;

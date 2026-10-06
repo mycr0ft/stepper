@@ -1,0 +1,122 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.16 2018/04/23 17:56:14 kevin Exp
+ ISO TC184/SC4/WG12 N10052 - ISO/TS 10303-1791 Primitive solids - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N7819
+*)
+
+
+SCHEMA Primitive_solids_arm;
+
+USE FROM Basic_geometry_arm;   -- ISO/TS 10303-1652
+
+ENTITY Boolean_result
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Box_domain
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Boxed_half_space
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Circular_cone
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Circular_cylinder
+   SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Convex_hexahedron
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Csg_solid
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Cyclide_segment_solid
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Eccentric_cone
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Ellipsoid
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Extruded_face_solid
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Faceted_primitive
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Half_space_solid
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Rectangular_block
+   SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Rectangular_pyramid
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Revolved_face_solid
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Right_angular_wedge
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Solid_replica
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Sphere
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Tetrahedron
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+ENTITY Torus
+  SUBTYPE OF (Detailed_geometric_model_element);
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT ps_detailed_geometric_model_element_subtypes FOR Detailed_geometric_model_element;
+  ONEOF (
+ Boolean_result,
+ Box_domain,
+ Boxed_half_space,
+ Circular_cone,
+ Circular_cylinder,
+ Convex_hexahedron,
+ Csg_solid,
+ Cyclide_segment_solid,
+ Eccentric_cone,
+ Ellipsoid,
+ Extruded_face_solid,
+ Faceted_primitive,
+ Half_space_solid,
+ Rectangular_block,
+ Rectangular_pyramid,
+ Revolved_face_solid,
+ Right_angular_wedge,
+ Solid_replica,
+ Sphere,
+ Tetrahedron,
+ Torus);
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA; -- Primitive_solids_arm

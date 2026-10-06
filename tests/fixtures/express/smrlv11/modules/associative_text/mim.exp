@@ -1,0 +1,35 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.18 2012/10/11 18:49:14 thomasrthurman Exp
+ISO TC184/SC4/WG12 N7949 - ISO/TS 10303-1132 Associative text - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N7386
+*) 
+
+
+SCHEMA Associative_text_mim;
+
+USE FROM Appearance_assignment_mim;    -- ISO/TS 10303-1001
+
+USE FROM Colour_mim;          -- ISO/TS 10303-1002
+
+USE FROM Text_appearance_mim; -- ISO/TS 10303-1136
+
+USE FROM presentation_definition_schema(
+	annotation_occurrence,
+	annotation_text,
+	annotation_text_occurrence,
+	annotation_curve_occurrence,
+	text_string_representation);
+	
+USE FROM presentation_organization_schema(
+	annotation_representation_select);
+	
+USE FROM presentation_appearance_schema(   -- ISO 10303-46
+    box_height,
+	curve_style,
+	presentation_style_assignment,
+	text_style_for_defined_font,
+    text_style_with_box_characteristics,
+    text_style_with_mirror);
+
+END_SCHEMA;

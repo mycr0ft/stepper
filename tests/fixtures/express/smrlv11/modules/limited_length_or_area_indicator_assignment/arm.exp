@@ -1,0 +1,468 @@
+(*
+   N11282 - ISO/TS - 10303-1854 limited_length_or_area_indicator_assignment - EXPRESS ARM
+*)
+   
+SCHEMA Limited_length_or_area_indicator_assignment_arm;
+
+USE FROM Composite_constituent_shape_arm; -- ISO/TS 10303-1767
+
+
+USE FROM Description_assignment_arm; -- ISO/TS 10303-1473
+
+
+USE FROM Document_and_version_identification_arm; -- ISO/TS 10303-1121
+
+
+USE FROM Part_and_zone_laminate_tables_arm; -- ISO/TS 10303-1770
+
+
+USE FROM Part_view_definition_arm; -- ISO/TS 10303-1023
+
+
+USE FROM Ply_orientation_specification_arm; -- ISO/TS 10303-1772
+
+
+USE FROM Product_class_arm; -- ISO/TS 10303-1103
+
+
+USE FROM Shape_property_assignment_arm; -- ISO/TS 10303-1032
+
+
+USE FROM Stock_material_arm; -- ISO/TS 10303-1771
+
+
+USE FROM Value_with_unit_arm; -- ISO/TS 10303-1054
+
+
+USE FROM Value_with_unit_extension_arm; -- ISO/TS 10303-1753
+
+
+
+
+TYPE point_for_llai_select = SELECT
+   (ply_piece_shape,
+    Ply_shape,
+    Point_zone_shape);
+END_TYPE;
+
+
+
+TYPE line_for_llai_select = SELECT
+  (Edge_zone_shape,
+   Filament_laminate_shape,
+   ply_piece_shape,
+   Ply_shape);
+END_TYPE;
+
+
+
+TYPE area_for_llai_select = SELECT
+   (composite_assembly_shape,
+    core_shape,
+    Ply_laminate_table,
+    Ply_laminate_sequence_definition,
+    ply_piece_shape,
+    Ply_shape);
+END_TYPE;
+
+
+
+TYPE strategy_point_llai_specification_type = ENUMERATION OF (
+  hand_layup,
+  machine_layup);
+END_TYPE;
+
+
+
+TYPE core_sample_llai_specification_type = ENUMERATION OF (
+  laminate_code,
+  local_ply_table_stackup,
+  ply_materials,
+  ply_thicknesses,
+  sample_ply_count);
+END_TYPE;
+
+
+
+TYPE guide_curve_llai_specification_type = ENUMERATION OF (
+  curve_11,
+  cylindrical_11);
+END_TYPE;
+
+
+TYPE edge_sealing_llai_specification_type = ENUMERATION OF (
+  edge_sealing);
+END_TYPE;
+
+
+TYPE overlap_splice_area_llai_specification_type = ENUMERATION OF (
+  allowed_repeat_pattern,
+  gap_allowance,
+  stagger_distance);
+END_TYPE;
+
+
+TYPE butt_splice_area_llai_specification_type = ENUMERATION OF (
+  allowed_repeat_pattern,
+  gap_allowance,
+  stagger_distance);
+END_TYPE;
+
+
+
+TYPE no_splice_area_llai_specification_type = ENUMERATION OF (
+  no_splice);
+END_TYPE;
+
+
+
+TYPE fiber_orientation_angle_tolerance_deviation_area_llai_specification_type = ENUMERATION OF (
+  fiber_orientation_angle_tolerance_deviation);
+END_TYPE;
+
+
+
+TYPE surface_porosity_allowance_area_llai_specification_type = ENUMERATION OF (
+  surface_porosity_allowance);
+END_TYPE;
+
+
+
+TYPE ply_drop_off_stay_out_area_llai_specification_type = ENUMERATION OF (
+  ply_drop_off_stay_out);
+END_TYPE;
+
+
+
+TYPE surface_preparation_area_llai_specification_type = ENUMERATION OF (
+  surface_preparation_area);
+END_TYPE;
+
+
+
+TYPE potting_area_llai_specification_type = ENUMERATION OF (
+  potting_area);
+END_TYPE;
+
+
+
+TYPE darting_area_llai_specification_type = ENUMERATION OF (
+  darting_area);
+END_TYPE;
+
+
+
+TYPE ply_wrinkle_allowance_area_llai_specification_type = ENUMERATION OF (
+  ply_wrinkle_allowance_area);
+END_TYPE;
+
+
+
+TYPE stitching_area_llai_specification_type = ENUMERATION OF (
+  stitching_area);
+END_TYPE;
+
+
+
+TYPE manufacturing_edge_of_ply_llai_specification_type = ENUMERATION OF (
+  manufacturing_edge_of_ply);
+END_TYPE;
+
+
+
+TYPE manufacturing_edge_of_part_llai_specification_type = ENUMERATION OF (
+  manufacturing_edge_of_part);
+END_TYPE;
+
+
+
+
+
+
+ENTITY Limited_length_area_indicator
+  SUBTYPE OF (Part_view_definition);
+END_ENTITY;
+
+
+ENTITY User_defined_llai
+  SUBTYPE OF (Limited_length_area_indicator);
+  shape_for_user_defined_llai : Constituent_shape_representation;
+  user_defined_location_for_llai : OPTIONAL Shape_element;
+  user_defined_llai_specification :  OPTIONAL Document;
+  user_defined_llai_type : text;
+END_ENTITY;
+
+
+ENTITY Point_based_llai
+  SUPERTYPE OF (ONEOF (Core_sample,
+                       Strategy_point))
+  SUBTYPE OF (Limited_length_area_indicator);
+  llai_point_object : point_for_llai_select;
+  llai_point_location : OPTIONAL Shape_element;
+END_ENTITY;
+
+
+ENTITY Line_based_llai
+  SUPERTYPE OF (ONEOF (Edge_sealing,
+                       Guide_curve))
+ SUBTYPE OF (Limited_length_area_indicator);
+  llai_line_object : line_for_llai_select;
+  llai_line_location : OPTIONAL Shape_element;
+END_ENTITY;
+
+
+ENTITY Area_based_llai
+  SUPERTYPE OF (ONEOF (Butt_splice_area,
+                        Darting_area,
+                        Fiber_orientation_angle_tolerance_deviation_area,
+                        Manufacturing_edge_of_part,
+                        Manufacturing_edge_of_ply,
+                        No_splice_area,
+                        Overlap_splice_area,
+                        Ply_drop_off_stay_out_area,
+                        Ply_wrinkle_allowance_area,
+                        Potting_area,
+                        Stitching_area,
+                        Surface_porosity_allowance_area,
+                        Surface_preparation_area))
+  SUBTYPE OF (Limited_length_area_indicator);
+    llai_area_object : area_for_llai_select;
+    llai_area_location : OPTIONAL Shape_element;
+END_ENTITY;
+
+
+ENTITY Strategy_point
+  SUBTYPE OF (Point_based_llai);
+  strategy_point_specifications : OPTIONAL SET[1:?] OF Strategy_point_llai_specification;
+END_ENTITY;
+
+
+ENTITY Strategy_point_llai_specification;
+  strategy_point_llai_specification_definition :  Document;
+  strategy_point_specification_type : strategy_point_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Core_sample
+  SUBTYPE OF (Point_based_llai);
+  core_sample_specifications : OPTIONAL SET[1:?] OF Core_sample_llai_specification;
+END_ENTITY;
+
+
+ENTITY Core_sample_llai_specification;
+  core_sample_llai_specification_definition :  Document;
+  core_sample_specification_type : core_sample_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Guide_curve
+  SUBTYPE OF (Line_based_llai);
+  guide_curve_specifications : OPTIONAL SET[1:?] OF Guide_curve_llai_specification;
+END_ENTITY;
+
+
+ENTITY Guide_curve_llai_specification;
+  guide_curve_llai_specification_definition :  Document;
+  guide_curve_specification_type : guide_curve_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Edge_sealing
+  SUBTYPE OF (Line_based_llai);
+  edge_sealing_specifications : OPTIONAL SET[1:?] OF Edge_sealing_llai_specification;
+END_ENTITY;
+
+
+ENTITY Edge_sealing_llai_specification;
+  edge_sealing_llai_specification_definition :  Document;
+  edge_sealing_specification_type : edge_sealing_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Overlap_splice_area
+  SUBTYPE OF (Area_based_llai);
+  allowed_repeat_pattern : count_measure;
+  overlap_direction : Direction;
+  overlap_splice_area_specifications : OPTIONAL SET[1:?] OF
+     overlap_splice_area_llai_specification;
+  overlap_width : Length_data_element;
+  stagger_distance : Length_data_element;
+END_ENTITY;
+
+
+ENTITY Overlap_splice_area_llai_specification;
+  overlap_splice_area_llai_specification_definition : Document;
+  overlap_splice_area_specification_type : overlap_splice_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Butt_splice_area
+  SUBTYPE OF (Area_based_llai);
+  allowed_repeat_pattern : count_measure;
+  butt_splice_area_specifications : OPTIONAL SET[1:?] OF Butt_splice_area_llai_specification;
+  butt_direction : Direction;
+  gap: Length_data_element;
+  stagger_distance : Length_data_element;
+END_ENTITY;
+
+
+ENTITY Butt_splice_area_llai_specification;
+  butt_splice_area_llai_specification_definition :  Document;
+  butt_splice_area_specification_type : butt_splice_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY No_splice_area
+  SUBTYPE OF (Area_based_llai);
+  no_splice_area_specifications : OPTIONAL SET[1:?] OF No_splice_area_llai_specification;
+END_ENTITY;
+
+
+ENTITY No_splice_area_llai_specification;
+  no_splice_area_llai_specification_definition :  Document;
+  no_splice_area_specification_type : no_splice_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Fiber_orientation_angle_tolerance_deviation_area
+  SUBTYPE OF (Area_based_llai);
+  fiber_orientation_angle_tolerance_deviation_area_specifications : OPTIONAL SET[1:?] OF
+    Fiber_orientation_angle_tolerance_deviation_area_llai_specification;
+END_ENTITY;
+
+
+ENTITY Fiber_orientation_angle_tolerance_deviation_area_llai_specification;
+  fiber_orientation_angle_tolerance_deviation_area_llai_specification_definition :
+    Document;
+  fiber_orientation_angle_tolerance_deviation_area_specification_type :
+    fiber_orientation_angle_tolerance_deviation_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Surface_porosity_allowance_area
+  SUBTYPE OF (Area_based_llai);
+  surface_porosity_allowance_area_specifications : OPTIONAL SET[1:?] OF
+    Surface_porosity_allowance_area_llai_specification;
+END_ENTITY;
+
+
+ENTITY Surface_porosity_allowance_area_llai_specification;
+  surface_porosity_allowance_area_llai_specification_definition :
+    Document;
+  surface_porosity_allowance_area_specification_type :
+    surface_porosity_allowance_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Ply_drop_off_stay_out_area
+  SUBTYPE OF (Area_based_llai);
+  ply_drop_off_stay_out_area_specifications: OPTIONAL SET[1:?] OF
+    Ply_drop_off_stay_out_area_llai_specification;
+END_ENTITY;
+
+
+ENTITY Ply_drop_off_stay_out_area_llai_specification;
+  ply_drop_off_stay_out_area_llai_specification_definition :  Document;
+  ply_drop_off_stay_out_area_specification_type :
+    ply_drop_off_stay_out_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Surface_preparation_area
+  SUBTYPE OF (Area_based_llai);
+  surface_preparation_area_specifications: OPTIONAL SET[1:?] OF
+    Surface_preparation_area_llai_specification;
+END_ENTITY;
+
+
+ENTITY Surface_preparation_area_llai_specification;
+  Surface_preparation_area_llai_specification_definition :  Document;
+  surface_preparation_area_specification_type :
+    surface_preparation_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Potting_area
+  SUBTYPE OF (Area_based_llai);
+  potting_area_specifications: OPTIONAL SET[1:?] OF
+    Potting_area_llai_specification;
+END_ENTITY;
+
+
+ENTITY Potting_area_llai_specification;
+   potting_area_llai_specification_definition : Document;
+  potting_area_specification_type : potting_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Darting_area
+  SUBTYPE OF (Area_based_llai);
+  darting_area_specifications: OPTIONAL SET[1:?] OF
+    Darting_area_llai_specification;
+END_ENTITY;
+
+
+
+ENTITY Darting_area_llai_specification;
+  darting_area_llai_specification_definition :  Document;
+  darting_area_specification_type : darting_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Ply_wrinkle_allowance_area
+  SUBTYPE OF (Area_based_llai);
+  ply_wrinkle_allowance_area_specifications: OPTIONAL SET[1:?] OF
+    Ply_wrinkle_allowance_area_llai_specification;
+END_ENTITY;
+
+
+ENTITY Ply_wrinkle_allowance_area_llai_specification;
+  ply_wrinkle_allowance_area_llai_specification_definition :  Document;
+  ply_wrinkle_allowance_area_specification_type :
+    ply_wrinkle_allowance_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Stitching_area
+  SUBTYPE OF (Area_based_llai);
+  stitching_area_specifications: OPTIONAL SET[1:?] OF
+    Stitching_area_llai_specification;
+END_ENTITY;
+
+
+ENTITY Stitching_area_llai_specification;
+  stitching_area_llai_specification_definition :  Document;
+  stitching_area_specification_type :
+    stitching_area_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Manufacturing_edge_of_ply
+  SUBTYPE OF (Area_based_llai);
+  manufacturing_edge_of_ply_specifications: OPTIONAL SET[1:?] OF
+    Manufacturing_edge_of_ply_llai_specification;
+END_ENTITY;
+
+ 
+ENTITY Manufacturing_edge_of_ply_llai_specification;
+  manufacturing_edge_of_ply_llai_specification_definition :  Document;
+  manufacturing_edge_of_ply_specification_type :
+    manufacturing_edge_of_ply_llai_specification_type;
+END_ENTITY;
+
+
+ENTITY Manufacturing_edge_of_part
+  SUBTYPE OF (Area_based_llai);
+  manufacturing_edge_of_part_specifications: OPTIONAL SET[1:?] OF
+    Manufacturing_edge_of_part_llai_specification;
+END_ENTITY;
+
+
+ENTITY Manufacturing_edge_of_part_llai_specification;
+  manufacturing_edge_of_part_llai_specification_definition :  Document;
+  manufacturing_edge_of_part_specification_type : manufacturing_edge_of_part_llai_specification_type;
+END_ENTITY;
+
+
+END_SCHEMA;
+

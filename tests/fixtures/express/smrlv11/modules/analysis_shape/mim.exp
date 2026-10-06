@@ -1,0 +1,16 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.6 2015/09/24 11:01:19 lothartklein Exp
+   WG12 N6705 - ISO/TS 10303-1374 analysis_shape - EXPRESS MIM*)
+
+
+SCHEMA Analysis_shape_mim;
+
+USE FROM Analysis_identification_mim;
+
+USE FROM Product_view_definition_mim;
+
+USE FROM Shape_property_assignment_mim;
+
+END_SCHEMA;
+

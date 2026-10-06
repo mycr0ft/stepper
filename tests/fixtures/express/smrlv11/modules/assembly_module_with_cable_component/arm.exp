@@ -1,0 +1,24 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.25 2017/05/05 15:04:02 kevletu Exp
+   ISO TC184/SC4/WG12 N9412 - ISO/TS 10303-1644 Assembly module with cable component - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N7502
+*)
+
+SCHEMA Assembly_module_with_cable_component_arm;
+
+USE FROM Assembly_module_design_arm; -- ISO/TS 10303-1636
+USE FROM Cable_arm;	-- ISO/TS 10303-1653
+
+  ENTITY Cable_component
+    SUBTYPE OF (Physical_component, Single_instance);
+      SELF\Definition_based_product_occurrence.derived_from : Cable_usage_view;
+  END_ENTITY;
+
+  SUBTYPE_CONSTRAINT amwcc_part_terminal_subtypes FOR Part_terminal; 
+    ONEOF (Assembly_module_terminal,
+           Cable_terminal,
+           Packaged_part_terminal);
+  END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;

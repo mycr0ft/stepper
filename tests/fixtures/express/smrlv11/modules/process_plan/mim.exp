@@ -1,0 +1,143 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.24 2019/06/05 14:57:08 sjohnston Exp
+   ISO TC184/SC4/WG12 N10431 - ISO/TS - 10303-1803 Process plan - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N10322
+*)
+SCHEMA Process_plan_mim;
+
+USE FROM action_schema (   -- ISO 10303-41
+   action,
+   action_method,
+   action_method_relationship,
+   action_resource);
+USE FROM Activity_method_mim; -- ISO/TS 10303-1049
+USE FROM application_context_schema -- ISO 10303-41
+	(application_context_element); 
+USE FROM Item_definition_structure_mim; -- ISO/TS 10303-1345
+USE FROM Product_view_definition_mim; -- ISO/TS 10303-1019
+USE FROM Resource_item_mim; -- ISO/TS 10303-1268
+USE FROM Support_resource_mim; -- ISO/TS 10303-1800
+USE FROM Shape_property_assignment_mim; -- ISO/TS 10303-1032
+USE FROM Specification_control_mim; -- ISO/TS 10303-1112
+USE FROM Time_interval_assignment_mim; -- ISO/TS 10303-1365
+
+USE FROM process_property_representation_schema   -- ISO 10303-49
+  (action_property_representation,
+   resource_property_representation);
+
+USE FROM process_property_schema   -- ISO 10303-49
+  (action_property,
+   action_resource_requirement,
+   process_product_association,
+   process_property_association,
+   product_definition_process,
+   property_process,
+   requirement_for_action_resource,
+   resource_property,
+   resource_requirement_type);
+
+USE FROM product_definition_schema -- ISO 10303-41
+   (product,
+    product_definition,
+    product_definition_formation,
+    product_related_product_category);
+    
+ENTITY process_operation
+  SUBTYPE OF (action_method); 
+END_ENTITY;
+
+ENTITY process_plan
+  SUBTYPE OF (action);
+WHERE
+  WR1:  SIZEOF( QUERY( ar <* USEDIN(SELF,'ACTION_SCHEMA.' +
+                      'ACTION_RELATIONSHIP.RELATED_ACTION') |
+               SIZEOF(['PROCESS_PLAN_MIM.PROCESS_PLAN',
+                       'PROCESS_PLAN_MIM.PRODUCT_PROCESS_PLAN'] *
+                       TYPEOF(ar.relating_action)) <> 1
+              )) = 0;
+           
+  WR2:  SIZEOF( QUERY( ar <* USEDIN(SELF,'ACTION_SCHEMA.' +
+                      'ACTION_RELATIONSHIP.RELATING_ACTION') |
+               (SIZEOF(['PROCESS_PLAN_MIM.PROCESS_PLAN',
+                        'PROCESS_PLAN_MIM.PRODUCT_PROCESS_PLAN'] *
+                        TYPEOF(ar.related_action)) = 1) OR
+               ((ar.name = 'process operation occurrence') AND
+                ('PROCESS_PLAN_MIM.PROCESS_OPERATION' IN
+                 TYPEOF(ar.related_action.chosen_method)))
+              )) = 
+             SIZEOF(USEDIN(SELF,'ACTION_SCHEMA.' +
+                    'ACTION_RELATIONSHIP.RELATING_ACTION'));   
+END_ENTITY;
+
+ENTITY product_definition_resource
+  SUBTYPE OF (action_resource,product_definition);
+WHERE
+  WR1:  SIZEOF( USEDIN(SELF,'PROCESS_PROPERTY_SCHEMA.' +
+               'REQUIREMENT_FOR_ACTION_RESOURCE.RESOURCES')
+               ) > 0;           
+  WR2:  SELF\product_definition.frame_of_reference\application_context_element.name IN 
+        ['part definition','part occurrence','physical occurrence'];           
+  WR3: SELF\action_resource.name = SELF\product_definition.name;
+  WR4: SELF\action_resource.description = SELF\product_definition.description;
+END_ENTITY;
+
+ENTITY product_resource
+  SUBTYPE OF (action_resource,product);
+WHERE
+  WR1:  SIZEOF( USEDIN(SELF,'PROCESS_PROPERTY_SCHEMA.' +
+               'REQUIREMENT_FOR_ACTION_RESOURCE.RESOURCES')
+               ) > 0;
+  WR2:  SIZEOF ( QUERY ( prpc <* USEDIN ( SELF,
+            'PRODUCT_DEFINITION_SCHEMA.PRODUCT_RELATED_PRODUCT_CATEGORY.PRODUCTS' ) | 
+            prpc.name ='part' ) ) <> 0;
+  WR3: SELF\action_resource.name = SELF\product.name;
+  WR4: SELF\action_resource.description = SELF\product.description;
+END_ENTITY;
+
+ENTITY product_definition_formation_resource
+  SUBTYPE OF (action_resource,product_definition_formation);
+WHERE
+  WR1:  SIZEOF( USEDIN(SELF,'PROCESS_PROPERTY_SCHEMA.' +
+               'REQUIREMENT_FOR_ACTION_RESOURCE.RESOURCES')
+               ) > 0;
+  WR2:  SIZEOF ( QUERY ( prpc <* USEDIN( SELF\product_definition_formation.of_product,
+            'PRODUCT_DEFINITION_SCHEMA.PRODUCT_RELATED_PRODUCT_CATEGORY.PRODUCTS' ) | 
+            prpc.name ='part' ) ) <> 0;
+  WR3: SELF\action_resource.name = SELF\product_definition_formation.id;
+  WR4: SELF\action_resource.description = SELF\product_definition_formation.description;
+END_ENTITY;
+
+ENTITY product_process_plan
+  SUBTYPE OF (product_definition_process);
+WHERE
+  WR1:  SIZEOF( QUERY( ar <* USEDIN(SELF,'ACTION_SCHEMA.' +
+                     'ACTION_RELATIONSHIP.RELATED_ACTION') |
+               SIZEOF(['PROCESS_PLAN_MIM.PROCESS_PLAN',
+                       'PROCESS_PLAN_MIM.PRODUCT_PROCESS_PLAN'] *
+                       TYPEOF(ar.relating_action)
+                ) <> 1
+              )) = 0;
+           
+  WR2:  SIZEOF( QUERY( ar <* USEDIN(SELF,'ACTION_SCHEMA.' +
+                      'ACTION_RELATIONSHIP.RELATING_ACTION') |
+               (SIZEOF(['PROCESS_PLAN_MIM.PROCESS_PLAN',
+                        'PROCESS_PLAN_MIM.PRODUCT_PROCESS_PLAN'] *
+                        TYPEOF(ar.related_action)) = 1) OR
+               ((ar.name = 'process operation occurrence') AND
+                ('PROCESS_PLAN_MIM.PROCESS_OPERATION' IN
+                 TYPEOF(ar.related_action.chosen_method)))
+              )) = 
+             SIZEOF(USEDIN(SELF,'ACTION_SCHEMA.' +
+                    'ACTION_RELATIONSHIP.RELATING_ACTION'));   
+  WR3:  SIZEOF( QUERY( ppa <* USEDIN(SELF,'PROCESS_PROPERTY_SCHEMA.' +
+                     'PROCESS_PRODUCT_ASSOCIATION.PROCESS') |
+               (ppa.name <> 'produced output') OR
+               NOT('PROCESS_PLAN_MIM.PRODUCT_DEFINITION' IN
+                   TYPEOF(ppa.defined_product))
+              )) = 0;
+           
+END_ENTITY;
+
+
+END_SCHEMA;

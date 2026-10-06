@@ -1,0 +1,82 @@
+(*
+   ISO TC184/SC4/WG12 N11206 - ISO/TS 10303-1825 extended_person_organization - EXPRESS ARM
+*)
+
+SCHEMA Extended_person_organization_arm;
+
+USE FROM Classification_assignment_arm;  -- ISO/TS 10303-1114
+
+USE FROM Description_assignment_arm;  -- ISO/TS 10303-1473
+
+USE FROM External_item_identification_assignment_arm;  -- ISO/TS 10303-1128
+
+USE FROM Identification_assignment_arm;  -- ISO/TS 10303-1021
+
+USE FROM Multi_linguism_arm;  -- ISO/TS 10303-1105
+
+USE FROM Person_organization_arm;  -- ISO/TS 10303-1011
+
+TYPE epo_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON classification_item WITH
+  (Address_component,
+   Compound_address,
+   Compound_address_assignment,
+   Compound_person_name,
+   Compound_person_name_assignment,
+   Person_name_component);
+END_TYPE;
+
+TYPE epo_description_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON description_item WITH
+  (Address_component,
+   Compound_address);
+END_TYPE;
+
+TYPE epo_external_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON external_identification_item WITH
+  (Address_component,
+   Compound_address);
+END_TYPE;
+
+TYPE epo_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON identification_item WITH
+  (Address_component,
+   Compound_address);
+END_TYPE;
+
+TYPE epo_string_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON string_select WITH
+  (Address_component,
+   Person_name_component);
+END_TYPE;
+
+ENTITY Address_component;
+  component_value : STRING;
+  component_type : STRING;
+  description : OPTIONAL STRING;
+END_ENTITY;
+
+ENTITY Compound_address;
+  compounded_address_components : SET [1 : ?] OF Address_component;
+  address_type : STRING;
+  description : OPTIONAL STRING;
+END_ENTITY;
+
+ENTITY Compound_address_assignment;
+  assignment_type : OPTIONAL STRING;
+  assigned_compound_address : Compound_address;
+  located_person_organizations : SET [1 : ?] OF organization_or_person_in_organization_select;
+END_ENTITY;
+
+ENTITY Compound_person_name;
+  name_type : STRING;
+  compounded_person_name_components : LIST [1 : ?] OF UNIQUE Person_name_component;
+END_ENTITY;
+
+ENTITY Compound_person_name_assignment;
+  assignment_type : OPTIONAL STRING;
+  assigned_compound_person_names : SET [1 : ?] OF Compound_person_name;
+  named_person : Person;
+END_ENTITY;
+
+ENTITY Person_name_component;
+  component_type : STRING;
+  component_value : STRING;
+END_ENTITY;
+
+END_SCHEMA;  -- Extended_person_organization_arm

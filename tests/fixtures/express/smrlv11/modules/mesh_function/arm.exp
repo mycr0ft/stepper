@@ -1,0 +1,27 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.7 2009/07/21 19:49:08 darla Exp
+   ISO TC184/SC4/WG12 N6733 - ISO/CD-TS 10303-1385 Mesh function - EXPRESS ARM
+*)
+
+SCHEMA Mesh_function_arm;
+
+USE FROM Generic_expression_arm;
+
+USE FROM Mesh_topology_arm;
+
+ENTITY Mesh_function;
+  mesh : Mesh;
+  basis : LIST [0 : ?] OF Mesh_function_basis;
+  uniform : BOOLEAN;
+  vertex_values : BOOLEAN;
+END_ENTITY;
+
+ENTITY Mesh_function_basis;
+  cell_topological_dimension : INTEGER;
+  value_array_dimension : INTEGER;
+  value_array_order : ARRAY [1 : value_array_dimension] OF INTEGER;
+END_ENTITY;
+
+END_SCHEMA;
+

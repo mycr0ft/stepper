@@ -1,0 +1,17 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.4 2009/08/17 22:29:37 lothartklein Exp
+   ISO TC184/SC4/WG12 N6761 - ISO/TS 10303-1327 Compound shape representation - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N5326
+*)
+SCHEMA Compound_shape_representation_arm;
+
+USE FROM Edge_based_wireframe_arm; -- ISO/TS 10303-1501
+
+USE FROM Non_manifold_surface_arm; -- ISO/CD-TS 10303-1324
+
+  ENTITY Compound_shape_representation
+    SUBTYPE OF (Geometric_model);
+  END_ENTITY;
+
+END_SCHEMA;

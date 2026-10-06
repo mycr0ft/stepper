@@ -1,0 +1,38 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.22 2019/04/03 14:35:06 kevin Exp
+   ISO TC184/SC4/WG12 N10425 - ISO/TS 10303-1733 Planned characteristic - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N8278
+*)
+
+
+SCHEMA Planned_characteristic_mim;
+
+	USE FROM Group_mim;                     -- ISO/TS 10303-1113
+	USE FROM Production_rule_mim;	        -- ISO/TS 10303-1739
+	USE FROM Requirement_assignment_mim;	-- ISO/TS 10303-1233
+	USE FROM Process_plan_mim;              -- ISO/TS 10303-1803
+	USE FROM Representation_schema(         -- ISO 10303-43
+	    representation,
+	    representation_relationship);
+
+TYPE pc_action_items = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON action_items WITH ( 
+	evaluated_characteristic,
+	representation);
+END_TYPE;
+
+ENTITY evaluated_characteristic
+  SUBTYPE OF (representation, representation_relationship);
+UNIQUE
+  UR1: SELF\representation_relationship.rep_1, SELF\representation_relationship.rep_2;
+WHERE
+  WR1: SELF\representation_relationship.rep_1 <> 
+       SELF\representation_relationship.rep_2;
+END_ENTITY; 
+
+ENTITY evaluation_product_definition
+ SUBTYPE OF (product_definition);
+END_ENTITY;
+	
+END_SCHEMA;
+

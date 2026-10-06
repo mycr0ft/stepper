@@ -1,0 +1,163 @@
+(*
+ISO 10303 TC184/SC4/WG12 N11073
+
+EXPRESS Source:
+ISO 10303-56 ed3 State - State observed schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2023  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-56 ed2 State - State observed schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA state_observed_schema '{iso standard 10303 part(56) version(3) object(1) state_observed_schema(2)}';
+
+REFERENCE FROM basic_attribute_schema	--ISO 10303-41
+	(get_id_value,
+	id_attribute,
+	id_attribute_select
+	);
+	
+REFERENCE FROM state_type_schema   -- ISO 10303-56
+  (state_type); 
+
+REFERENCE FROM support_resource_schema   -- ISO 10303-41
+  (bag_to_set,
+   identifier,
+   label,
+   text); 
+
+  TYPE sos_id_attribute_select = SELECT BASED_ON id_attribute_select WITH (
+    ascribable_state_relationship);
+  END_TYPE;
+
+ENTITY ascribable_state;
+  name : label;
+  description : OPTIONAL text;
+  pertaining_state_type : state_type;
+  ascribed_state_observed : state_observed;
+END_ENTITY;
+
+ENTITY ascribable_state_relationship;
+  name : label;
+  description : OPTIONAL text;
+  relating_ascribable_state : ascribable_state;
+  related_ascribable_state 	: ascribable_state;
+DERIVE
+  id : identifier := get_id_value(SELF);
+WHERE
+  WR1: SIZEOF(USEDIN(SELF, 'BASIC_ATTRIBUTE_SCHEMA.' + 'ID_ATTRIBUTE.IDENTIFIED_ITEM')) <= 1;
+END_ENTITY;
+
+ENTITY state_definition_to_state_assignment_relationship
+	SUBTYPE of (ascribable_state_relationship);
+	relation_type : STRING;
+WHERE
+	WR1: acyclic_state_definition_to_state_assignment_relationship(SELF, [SELF\ascribable_state_relationship.related_ascribable_state], 'STATE_OBSERVED_SCHEMA.STATE_DEFINITION_TO_STATE_ASSIGNMENT_RELATIONSHIP');
+END_ENTITY;
+
+ENTITY hypothesis_state_to_confirmation_state_relationship
+	SUBTYPE of (state_definition_to_state_assignment_relationship);
+	confirmed_state 	: ascribable_state;							
+	hypothesized_state	: ascribable_state;	
+WHERE
+	WR1: acyclic_hypothesis_state_to_confirmation_state_relationship(SELF, [confirmed_state], 'STATE_OBSERVED_SCHEMA.HYPOTHESIS_STATE_TO_CONFIRMATION_STATE_RELATIONSHIP');				
+END_ENTITY;
+
+ENTITY state_observed;
+  name : label;
+  description : OPTIONAL text;
+END_ENTITY;
+
+ENTITY state_observed_assignment
+  ABSTRACT SUPERTYPE ;
+  assigned_state_observed : state_observed;
+  role : state_observed_role;
+END_ENTITY;
+
+ENTITY state_observed_relationship;
+  name : label;
+  description : OPTIONAL text;
+  relating_state_observed : SET[1:?] OF state_observed;
+  related_state_observed : SET[1:?] OF state_observed;
+END_ENTITY;
+
+ENTITY state_observed_role;
+  name : label;
+  description : OPTIONAL text;
+END_ENTITY;
+
+FUNCTION acyclic_state_definition_to_state_assignment_relationship
+   (relation          : state_definition_to_state_assignment_relationship;
+    relatives         : SET [1:?] OF ascribable_state;
+    specific_relation : STRING) : LOGICAL;
+   LOCAL
+     x                : SET OF ascribable_state_relationship;
+   END_LOCAL;
+   IF relation.relating_ascribable_state IN
+             relatives THEN
+     RETURN (FALSE);
+   END_IF;             -- IN is based in instance equality
+   x := QUERY (sdtsar <* bag_to_set (USEDIN
+        (relation.relating_ascribable_state,
+         'STATE_OBSERVED_SCHEMA.' +
+         'ASCRIBABLE_STATE_RELATIONSHIP.' +
+         'RELATED_ASCRIBABLE_STATE')) |
+          specific_relation IN TYPEOF (sdtsar));
+   REPEAT I := 1 TO HIINDEX(x);             -- pre-checked loop
+     IF NOT acyclic_state_definition_to_state_assignment_relationship
+       (x[i],
+        relatives + relation.relating_ascribable_state,
+        specific_relation) THEN
+       RETURN(FALSE);
+     END_IF;
+   END_REPEAT;
+   RETURN(TRUE);
+ END_FUNCTION;
+ 
+ FUNCTION acyclic_hypothesis_state_to_confirmation_state_relationship
+   (relation          : hypothesis_state_to_confirmation_state_relationship;
+    relatives         : SET [1:?] OF ascribable_state;
+    specific_relation : STRING) : LOGICAL;
+   LOCAL
+     x                : SET OF hypothesis_state_to_confirmation_state_relationship;
+   END_LOCAL;
+   IF relation.confirmed_state IN
+             relatives THEN
+     RETURN (FALSE);
+   END_IF;             -- IN is based in instance equality
+   x := QUERY (hstcsr <* bag_to_set (USEDIN
+        (relation.confirmed_state,
+         'STATE_OBSERVED_SCHEMA.' +
+         'HYPOTHESIS_STATE_TO_CONFIRMATION_STATE_RELATIONSHIP.' +
+         'HYPOTHESIZED_STATE')) |
+          specific_relation IN TYPEOF (hstcsr));
+   REPEAT I := 1 TO HIINDEX(x);             -- pre-checked loop
+     IF NOT acyclic_hypothesis_state_to_confirmation_state_relationship
+       (x[i],
+        relatives + relation.confirmed_state,
+        specific_relation) THEN
+       RETURN(FALSE);
+     END_IF;
+   END_REPEAT;
+   RETURN(TRUE);
+ END_FUNCTION;
+
+END_SCHEMA;  -- state_observed_schema

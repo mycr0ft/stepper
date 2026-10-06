@@ -1,0 +1,59 @@
+(*
+   ISO TC184/SC4/WG12 N11362 - ISO/TS 10303-1811 Product and manufacturing information with nominal 3d models - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N9370
+*)
+
+SCHEMA Product_and_manufacturing_information_with_nominal_3d_models_arm;
+
+USE FROM Advanced_boundary_representation_arm; -- ISO/TS 10303-1514
+USE FROM Compound_shape_representation_arm; -- ISO/TS 10303-1327
+USE FROM Construction_geometry_arm; -- ISO/TS 10303-1131
+USE FROM Design_product_data_management_arm; -- ISO/TS 10303-1628
+USE FROM Faceted_boundary_representation_arm; -- ISO/TS 10303-1512
+USE FROM Hybrid_boundary_representation_arm; -- ISO/TS 10303-1513
+USE FROM Manifold_subsurface_arm; -- ISO/TS 10303-1702
+USE FROM Part_view_definition_arm; -- ISO/TS 10303-1023
+USE FROM Shape_property_assignment_arm; -- ISO/TS 10303-1032
+USE FROM Tessellated_boundary_representation_arm; -- ISO/TS 10303-1515
+USE FROM Tessellated_manifold_surface_shape_representation_arm; -- ISO/TS 10303-1504
+USE FROM Tessellated_manifold_subsurface_shape_representation_arm; -- ISO/TS 10303-1503
+
+TYPE advanced_face_model = SELECT (
+  Advanced_brep_shape_representation,
+  Manifold_surface_shape_representation, 
+  Manifold_subsurface_model);
+END_TYPE;
+
+TYPE pmiwn3dm_documented_element_select = SELECT BASED_ON documented_element_select WITH 
+    (View_definition_context);
+END_TYPE; 
+
+TYPE pmiwn3m_product_shape_type_enumeration = ENUMERATION BASED_ON product_shape_type_enumeration WITH ( 
+  nominal_shape ); 
+END_TYPE;
+
+TYPE pamap_initial_application_domain_enumeration = ENUMERATION BASED_ON initial_application_domain_enumeration WITH (
+  model_based_product_geometry);
+END_TYPE;
+
+RULE nominal_3d_model_shape_constraint FOR (Part_view_definition);
+WHERE
+  WR1: SIZEOF ( QUERY ( p <* Part_view_definition | 
+        (p\Product_view_definition.shape_type = pmiwn3m_product_shape_type_enumeration.nominal_shape)
+           AND ( 
+                 (p.initial_context.application_domain <> pamap_initial_application_domain_enumeration.model_based_product_geometry)
+                 OR 
+                 (p.initial_context.life_cycle_stage <> pvd_life_cycle_stage_enumeration.design)
+               )
+                      ) 
+               ) = 0 ;
+  WR2: SIZEOF ( QUERY ( p <* Part_view_definition | 
+                          SIZEOF( [ 'ADVANCED_BOUNDARY_REPRESENTATION_ARM.ADVANCED_BREP_SHAPE_REPRESENTATION',
+                                    'MANIFOLD_SURFACE_ARM.MANIFOLD_SURFACE_SHAPE_REPRESENTATION',
+                                    'MANIFOLD_SUBSURFACE_ARM.MANIFOLD_SUBSURFACE_MODEL'
+                                  ] * TYPEOF(p.primary_shape_representation) ) > 0
+                      ) 
+              ) = 0;
+END_RULE; 
+
+END_SCHEMA;

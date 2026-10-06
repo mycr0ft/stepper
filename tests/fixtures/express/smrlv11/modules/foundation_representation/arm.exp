@@ -1,0 +1,180 @@
+(*
+$Id: arm.exp,v 1.26 2020/08/04 12:53:08 kevin Exp $
+ISO TC184/SC4/WG12 N10672 - ISO/TS 10303-1006 Foundation representation - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N10389
+*) 
+
+
+SCHEMA Foundation_representation_arm; 
+
+USE FROM Support_resource_arm;   -- ISO/TS 10303-1800
+REFERENCE FROM Support_resource_arm (bag_to_set);   -- ISO/TS 10303-1800
+USE FROM Value_with_unit_arm;    -- ISO/TS 10303-1054
+
+TYPE representation_or_representation_reference = SELECT
+   (Representation, 
+    Representation_reference);
+END_TYPE; 
+
+ENTITY Numerical_representation_context
+  SUBTYPE OF (Representation_context);
+  units : OPTIONAL SET[1:?] OF Unit;
+  accuracies : OPTIONAL SET[1:?] OF Uncertainty_with_unit;
+END_ENTITY;
+
+ENTITY Representation;
+  id : OPTIONAL identifier;
+  name : OPTIONAL label;
+  description : OPTIONAL text;
+  context_of_items : Representation_context;
+  items : SET[1:?] OF Representation_item;
+WHERE
+  WR1 : EXISTS(name) OR (TYPEOF(SELF\Representation) <> TYPEOF(SELF));
+END_ENTITY;
+
+ENTITY Representation_context;
+  id : identifier;
+  kind : text;
+INVERSE
+  representations_in_context : SET[1:?] OF Representation FOR context_of_items;
+END_ENTITY;
+
+ENTITY Representation_context_reference;
+  context_identifier : identifier;
+INVERSE
+  representations_in_context : SET[1:?] OF Representation_reference FOR context_of_items;
+END_ENTITY;
+
+ENTITY Representation_item
+  ABSTRACT SUPERTYPE ;
+  name : OPTIONAL label;
+END_ENTITY;
+
+ENTITY Representation_item_relationship;
+  name : label;
+  description : OPTIONAL text;
+  relating_representation_item : Representation_item;
+  related_representation_item : Representation_item;
+END_ENTITY;
+
+ENTITY Representation_reference;
+  id : identifier;
+  context_of_items : Representation_context_reference;
+END_ENTITY;
+
+ENTITY Representation_relationship;
+  relation_type : OPTIONAL label;
+  description : OPTIONAL text;
+  rep_1 : Representation;
+  rep_2 : Representation;
+WHERE
+  WR1 : EXISTS(relation_type) OR (TYPEOF(SELF\Representation_relationship) <> TYPEOF(SELF));
+  WR2 : EXISTS(description) OR (TYPEOF(SELF\Representation_relationship) <> TYPEOF(SELF));
+END_ENTITY;
+
+ENTITY String_representation_item
+  SUBTYPE OF (Representation_item);
+  string_value : STRING;
+END_ENTITY;
+
+  FUNCTION item_in_context
+    (item  : Representation_item;
+     cntxt : Representation_context) : BOOLEAN;
+    LOCAL
+      y : BAG OF Representation_item;
+    END_LOCAL;
+    -- If there is one or more representation using both the item
+    -- and cntxt return true.
+    IF SIZEOF(USEDIN(item,'FOUNDATION_REPRESENTATION_ARM.REPRESENTATION.ITEMS')
+      * cntxt.representations_in_context) > 0 THEN
+      RETURN (TRUE);
+      -- Determine the bag of representation_items that reference
+      -- item
+      ELSE y := QUERY(z <* USEDIN (item , '') |
+             'FOUNDATION_REPRESENTATION_ARM.REPRESENTATION_ITEM' IN TYPEOF(z));
+        -- Ensure that the bag is not empty
+        IF SIZEOF(y) > 0 THEN
+        -- For each element in the bag
+        REPEAT i := 1 TO HIINDEX(y);
+          -- Check to see it is an item in the input cntxt.
+          IF item_in_context(y[i], cntxt) THEN
+            RETURN (TRUE);
+          END_IF;
+        END_REPEAT;
+      END_IF;
+    END_IF;
+    -- Return false when all possible branches have been checked
+    -- with no success.
+    RETURN (FALSE);
+  END_FUNCTION;
+
+  FUNCTION using_representations (item : Representation_item): SET OF Representation;
+    LOCAL
+      results            : SET OF Representation;
+      result_bag         : BAG OF Representation;
+      intermediate_items : SET OF Representation_item;
+    END_LOCAL;
+    -- Find the representations in which the item is used and add to the
+    -- results set.
+    results := [];
+    result_bag := USEDIN(item,'FOUNDATION_REPRESENTATION_ARM.REPRESENTATION.ITEMS');
+    IF SIZEOF(result_bag) > 0 THEN
+      REPEAT i := 1 TO HIINDEX(result_bag);
+        results := results + result_bag[i];
+      END_REPEAT;
+    END_IF;
+    -- Find all representation_items or founded_items
+    -- by which item is referenced directly or indirectly.
+    intermediate_items := using_items(item,[]);
+    -- If the set of intermediate items is not empty;
+    IF SIZEOF(intermediate_items) > 0 THEN
+      -- For each element in the set, add the
+      -- representations of that element.
+      REPEAT i := 1 TO HIINDEX(intermediate_items);
+        result_bag := USEDIN(intermediate_items[i],
+                      'FOUNDATION_REPRESENTATION_ARM.REPRESENTATION.ITEMS');
+        IF SIZEOF(result_bag) > 0 THEN
+          REPEAT j := 1 TO HIINDEX(result_bag);
+            results := results + result_bag[j];
+          END_REPEAT;
+        END_IF;
+      END_REPEAT;
+    END_IF;
+    -- Return the set of representation in which the input item is
+    -- used directly and indirectly (through intervening
+    -- representation_items or founded items).
+    RETURN (results);
+  END_FUNCTION;
+
+  FUNCTION using_items (item : Representation_item;
+                        checked_items: SET OF Representation_item)
+                      : SET OF Representation_item;
+    LOCAL
+      new_check_items    : SET OF Representation_item;
+      result_items       : SET OF Representation_item;
+      next_items         : SET OF Representation_item;
+    END_LOCAL;
+    result_items := [];
+    new_check_items := checked_items + item;
+    -- Find the set of representation_items or founded_items
+    -- in which item is used directly.
+    next_items := QUERY(z <* bag_to_set( USEDIN(item , '')) |
+      ('FOUNDATION_REPRESENTATION_ARM.REPRESENTATION_ITEM' IN TYPEOF(z)));
+    -- If the set of next_items is not empty;
+    IF SIZEOF(next_items) > 0 THEN
+      -- For each element in the set, find the using_items recursively
+      REPEAT i := 1 TO HIINDEX(next_items);
+        -- Check for loop in data model, i.e. one of the next_items
+        -- occurred earlier in the set of check_items;
+        IF NOT(next_items[i] IN new_check_items) THEN
+          result_items := result_items + next_items[i] +
+                          using_items(next_items[i],new_check_items);
+        END_IF;
+      END_REPEAT;
+    END_IF;
+    -- return the set of representation_items or founded_items
+    -- in which the input item is used directly and indirectly.
+    RETURN (result_items);
+  END_FUNCTION;
+
+END_SCHEMA;  -- Foundation_representation_arm

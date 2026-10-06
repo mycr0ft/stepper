@@ -1,0 +1,451 @@
+(*
+$Id: draughting_element_schema.exp,v 1.55 2021/07/21 16:24:25 kevin Exp $
+ISO 10303 TC184/SC4/WG12 N10943
+
+EXPRESS Source:
+ISO 10303-101 ed6 Draughting - Draughting element schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2021 All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-101 ed6 Draughting - Draughting element schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA draughting_element_schema '{iso standard 10303 part(101) version(6) object(1) draughting_element_schema(2)}';
+
+REFERENCE FROM geometric_model_schema -- ISO 10303-42
+       (geometric_set,
+       tessellated_geometric_set);   
+
+REFERENCE FROM geometry_schema -- ISO 10303-42
+    (axis2_placement,
+     axis2_placement_2d,
+     axis2_placement_3d,
+     cartesian_point,
+     geometric_representation_item,
+--bug 8420 removed surface
+     plane);
+     
+REFERENCE FROM mechanical_design_schema  -- ISO 10303-113
+        (annotation_placeholder_occurrence);
+
+REFERENCE FROM presentation_appearance_schema -- ISO 10303-46
+    (invisible_item,
+    presentation_style_assignment,
+    styled_item);     
+     
+REFERENCE FROM presentation_definition_schema -- ISO 10303-46
+    (annotation_occurrence,
+     annotation_curve_occurrence,
+     annotation_fill_area_occurrence,
+     annotation_text_occurrence,
+     annotation_symbol_occurrence
+     );
+
+REFERENCE FROM presentation_organization_schema -- ISO 10303-46
+    (annotation_representation_select,
+    area_dependent_annotation_representation,
+    camera_model, 
+    presentation_area,
+    presentation_view,
+    view_dependent_annotation_representation);
+    
+REFERENCE FROM presentation_resource_schema -- ISO 10303-46
+    (planar_box);
+
+REFERENCE FROM product_property_definition_schema        -- ISO 10303-41
+  (product_definition_shape,
+   property_definition,
+   shape_aspect, 
+   shape_aspect_relationship);
+
+REFERENCE FROM product_property_representation_schema -- ISO 10303-49
+     (item_identified_representation_usage,
+     shape_definition_representation);
+     
+REFERENCE FROM representation_schema -- ISO 10303-43
+     (representation,
+      representation_item,
+      mapped_item,
+      representation_map,
+      using_representations);
+ 
+REFERENCE FROM support_resource_schema -- ISO 10303-41
+    (label,
+     text,
+     bag_to_set);
+
+--bug 8420 
+--bug 8420 note: advanced_face is interfaced by the Draughting_element_mim because advanced_face is a subtype of face_surface
+--bug 8420 and we would need to integrate part 511 into this part to include it herein,
+--bug 8420 as a 1xx series part is not permitted to REFERENCE FROM a 5xx series part.
+REFERENCE FROM topology_schema -- ISO 10303-42
+    (face_surface);
+     
+  TYPE annotation_plane_element = SELECT 
+    (draughting_callout, 
+     styled_item); 
+  END_TYPE;
+
+  TYPE des_annotation_representation_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON annotation_representation_select WITH
+    (draughting_model); 
+  END_TYPE;
+
+--bug 8420
+ TYPE des_apll_point_select= SELECT (
+  	apll_point,
+        apll_point_with_surface);
+  END_TYPE;
+
+--bug 8420
+  TYPE des_apll_point_symbol = ENUMERATION OF ( 
+         circle,
+         dot,
+         internal_pair_forward_arrowhead, 
+         internal_pair_reverse_arrowhead,
+         none,
+         positive_arrowhead,
+         triangle);
+  END_TYPE;
+
+  TYPE draughting_callout_element = EXTENSIBLE GENERIC_ENTITY SELECT
+    (annotation_curve_occurrence,
+     annotation_fill_area_occurrence,
+     annotation_symbol_occurrence,
+     annotation_text_occurrence,
+     tessellated_annotation_occurrence);
+  END_TYPE;
+
+  TYPE dimension_extent_usage = ENUMERATION OF
+    (origin,
+     target);
+  END_TYPE;
+
+  TYPE des_invisible_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON invisible_item WITH
+    (draughting_callout);
+  END_TYPE;
+
+TYPE draughting_model_item_association_select = SELECT (
+  annotation_occurrence,
+  draughting_callout);
+END_TYPE;
+
+TYPE draughting_model_item_definition = EXTENSIBLE GENERIC_ENTITY SELECT (
+  product_definition_shape,
+  property_definition, 
+  shape_aspect, 
+  shape_aspect_relationship);
+END_TYPE;
+
+  TYPE draughting_model_item_select = SELECT
+    (mapped_item,
+     styled_item,
+     axis2_placement,
+     camera_model,
+     draughting_callout);
+  END_TYPE;  
+  
+  TYPE plane_or_planar_box = SELECT 
+    (plane, 
+     planar_box) ;
+  END_TYPE; 
+  
+--Bug 8420
+ENTITY annotation_placeholder_leader_line
+ ABSTRACT SUPERTYPE OF (ONEOF(annotation_to_annotation_leader_line, annotation_to_model_leader_line, auxiliary_leader_line))
+ SUBTYPE OF (geometric_representation_item);
+   geometric_elements : LIST [2:?] OF UNIQUE des_apll_point_select;
+ DERIVE
+   model_end          : des_apll_point_select := geometric_elements[HIINDEX(geometric_elements)];
+ INVERSE
+   container          : annotation_placeholder_occurrence_with_leader_line FOR leader_line;
+ UNIQUE
+  UR1 : geometric_elements;
+ END_ENTITY;
+--IP1: When a positive_arrowhead is provided, there shall be at least one point in the list of points whose index value is smaller by one than the index value of the point to which the positive_arrowhead is applied.
+--note: the positive_arrowhead point cannot be the start of the leader line.
+ 
+--IP2: IF there is one point with either an internal_pair_forward_arrowhead, or an internal_pair_reverse_arrowhead, there shall be another poimt in the list with the reverse annotation.
+
+--IP3: When an internal_pair_forward_arrowhead is provided, there shall be an internal_pair_reverse_arrowhead provided at the point in the list of points whose index value is less by one than the index value of the point to which the internal_pair_forward_arrowhead is applied.
+
+
+ENTITY annotation_placeholder_occurrence_with_leader_line
+  SUBTYPE OF (annotation_placeholder_occurrence);
+  leader_line          : SET [1:?] OF annotation_placeholder_leader_line;
+UNIQUE
+ UR1: leader_line;
+END_ENTITY;
+--IP1: No point specified by the attribute geometric_elements of annotation_placeholder_leader_line shall also be specified by the attribute geometric_set referenced by the attribute item inherited from annotation_placeholder_occurrence.
+
+ENTITY annotation_plane 
+  SUBTYPE OF (annotation_occurrence, geometric_representation_item);
+    elements : OPTIONAL SET[1:?] OF annotation_plane_element;
+    SELF\styled_item.item : plane_or_planar_box;
+  WHERE
+    WR1: SELF\geometric_representation_item.dim = 3;
+    WR2: NOT('PRESENTATION_RESOURCE_SCHEMA.'+'PLANAR_BOX' IN TYPEOF(SELF\styled_item.item)) OR
+      ('GEOMETRY_SCHEMA.'+'AXIS2_PLACEMENT_3D' IN TYPEOF(SELF\styled_item.item\planar_box.placement));
+    WR3: (('PRESENTATION_RESOURCE_SCHEMA.'+'PLANAR_BOX' IN TYPEOF(SELF\styled_item.item)) AND
+      ('PRESENTATION_APPEARANCE_SCHEMA.'+'CURVE_STYLE' IN TYPEOF(SELF\styled_item.styles[1]\presentation_style_assignment.styles[1]))) OR
+      (('GEOMETRY_SCHEMA.'+'PLANE' IN TYPEOF(SELF\styled_item.item)) AND
+      ('PRESENTATION_APPEARANCE_SCHEMA.'+'FILL_AREA_STYLE' IN TYPEOF(SELF\styled_item.styles[1]\presentation_style_assignment.styles[1])));
+    WR4: (SIZEOF(SELF\styled_item.styles) = 1) AND
+      (SIZEOF(SELF\styled_item.styles[1]\presentation_style_assignment.styles) = 1);
+END_ENTITY;
+
+ENTITY annotation_to_annotation_leader_line
+ SUBTYPE OF (annotation_placeholder_leader_line);
+DERIVE
+  start_end : des_apll_point_select := SELF\annotation_placeholder_leader_line.geometric_elements[1];
+  WHERE
+--Bug 8420
+   WR1: (SIZEOF (['DRAUGHTING_ELEMENT_SCHEMA.APLL_POINT_WITH_SURFACE'] * TYPEOF(SELF\annotation_placeholder_leader_line.model_end)) = 0) AND
+        (SIZEOF (['DRAUGHTING_ELEMENT_SCHEMA.APLL_POINT_WITH_SURFACE'] * TYPEOF(start_end)) = 0);
+-- The geometric_elements inherited from annotation_placeholder_leader_line shall not start nor end on the part model.
+--IP1: An annotation_to_annotation_leader_line shall start and end at annotation boundary curves when the placeholder is replaced with annotation with rendered boundary curves.
+--IP2: When rendered by the receiving system the leader line shall start and end on different annotation instances.
+END_ENTITY;
+
+ENTITY annotation_to_model_leader_line
+ SUBTYPE OF (annotation_placeholder_leader_line);
+DERIVE
+   start_end : des_apll_point_select := SELF\annotation_placeholder_leader_line.geometric_elements[1];
+  WHERE
+   WR1: SIZEOF (['DRAUGHTING_ELEMENT_SCHEMA.APLL_POINT_WITH_SURFACE'] * TYPEOF(SELF\annotation_placeholder_leader_line.model_end)) = 1;
+-- The geometric_elements inherited from annotation_placeholder_leader_line shall end on the part model.
+--Bug 8420
+   WR2: SIZEOF (['DRAUGHTING_ELEMENT_SCHEMA.APLL_POINT_WITH_SURFACE'] * TYPEOF(start_end)) = 0;
+-- The geometric_elements inherited from annotation_placeholder_leader_line shall not start on the part model.
+END_ENTITY;
+--IP1: An annotation_to_model_leader_line shall start at annotation and shall visually end on the product model at an apll_point_with_surface.
+--NOTE : Industrial practice is for the leader line to end in the close neighborhood of the model. Exchange agreements may be used to define the acceptable criterion for a terminus of a leader line being considered to be in the close neighborhood of the model.
+--NOTE : The start end may be at an arbitrary location in the close neighborhood of a numeric literal text that is helping to compose the annotation.  Exchange agreements may be used to define the acceptable criterion for a terminus of a leader line being considered to be in the close neighborhood of the numeric literal.
+
+ENTITY apll_point
+  SUBTYPE OF (cartesian_point);
+--bug 8420
+  symbol_applied: des_apll_point_symbol;
+INVERSE
+  container: annotation_placeholder_leader_line FOR geometric_elements;
+WHERE
+ WR1: SIZEOF(['DRAUGHTING_ELEMENT_SCHEMA.APLL_POINT_WITH_SURFACE'] * TYPEOF(SELF)) = 0;
+ WR2: SIZEOF(USEDIN(SELF, 'GEOMETRY_SCHEMA.GEOMETRIC_SET.ELEMENTS')) = 0;
+END_ENTITY;
+
+--bug 8420 removed proposed point_on_curve entity as there are no annotation curves in the placeholder.
+
+ENTITY apll_point_with_surface
+  SUBTYPE OF(cartesian_point);
+--bug 8420
+  symbol_applied: des_apll_point_symbol;
+  associated_surface : face_surface;
+INVERSE
+  container: annotation_placeholder_leader_line FOR geometric_elements;
+WHERE
+ WR1: SIZEOF(['DRAUGHTING_ELEMENT_SCHEMA.APLL_POINT'] * TYPEOF(SELF)) = 0;
+ WR2: SIZEOF(USEDIN(SELF, 'GEOMETRY_SCHEMA.GEOMETRIC_SET.ELEMENTS')) = 0;
+END_ENTITY;
+--IP: The apll_point_with_surface is closely related visually to the model surface, but is not in the domain of the surface.
+
+ENTITY auxiliary_leader_line
+ SUBTYPE OF (annotation_placeholder_leader_line);
+  controlling_leader_line : annotation_to_model_leader_line;
+DERIVE
+  free_space_end: des_apll_point_select := SELF\annotation_placeholder_leader_line.geometric_elements[1];
+ WHERE
+   WR1: SELF\annotation_placeholder_leader_line.container :=: controlling_leader_line\annotation_placeholder_leader_line.container;
+-- An auxiliary_leader_line shall be associated to the same annotation_placeholder_occurrence_with_leader_line that the controlling_leader_line is associated to.
+
+   WR2: SIZEOF (['DRAUGHTING_ELEMENT_SCHEMA.APLL_POINT_WITH_SURFACE'] * TYPEOF(free_space_end)) = 0;
+-- The geometric_elements inherited from annotation_placeholder_leader_line shall not start on the part model.
+
+   WR3: SIZEOF (['DRAUGHTING_ELEMENT_SCHEMA.APLL_POINT_WITH_SURFACE'] * TYPEOF(SELF\annotation_placeholder_leader_line.model_end)) = 1;
+-- The geometric_elements inherited from annotation_placeholder_leader_line shall end on the part model.
+END_ENTITY;
+--IP1: An auxiliary_leader_line shall start at an arbitray location.
+--NOTE 1 : Industrial practice is for the leader line to end in the close neighborhood of the model. Exchange agreements may be used to define the acceptable criterion for a terminus of a leader line being considered to be in the close neighborhood of the model.
+--NOTE 2 : The start end may be at an arbitrary location in the close neighborhood of a numeric literal text that is helping to compose the annotation.  Exchange agreements may be used to define the acceptable criterion for a terminus of a leader line being considered to be in the close neighborhood of the numeric literal.
+
+  ENTITY dimension_curve
+    SUBTYPE OF (annotation_curve_occurrence);
+    WHERE
+      WR1: (SIZEOF(
+          QUERY(dct <* USEDIN(SELF,'DRAUGHTING_ELEMENT_SCHEMA.' +
+                'TERMINATOR_SYMBOL.ANNOTATED_CURVE')
+               | (('DRAUGHTING_ELEMENT_SCHEMA.'+
+                  'DIMENSION_CURVE_TERMINATOR' IN TYPEOF(dct))
+                  ))
+          ) <= 2);
+      WR2:  SIZEOF(
+            QUERY( dcdc <* USEDIN(SELF,'DRAUGHTING_ELEMENT_SCHEMA.' +
+                   'DRAUGHTING_CALLOUT.CONTENTS') |
+                   ('DRAUGHTING_ELEMENT_SCHEMA.'+
+                    'DIMENSION_CURVE_DIRECTED_CALLOUT' IN TYPEOF(dcdc)))
+          )>= 1;
+     WR3: (SIZEOF(
+            QUERY(dct1 <* USEDIN(SELF,'DRAUGHTING_ELEMENT_SCHEMA.' +
+                  'TERMINATOR_SYMBOL.ANNOTATED_CURVE') 
+               | (('DRAUGHTING_ELEMENT_SCHEMA.'+
+                  'DIMENSION_CURVE_TERMINATOR' IN TYPEOF(dct1)) 
+                  AND (dct1\dimension_curve_terminator.role = dimension_extent_usage.origin)))
+          ) <= 1)
+        AND 
+        (SIZEOF(
+            QUERY (dct2 <* USEDIN(SELF,'DRAUGHTING_ELEMENT_SCHEMA.'+
+                   'TERMINATOR_SYMBOL.ANNOTATED_CURVE') 
+                 | (('DRAUGHTING_ELEMENT_SCHEMA.'+
+                   'DIMENSION_CURVE_TERMINATOR' IN TYPEOF(dct2))
+                   AND (dct2\dimension_curve_terminator.role = dimension_extent_usage.target)))
+         ) <= 1);
+  END_ENTITY;
+
+  ENTITY draughting_model
+    SUBTYPE OF (representation);
+      SELF\representation.items : SET[1:?] OF draughting_model_item_select;
+    UNIQUE
+      UR1:  SELF\representation.name;
+    WHERE
+      WR1:  SIZEOF (QUERY (mi <* QUERY (it <* SELF.items |
+         ('REPRESENTATION_SCHEMA.MAPPED_ITEM' IN TYPEOF(it))) |
+         NOT (
+           SIZEOF (['PRODUCT_PROPERTY_REPRESENTATION_SCHEMA.SHAPE_REPRESENTATION',
+                    'DRAUGHTING_ELEMENT_SCHEMA.DRAUGHTING_MODEL'] *
+              TYPEOF (mi\mapped_item.mapping_source.
+                      mapped_representation)) = 1
+        ))) = 0;
+     WR2:  SIZEOF (QUERY (smi <* QUERY (si <* QUERY (it <* SELF.items |
+        ('PRESENTATION_APPEARANCE_SCHEMA.STYLED_ITEM' IN TYPEOF(it))) |
+        ('REPRESENTATION_SCHEMA.MAPPED_ITEM' IN
+            TYPEOF(si\styled_item.item))) |
+        (NOT (('PRODUCT_PROPERTY_REPRESENTATION_SCHEMA.SHAPE_REPRESENTATION' IN
+                 TYPEOF(smi\styled_item.item\mapped_item.
+                        mapping_source.mapped_representation))
+            AND
+             (SIZEOF (QUERY (sty <* smi\styled_item.styles |
+               (NOT (SIZEOF (QUERY (psa <* sty.styles |
+                       (NOT ('PRESENTATION_APPEARANCE_SCHEMA.CURVE_STYLE' IN TYPEOF(psa))))) = 1
+             )))) = 1)))
+        )) = 0;
+  END_ENTITY;
+
+ENTITY draughting_model_item_association
+  SUBTYPE OF(item_identified_representation_usage);
+  SELF\item_identified_representation_usage.definition          : draughting_model_item_definition;
+  SELF\item_identified_representation_usage.used_representation : annotation_representation_select;
+  SELF\item_identified_representation_usage.identified_item     : draughting_model_item_association_select;
+END_ENTITY;
+
+  ENTITY leader_curve
+    SUBTYPE OF (annotation_curve_occurrence);
+    WHERE
+      WR1: SIZEOF( 
+          QUERY(ldc <* USEDIN( SELF, 'DRAUGHTING_ELEMENT_SCHEMA.' +
+                       'DRAUGHTING_CALLOUT.CONTENTS')
+                   |   'DRAUGHTING_ELEMENT_SCHEMA.' +
+                       'LEADER_DIRECTED_CALLOUT'  IN TYPEOF(ldc))) >= 1;
+  END_ENTITY;
+
+  ENTITY projection_curve
+    SUBTYPE OF (annotation_curve_occurrence);
+  END_ENTITY;
+
+  ENTITY terminator_symbol
+    SUBTYPE OF (annotation_symbol_occurrence);
+      annotated_curve : annotation_curve_occurrence;
+  END_ENTITY;
+
+  ENTITY dimension_curve_terminator
+    SUBTYPE OF (terminator_symbol);
+      role  : dimension_extent_usage;
+    WHERE
+      WR1: 'DRAUGHTING_ELEMENT_SCHEMA.DIMENSION_CURVE' IN TYPEOF
+        (SELF\terminator_symbol.annotated_curve);
+  END_ENTITY;
+
+  ENTITY leader_terminator
+    SUBTYPE OF (terminator_symbol);
+    WHERE
+      WR1: 'DRAUGHTING_ELEMENT_SCHEMA.LEADER_CURVE' IN TYPEOF
+        (SELF\terminator_symbol.annotated_curve);
+  END_ENTITY;
+
+  ENTITY draughting_callout
+    SUBTYPE OF (geometric_representation_item);
+      contents : SET [1:?] OF draughting_callout_element; 
+    WHERE
+      WR1: (SIZEOF (QUERY (l_1 <* SELF\draughting_callout.contents |
+        'DRAUGHTING_ELEMENT_SCHEMA.LEADER_CURVE' IN (TYPEOF(l_1)))) = 0) OR
+        ('DRAUGHTING_ELEMENT_SCHEMA.LEADER_DIRECTED_CALLOUT' IN (TYPEOF(SELF))) AND
+        (SIZEOF (QUERY (l_1 <* SELF\draughting_callout.contents |
+        'DRAUGHTING_ELEMENT_SCHEMA.PROJECTION_CURVE' IN (TYPEOF(l_1)))) = 0) OR
+        ('DRAUGHTING_ELEMENT_SCHEMA.PROJECTION_DIRECTED_CALLOUT' IN (TYPEOF(SELF))) AND  
+        (SIZEOF (QUERY (l_1 <* SELF\draughting_callout.contents |
+        'DRAUGHTING_ELEMENT_SCHEMA.DIMENSION_CURVE' IN (TYPEOF(l_1)))) = 0) OR
+        ('DRAUGHTING_ELEMENT_SCHEMA.DIMENSION_CURVE_DIRECTED_CALLOUT' IN (TYPEOF(SELF)));
+      WR2: SIZEOF (QUERY ( apo <* contents |
+          'MECHANICAL_DESIGN_SCHEMA.ANNOTATION_PLACEHOLDER_OCCURRENCE' in TYPEOF(apo)
+          )) < 2;
+
+  END_ENTITY;
+
+  ENTITY draughting_callout_relationship;
+    name : label;
+    description : text;
+    relating_draughting_callout : draughting_callout;
+    related_draughting_callout : draughting_callout;
+  END_ENTITY;
+
+  ENTITY leader_directed_callout
+    SUBTYPE OF (draughting_callout);
+    WHERE
+      WR1: SIZEOF (QUERY (l_1 <* SELF\draughting_callout.contents |
+        'DRAUGHTING_ELEMENT_SCHEMA.LEADER_CURVE' IN (TYPEOF(l_1)))) >= 1;
+      WR2: SIZEOF(SELF\draughting_callout.contents) >=2;
+  END_ENTITY;
+
+  ENTITY projection_directed_callout
+    SUBTYPE OF (draughting_callout);
+    WHERE
+      WR1: SIZEOF(QUERY(p_1<*SELF\draughting_callout.contents | 
+        'DRAUGHTING_ELEMENT_SCHEMA.PROJECTION_CURVE' IN (TYPEOF(p_1))))<=2;
+      WR2: SIZEOF(SELF\draughting_callout.contents) >=2;
+  END_ENTITY;
+
+  ENTITY dimension_curve_directed_callout
+    SUBTYPE OF (draughting_callout);
+    WHERE
+      WR1: SIZEOF(QUERY(d_c<*SELF\draughting_callout.contents | 
+        'DRAUGHTING_ELEMENT_SCHEMA.DIMENSION_CURVE' IN (TYPEOF(d_c))))<=2;
+      WR2: SIZEOF(SELF\draughting_callout.contents) >= 2;
+  END_ENTITY;
+  
+  ENTITY tessellated_annotation_occurrence
+    SUBTYPE OF (annotation_occurrence);
+    SELF\styled_item.item : tessellated_geometric_set; 
+  END_ENTITY;   
+
+  SUBTYPE_CONSTRAINT annotation_curve_subtypes FOR annotation_curve_occurrence;
+    (ONEOF(dimension_curve,
+    leader_curve,
+    projection_curve));
+  END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA; 

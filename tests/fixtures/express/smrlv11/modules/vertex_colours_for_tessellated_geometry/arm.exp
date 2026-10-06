@@ -1,0 +1,49 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.14 2017/09/26 09:52:57 verodub Exp
+   ISO TC184/SC4/WG12 N9756 - ISO/TS 10303-1836 Vertex colours for tessellated geometry - EXPRESS ARM
+*)
+
+SCHEMA Vertex_colours_for_tessellated_geometry_arm;
+
+USE FROM Appearance_assignment_arm;   -- ISO/TS 10303-1001
+USE FROM Tessellated_geometry_arm;   -- ISO/TS 10303-1819
+
+TYPE colour_type_enum = ENUMERATION OF(
+	RGB8,
+	RGBT8);
+END_TYPE;
+  
+TYPE tessellated_surface_item = SELECT 
+  (Tessellated_face, 
+   Tessellated_shell,
+   Tessellated_solid,
+   Tessellated_surface_set);
+END_TYPE;
+
+TYPE unsigned_8_bit_integer = INTEGER;
+	WHERE
+		WR1: { 0 <= SELF <= 255 };
+END_TYPE;
+
+ENTITY Styled_tessellated_element_with_colours
+	SUBTYPE OF (Styled_element);
+	 SELF\Styled_element.element : tessellated_surface_item;
+     colour_type : colour_type_enum;
+     colour_values : LIST[1:?] OF LIST[3:4] OF unsigned_8_bit_integer;
+   DERIVE
+     coloured_coordinate_values : Coordinates_list := get_coordinate_values(element);
+   WHERE
+    WR1 : NOT EXISTS(SELF\styled_element.appearance);
+    WR2 : ((colour_type = RGB8) AND (SIZEOF(QUERY(clist <* SELF.colour_values | NOT (SIZEOF(clist) = 3)))= 0)) OR
+           ((colour_type = RGBT8) AND (SIZEOF(QUERY(clist <* SELF.colour_values | NOT (SIZEOF(clist) = 4)))= 0));
+    WR3 : SIZEOF(colour_values) = coloured_coordinate_values.npoints;
+	WR4 : SELF\styled_element.invisible = FALSE;
+  END_ENTITY;
+ 
+ FUNCTION get_coordinate_values
+	(input : tessellated_surface_item) : Coordinates_list;
+	RETURN(?);
+ END_FUNCTION;
+
+END_SCHEMA;

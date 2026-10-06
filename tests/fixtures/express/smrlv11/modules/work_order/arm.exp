@@ -1,0 +1,42 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.19 2019/01/10 22:26:09 brandon Exp
+ ISO TC184/SC4/WG12 N10268 - ISO/TS 10303-1043 Work order - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N8074
+*)
+
+
+SCHEMA Work_order_arm; 
+
+USE FROM Activity_arm;    -- ISO/TS 10303-1047
+
+USE FROM Work_request_arm;    -- ISO/TS 10303-1042
+
+
+ENTITY Directed_activity
+  SUBTYPE OF (Activity);
+  directive : Work_order;
+END_ENTITY;
+
+ENTITY Directed_activity_items_assignment;
+	assigned_directed_activity 	: Directed_activity;
+	items 						: SET [1:?] OF affected_item_select;
+ END_ENTITY;
+
+ENTITY Work_order;
+  name : STRING;
+  description : OPTIONAL STRING;
+  in_response_to : SET[0:?] OF Work_request;
+END_ENTITY;
+
+ENTITY Work_order_relationship;
+	description 	: OPTIONAL STRING; 					
+	id			 	: OPTIONAL STRING; 					
+	related 		: Work_order;							
+	relating 		: Work_order;				
+	relation_type 	: STRING; 									
+ WHERE
+	WR1 : relating :<>: related;
+END_ENTITY;
+
+END_SCHEMA;  -- Work_order_arm

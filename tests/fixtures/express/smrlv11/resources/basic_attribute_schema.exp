@@ -1,0 +1,159 @@
+(*
+$Id: basic_attribute_schema.exp,v 1.26 2019/04/03 14:35:04 kevin Exp $
+ISO 10303 TC184/SC4/WG12 N10466
+
+EXPRESS Source:
+ISO 10303-41 ed6 Fundamentals of product description and support - Basic attribute schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2019  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-41 ed6 Fundamentals of product description and support - Basic attribute schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA basic_attribute_schema '{iso standard 10303 part(41) version(9) object(1) basic_attribute_schema(4)}';
+
+  REFERENCE FROM support_resource_schema (identifier, label, text);   -- ISO 10303-41
+ 
+  TYPE description_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE;
+
+  TYPE generic_attribute_list_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE; 
+
+  TYPE generic_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE;
+
+  TYPE id_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE;
+
+  TYPE name_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE;
+ 
+  TYPE role_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE;
+
+  ENTITY aggregate_id_attribute;
+    attribute_value : identifier;
+    identified_item : SET [1:?] OF id_attribute_select;
+  END_ENTITY;
+
+  ENTITY description_attribute;
+    attribute_value : text;
+    described_item : description_attribute_select;
+  END_ENTITY;
+
+  ENTITY generic_attribute;
+    attribute_name : label;
+    attribute_value : text;
+  END_ENTITY;
+
+  ENTITY generic_attribute_assignment;
+    attribute : generic_attribute;
+    item_with_attribute : generic_attribute_select;
+  END_ENTITY;
+
+  ENTITY generic_attribute_list_assignment;
+    attribute_name : label;
+    attributes : LIST [1:?] OF generic_attribute;
+    item_with_attribute : generic_attribute_list_select;
+  END_ENTITY;
+
+  ENTITY id_attribute;
+    attribute_value : identifier;
+    identified_item : id_attribute_select;
+  END_ENTITY;
+
+  ENTITY name_attribute;
+    attribute_value : label;
+    named_item : name_attribute_select;
+  END_ENTITY;
+
+  ENTITY object_role;
+    name : label;
+    description : OPTIONAL text;
+  END_ENTITY;
+
+  ENTITY role_association;
+    role : object_role;
+    item_with_role : role_select;
+  END_ENTITY;
+
+  FUNCTION get_description_value (obj : description_attribute_select):text;
+    LOCAL
+      description_bag : BAG OF description_attribute := (USEDIN(obj, 'BASIC_ATTRIBUTE_SCHEMA.' + 'DESCRIPTION_ATTRIBUTE.' + 'DESCRIBED_ITEM'));
+    END_LOCAL;
+
+    IF SIZEOF(description_bag) = 1 THEN
+      RETURN (description_bag[1].attribute_value);
+    ELSE
+      RETURN (?);
+    END_IF;
+  END_FUNCTION;
+
+  FUNCTION get_id_value (obj : id_attribute_select):identifier;
+    LOCAL
+      id_bag : BAG OF id_attribute := (USEDIN(obj, 'BASIC_ATTRIBUTE_SCHEMA.' + 'ID_ATTRIBUTE.' + 'IDENTIFIED_ITEM'));
+    END_LOCAL;
+
+    IF SIZEOF(id_bag) = 1 THEN
+      RETURN (id_bag[1].attribute_value);
+    ELSE
+      RETURN (?);
+    END_IF;
+  END_FUNCTION;
+
+  FUNCTION get_aggregate_id_value (obj : id_attribute_select):identifier;
+    LOCAL
+      aggregate_id_bag : BAG OF aggregate_id_attribute := (USEDIN(obj, 'BASIC_ATTRIBUTE_SCHEMA.' + 'AGGREGATE_ID_ATTRIBUTE.' + 'IDENTIFIED_ITEM'));
+    END_LOCAL;
+
+    IF SIZEOF(aggregate_id_bag) = 1 THEN
+      RETURN (aggregate_id_bag[1].attribute_value);
+    ELSE
+      RETURN (?);
+    END_IF;
+  END_FUNCTION;
+
+  FUNCTION get_name_value (obj : name_attribute_select):label;
+    LOCAL
+      name_bag : BAG OF name_attribute := (USEDIN(obj, 'BASIC_ATTRIBUTE_SCHEMA.' + 'NAME_ATTRIBUTE.' + 'NAMED_ITEM'));
+    END_LOCAL;
+
+    IF SIZEOF(name_bag) = 1 THEN
+      RETURN (name_bag[1].attribute_value);
+    ELSE
+      RETURN (?);
+    END_IF;
+  END_FUNCTION;
+
+  FUNCTION get_role (obj : role_select):object_role;
+    LOCAL
+      role_bag : BAG OF role_association := (USEDIN(obj, 'BASIC_ATTRIBUTE_SCHEMA.' + 'ROLE_ASSOCIATION.' + 'ITEM_WITH_ROLE'));
+    END_LOCAL;
+
+    IF SIZEOF(role_bag) = 1 THEN
+      RETURN (role_bag[1].role);
+    ELSE
+      RETURN (?);
+    END_IF;
+  END_FUNCTION;
+
+END_SCHEMA;

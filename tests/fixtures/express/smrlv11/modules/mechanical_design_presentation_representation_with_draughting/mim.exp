@@ -1,0 +1,90 @@
+(*
+   $Id: mim.exp,v 1.15 2017/11/16 00:17:58 thomasrthurman Exp $
+   ISO TC184/SC4/WG12 N9711 - ISO/TS 10303-1315 Mechanical design presentation representation with draughting - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N6683
+*)
+
+SCHEMA Mechanical_design_presentation_representation_with_draughting_mim;
+
+USE FROM Associative_draughting_elements_mim; -- ISO/CD-TS 10303-1311
+
+USE FROM Characterized_representation_mim; -- ISO/CD-TS 10303-1805
+
+USE FROM Description_assignment_mim; -- ISO/TS 10303-1473
+
+USE FROM Mechanical_design_geometric_presentation_mim; -- ISO/CD-TS 10303-1313
+
+USE FROM Mechanical_design_shaded_presentation_mim; -- ISO/CD-TS 10303-1314
+
+USE FROM Part_view_definition_mim; -- ISO/CD-TS 10303-1023
+
+USE FROM representation_schema(
+  definitional_representation_relationship_with_same_context);
+  
+  TYPE mdprwd_description_item = SELECT BASED_ON description_item WITH 
+    (draughting_callout_relationship,
+    draughting_model_item_association,
+    colour_specification,
+    curve_style_font);
+  END_TYPE;    
+  
+  TYPE mdprwd_multi_language_attribute_item = SELECT BASED_ON multi_language_attribute_item WITH 
+    (draughting_callout_relationship,
+    draughting_model_item_association,
+    curve_style_font);
+  END_TYPE;
+  
+  TYPE mdprwd_attribute_language_item = SELECT BASED_ON attribute_language_item WITH 
+    (draughting_callout_relationship,
+    draughting_model_item_association,
+    curve_style_font);
+  END_TYPE;  
+
+  TYPE mechanical_design_and_draughting_relationship_select = EXTENSIBLE GENERIC_ENTITY SELECT ( 
+    draughting_model,
+    mechanical_design_geometric_presentation_representation,
+    mechanical_design_shaded_presentation_representation,
+    mechanical_design_presentation_representation_with_draughting,
+    shape_representation); 
+  END_TYPE; 
+
+ENTITY model_geometric_view
+  SUBTYPE OF (characterized_item_within_representation);
+  SELF\characterized_item_within_representation.rep  : draughting_model;
+  SELF\characterized_item_within_representation.item : camera_model;
+END_ENTITY;
+
+ENTITY default_model_geometric_view
+ SUBTYPE OF (model_geometric_view, shape_aspect);
+ DERIVE
+   Self\shape_aspect.product_definitional : LOGICAL := FALSE;
+ UNIQUE 
+   UR1:of_shape;
+ WHERE
+  WR1: SELF\characterized_object.name = SELF\shape_aspect.name;
+  WR2: NOT EXISTS(SELF\characterized_object.description);
+  WR3: NOT EXISTS(SELF\shape_aspect.description);
+END_ENTITY;
+
+  ENTITY mechanical_design_presentation_representation_with_draughting
+    SUBTYPE of (representation); 
+      SELF\representation.items : SET[1:?] OF camera_model_d3;
+  END_ENTITY;  
+ 
+  ENTITY mechanical_design_and_draughting_relationship
+    SUBTYPE OF(definitional_representation_relationship_with_same_context); 
+      SELF\representation_relationship.rep_1 : mechanical_design_and_draughting_relationship_select; 
+      SELF\representation_relationship.rep_2 : mechanical_design_and_draughting_relationship_select; 
+    WHERE    
+      WR1: NOT('AIC_ASSOCIATIVE_DRAUGHTING_ELEMENTS.'+'DRAUGHTING_MODEL' IN TYPEOF(rep_2)) OR 
+       (('AIC_ASSOCIATIVE_DRAUGHTING_ELEMENTS.'+'DRAUGHTING_MODEL' IN TYPEOF(rep_1)) OR
+        ('PRODUCT_PROPERTY_REPRESENTATION_SCHEMA.'+'SHAPE_REPRESENTATION' IN TYPEOF(rep_1)));
+      WR2: NOT('AIC_MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION.'+'MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION' IN TYPEOF(rep_2)) OR 
+       (('AIC_MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION.'+'MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION' IN TYPEOF(rep_1)) OR
+        ('PRODUCT_PROPERTY_REPRESENTATION_SCHEMA.'+'SHAPE_REPRESENTATION' IN TYPEOF(rep_1)));
+      WR3: NOT('AIC_MECHANICAL_DESIGN_SHADED_PRESENTATION.'+'MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION' IN TYPEOF(rep_2)) OR 
+       (('AIC_MECHANICAL_DESIGN_SHADED_PRESENTATION.'+'MECHANICAL_DESIGN_SHADED_PRESENTATION_REPRESENTATION' IN TYPEOF(rep_1)) OR
+        ('PRODUCT_PROPERTY_REPRESENTATION_SCHEMA.'+'SHAPE_REPRESENTATION' IN TYPEOF(rep_1)));
+  END_ENTITY;  
+
+END_SCHEMA;

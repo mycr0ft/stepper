@@ -1,0 +1,14 @@
+(*
+ $Id: mim.exp,v 1.7 2004/08/27 11:42:42 davidleal Exp $
+ ISO TC184/SC4/WG12 N2721 - ISO/TS 10303-1170 Class of activity structure - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N1838
+*)
+
+SCHEMA Class_of_activity_structure_mim;
+
+USE FROM Class_of_activity_mim;    -- ISO/TS 10303-1071
+USE FROM Class_of_composition_of_activity_mim;    -- ISO/TS 10303-1171
+USE FROM Class_of_connection_of_activity_mim;    -- ISO/TS 10303-1172
+USE FROM Class_of_involvement_in_activity_mim;    -- ISO/TS 10303-1173
+
+END_SCHEMA;

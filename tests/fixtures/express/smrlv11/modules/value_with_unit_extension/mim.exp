@@ -1,0 +1,49 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.29 2017/10/20 15:53:05 brandonus Exp
+   ISO TC184/SC4/WG12 N9729 - ISO/TS 10303-1753 Value with unit extension - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N8245
+*)
+
+
+SCHEMA Value_with_unit_extension_mim;
+	USE FROM Value_with_unit_mim;	-- ISO/TS 10303-1054
+	USE FROM iso13584_generic_expressions_schema   -- ISO 13584-20
+		(environment,
+		variable_semantics);
+
+    USE FROM mathematical_functions_schema   -- ISO 10303-50
+       (complex_number_literal_polar);  
+       
+	REFERENCE FROM measure_schema(derive_dimensional_exponents); -- ISO/TS 10303-41 
+
+ENTITY expression_conversion_based_unit
+  SUBTYPE OF (context_dependent_unit, variable_semantics); 
+INVERSE
+  associated_variable_environment: environment FOR semantics; 
+END_ENTITY;
+
+ENTITY dielectric_constant_measure_with_unit
+  SUBTYPE OF (ratio_measure_with_unit);
+END_ENTITY;
+
+ENTITY loss_tangent_measure_with_unit
+  SUBTYPE OF (ratio_measure_with_unit);
+END_ENTITY;
+
+ENTITY thermal_resistance_measure_with_unit
+  SUBTYPE OF (measure_with_unit);
+WHERE
+  WR1: 'VALUE_WITH_UNIT_EXTENSION_MIM.THERMAL_RESISTANCE_UNIT' IN TYPEOF(SELF\measure_with_unit.unit_component);
+END_ENTITY;
+
+ENTITY thermal_resistance_unit
+  SUBTYPE OF (derived_unit);
+ WHERE
+   WR1: derive_dimensional_exponents(SELF) = 
+        dimensional_exponents ( -1.0, -1.0, -3.0, 0.0, 1.0, 0.0, 0.0 );
+END_ENTITY;
+
+END_SCHEMA;
+
+

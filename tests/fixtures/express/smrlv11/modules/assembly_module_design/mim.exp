@@ -1,0 +1,25 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.38 2017/06/27 08:50:41 kevletu Exp
+   ISO TC184/SC4/WG12 N9477 - ISO/TS 10303-1636 Assembly module design - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N8087
+*)
+SCHEMA Assembly_module_design_mim;
+
+USE FROM Assembly_module_usage_view_mim;	-- ISO/TS 10303-1642
+USE FROM Assembly_technology_mim;           -- ISO/TS 10303-1649
+USE FROM Physical_component_feature_mim;	-- ISO/TS 10303-1721
+USE FROM Physical_unit_design_view_mim; -- ISO/TS 10303-1728
+USE FROM Physical_connectivity_layout_topology_requirement_mim; -- ISO/TS 10303-1826
+USE FROM Physical_connectivity_definition_mim; -- ISO/TS 10303-1755
+
+ENTITY assembly_module_design_view
+  SUBTYPE OF (physical_unit);
+END_ENTITY;
+
+ENTITY component_mounting_feature
+  SUBTYPE OF (physical_component_feature);
+END_ENTITY;
+
+END_SCHEMA;
+

@@ -1,0 +1,16 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.12 2012/10/11 05:49:05 liutkuviene Exp
+   ISO TC184/SC4/WG12 N8108 - ISO/TS 10303-1641 Assembly module with subassembly - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7515
+*)
+
+
+SCHEMA Assembly_module_with_subassembly_mim;
+	USE FROM Assembly_module_design_mim;	-- ISO/TS 10303-1636
+  ENTITY assembly_module_component
+    SUBTYPE OF (physical_component);
+  END_ENTITY;
+	
+END_SCHEMA;
+

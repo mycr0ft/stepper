@@ -1,0 +1,24 @@
+(*
+ $Id: mim.exp,v 1.21 2020/08/27 15:21:34 kevin Exp $
+ ISO TC184/SC4/WG12 N10699 - ISO/TS 10303-1027 Contextual shape positioning - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N7976
+*)
+SCHEMA Contextual_shape_positioning_mim;
+
+USE FROM Geometric_model_relationship_mim;   -- ISO 10303-1403
+
+USE FROM product_property_representation_schema -- ISO 10303-41
+  (context_dependent_shape_representation);
+
+USE FROM representation_schema (	-- ISO 10303-43
+  item_defined_transformation,
+  representation_relationship_with_transformation,
+  transformation);
+
+USE FROM Shape_property_assignment_mim; --  ISO/TS 10303-1032
+
+END_SCHEMA;
+
+
+
+

@@ -1,0 +1,19 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.8 2012/10/19 18:39:57 darla Exp
+   ISO/CD-TS WG12 N 6743- 10303-1378 cfd_results - EXPRESS MIM*)
+
+SCHEMA Cfd_results_mim;
+
+USE FROM Analysis_mim;            --ISO/TS 10303-1372
+
+USE FROM Mesh_connectivity_mim;   --ISO/TS 10303-1384
+
+USE FROM Mesh_topology_mim;       --ISO/TS 10303-1386
+
+USE FROM results_schema;          --ISO/TS 10303-110
+
+USE FROM Support_resource_mim;    --ISO/TS 10303-1800
+
+END_SCHEMA;
+

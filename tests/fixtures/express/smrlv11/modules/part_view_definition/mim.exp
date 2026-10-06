@@ -1,0 +1,16 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.12 2012/10/11 05:49:25 liutkuviene Exp
+ ISO TC184/SC4/WG12 N8039 - ISO/TS 10303-1023 Part view definition - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N7455
+*)
+
+
+SCHEMA Part_view_definition_mim;
+
+USE FROM Part_and_version_identification_mim;    -- ISO/TS 10303-1022
+
+USE FROM Product_view_definition_mim;    -- ISO/TS 10303-1019
+
+
+END_SCHEMA;  -- Part_view_definition_mim

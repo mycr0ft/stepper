@@ -1,0 +1,36 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.38 2017/06/27 08:58:29 kevletu Exp
+   ISO TC184/SC4/WG12 N9508 - ISO/TS 10303-1714 Part feature location - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N7080
+*)
+
+SCHEMA Part_feature_location_arm;
+
+	USE FROM Shape_feature_arm;	-- ISO/TS 10303-1764
+	USE FROM Physical_unit_usage_view_arm; -- ISO/TS 10303-1732
+	
+	TYPE feature_or_non_feature_usage = EXTENSIBLE GENERIC_ENTITY SELECT;
+	END_TYPE;
+
+	TYPE usage_concept = EXTENSIBLE GENERIC_ENTITY SELECT
+		(Part_feature);
+	END_TYPE;
+
+  ENTITY Usage_concept_usage_relationship
+     SUBTYPE OF (Geometric_placement_operation);
+       SELF\Geometric_placement_operation.template_definition RENAMED associated_shape_definition : Geometric_model;
+       associated_usage                                                                           : usage_concept;
+       associating_usage_shape                                                                    : feature_or_non_feature_usage;
+     INVERSE
+       composed_model : SET[1:1] OF Geometric_model FOR items;
+     WHERE
+       WR1 : associating_usage_shape = composed_model[1]; 
+       WR2 : NOT EXISTS(SELF\Representation_item.name);
+       WR3 : ('ELEMENTAL_GEOMETRIC_SHAPE_ARM.GEOMETRIC_PLACEMENT' IN TYPEOF(SELF)) OR
+             ('ELEMENTAL_GEOMETRIC_SHAPE_ARM.GEOMETRIC_OPERATOR_TRANSFORMATION' IN TYPEOF(SELF));
+       WR4 : NOT('CONTEXTUAL_SHAPE_POSITIONING_ARM.GEOMETRIC_PLACEMENT_MODEL' IN TYPEOF(composed_model[1]));
+  END_ENTITY;
+
+END_SCHEMA;
+

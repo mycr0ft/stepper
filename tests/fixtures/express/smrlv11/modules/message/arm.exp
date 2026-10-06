@@ -1,0 +1,76 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.20 2009/08/11 07:53:53 robbod Exp
+ISO TC184/SC4/WG12 N6045 - ISO/TS 10303-1270 Message - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N3082
+*) 
+
+
+SCHEMA Message_arm;
+
+USE FROM Approval_arm;    -- ISO/CD-TS 10303-1012
+
+USE FROM Date_time_assignment_arm;    -- ISO/TS 10303-1014
+
+USE FROM Person_organization_arm;    -- ISO/TS 10303-1011
+
+USE FROM Security_classification_arm;    -- ISO/TS 10303-1015
+
+USE FROM State_observed_arm;    -- ISO/TS 10303-1256
+
+
+TYPE content_item_or_referenced_content_item = SELECT
+   (Content_item, 
+    Referenced_content_item);
+END_TYPE; 
+
+TYPE message_approval_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON approval_item WITH 
+   (Message);
+END_TYPE; 
+
+TYPE message_content_item = EXTENSIBLE SELECT;
+END_TYPE; 
+
+TYPE message_date_time_select = SELECT BASED_ON date_or_date_time_item WITH 
+   (Message);
+END_TYPE; 
+
+TYPE message_definer_select = EXTENSIBLE SELECT
+   (Organization, 
+    Person_in_organization);
+END_TYPE; 
+
+TYPE message_security_classification_select = SELECT BASED_ON security_classification_item WITH 
+   (Message);
+END_TYPE; 
+
+TYPE message_state_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON state_of_item WITH 
+   (Message);
+END_TYPE; 
+
+ENTITY Content_item;
+  item_identifier : STRING;
+  item_type : STRING;
+  access_comment : OPTIONAL STRING;
+END_ENTITY;
+
+ENTITY Message;
+  id : STRING;
+  message_type : STRING;
+  contains : SET[0:?] OF content_item_or_referenced_content_item;
+  defined_by : OPTIONAL SET[0:?] OF message_definer_select;
+  purpose : OPTIONAL STRING;
+END_ENTITY;
+
+ENTITY Message_relationship;
+  relating : Message;
+  related : Message;
+  relation_type : STRING;
+END_ENTITY;
+
+ENTITY Referenced_content_item;
+  contents : message_content_item;
+END_ENTITY;
+
+END_SCHEMA;  -- Message_arm
+

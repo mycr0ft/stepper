@@ -1,0 +1,22 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.11 2014/01/21 15:30:23 darla Exp
+ ISO TC184/SC4/WG12 N8400 - ISO/TS 10303-1014 Date time assignment - EXPRESS ARM
+	Supersedes ISO TC184/SC4/WG12 N1093
+*)
+SCHEMA Date_time_assignment_arm;
+
+USE FROM Extended_date_arm; -- ISO/TS 10303-1776
+
+   
+TYPE date_or_date_time_item = EXTENSIBLE SELECT;
+END_TYPE;
+   
+ENTITY Date_or_date_time_assignment;
+  assigned_date : date_or_date_time_select;
+  role          : STRING;
+  items         : SET [1:?] OF date_or_date_time_item;
+END_ENTITY;
+  
+END_SCHEMA;
+

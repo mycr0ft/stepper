@@ -1,0 +1,30 @@
+(*
+   ISO TC184/SC4/WG12 N10804 - ISO/TS 10303-1852 Retention period - EXPRESS ARM
+*)
+SCHEMA Retention_period_arm;
+
+USE FROM Activity_arm;    -- ISO/TS 10303-1047
+
+USE FROM Event_assignment_arm;    -- ISO/TS 10303-1364
+
+USE FROM Time_interval_assignment_arm;    -- ISO/TS 10303-1065
+
+USE FROM Value_with_unit_arm;    -- ISO/TS 10303-1054
+
+TYPE period_or_date_or_event_select = SELECT 
+  (date_or_event,
+   Duration);
+END_TYPE;
+
+ENTITY Retention_period;
+  retention_purpose : OPTIONAL STRING;
+  earliest_end_definition : OPTIONAL period_or_date_or_event_select;
+  latest_end_definition : OPTIONAL period_or_date_or_event_select;
+  start_definition : date_or_event;
+  is_applied_to : SET [1 : ?] OF time_interval_item;
+WHERE
+    WR1: EXISTS(earliest_end_definition) OR EXISTS(latest_end_definition);
+END_ENTITY;
+
+END_SCHEMA; -- Retention_period_arm
+

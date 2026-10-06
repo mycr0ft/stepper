@@ -1,0 +1,131 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.26 2019/04/03 14:35:07 kevin Exp
+   ISO TC184/SC4/WG12 N10430 - ISO/TS 10303-1803 Process plan - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N10321
+*)
+
+SCHEMA Process_plan_arm;
+
+USE FROM Activity_method_arm; -- ISO/TS 10303-1049
+USE FROM Item_definition_structure_arm; -- ISO/TS 10303-1345
+USE FROM Product_view_definition_arm; -- ISO/TS 10303-1019
+USE FROM Resource_item_arm;  -- ISO/TS 10303-1268
+USE FROM Support_resource_arm; -- ISO/TS 10303-1800
+USE FROM Shape_property_assignment_arm; -- ISO/TS 10303-1032
+USE FROM Specification_control_arm; -- ISO/TS 10303-1112
+USE FROM Time_interval_assignment_arm; -- ISO/TS 10303-1365
+
+TYPE pl_additional_application_domain_enumeration = ENUMERATION BASED_ON additional_application_domain_enumeration WITH (
+  process_state);
+END_TYPE;
+
+TYPE process_operation_input_or_output_select = EXTENSIBLE GENERIC_ENTITY SELECT (
+  Assembly_component_relationship,
+  Part_view_definition,
+  Product_occurrence);
+END_TYPE; 
+
+TYPE resource_definition_select = EXTENSIBLE GENERIC_ENTITY SELECT (
+  Product_occurrence,
+  Part_view_definition,
+  Resource_requirement_type);
+END_TYPE; 
+
+TYPE process_state_relationship_direction = ENUMERATION OF (
+  bidirectional_process_state_relationship,
+  unidirectional_process_state_relationship);
+END_TYPE;
+
+ENTITY Product_resource
+ SUBTYPE OF (Resource_item, Product);
+END_ENTITY;
+
+ENTITY Product_version_resource
+ SUBTYPE OF (Resource_item, Product_version);
+END_ENTITY;
+
+ENTITY Product_view_resource
+ SUBTYPE OF (Resource_item, Product_view_definition);
+END_ENTITY;
+
+ENTITY Resource_requirement_type; -- for descriptive_specification
+  name : label;
+  description : text;
+END_ENTITY;
+
+ENTITY Process_state_relationship
+  SUBTYPE OF (Part_definition_relationship);
+  direction : OPTIONAL process_state_relationship_direction;
+END_ENTITY;
+
+ENTITY Process_operation_definition;
+  id : STRING;
+  name : OPTIONAL label;
+  process_type : STRING;
+  description : OPTIONAL text;
+  version_id : OPTIONAL STRING;
+END_ENTITY;
+
+ENTITY Process_operation_definition_relationship;
+  relation_type : STRING;
+  description : text;
+  relating : process_operation_definition;
+  related : process_operation_definition;
+END_ENTITY;
+
+ENTITY Process_operation_input_or_output;
+  role : STRING;
+  description : OPTIONAL text;
+  operation : process_operation_occurrence;
+  element : process_operation_input_or_output_select;
+  placement : OPTIONAL Geometric_relationship_with_placement_transformation;
+  concerned_shape : SET [0:?] OF Shape_element;
+END_ENTITY;
+
+ENTITY Process_operation_occurrence;
+  id : STRING;
+  plan : process_plan;
+  operation_definition : Process_operation_definition;
+  is_defined_in : OPTIONAL Geometric_coordinate_space;
+END_ENTITY;
+
+ENTITY Process_operation_occurrence_relationship;
+  relation_type : STRING;
+  description : OPTIONAL text;
+  relating : Process_operation_occurrence;
+  related : Process_operation_occurrence;
+  cycle_time : OPTIONAL Time_interval_with_bounds;
+  waiting_time : OPTIONAL Duration;
+END_ENTITY;
+
+ENTITY Process_operation_resource_assignment;
+  reference_tool : BOOLEAN;
+  operation : Process_operation_occurrence;
+  reason : OPTIONAL STRING;
+  resource_definition : resource_definition_select;
+  placement : OPTIONAL Geometric_relationship_with_placement_transformation;
+END_ENTITY;
+
+ENTITY Process_plan;
+  plan_id : identifier;
+  name : OPTIONAL label;
+  description : OPTIONAL text;
+  version_id : OPTIONAL identifier;
+  produced_output : OPTIONAL SET [1:?] OF Part_version;
+END_ENTITY;
+
+ENTITY Process_plan_relationship;
+  relation_type : STRING;
+  description : OPTIONAL text;
+  relating : Process_plan;
+  related : Process_plan;
+END_ENTITY;
+
+ENTITY Same_time_machining_relationship
+  SUBTYPE OF (Part_occurrence_relationship);  -- was item_instance_relationship
+--  description : OPTIONAL text;
+--  placement : OPTIONAL transformation_select;
+END_ENTITY;
+
+END_SCHEMA;

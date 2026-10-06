@@ -1,0 +1,42 @@
+(*
+   $Id: arm.exp,v 1.23 2021/04/16 22:26:41 tom Exp $
+   ISO TC184/SC4/WG12 N11305 - ISO/TS 10303-1660 Datum difference based model - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N9382
+*)
+
+SCHEMA Datum_difference_based_model_arm;
+
+	USE FROM Datum_and_datum_systems_arm;	-- ISO/TS 10303-1853
+	USE FROM Functional_usage_view_arm;	-- ISO/TS 10303-1705
+	USE FROM Model_parameter_arm; --  ISO/TS 10303-1703
+
+  	TYPE dfbm_analytical_model_port_assignment_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON analytical_model_port_assignment_select WITH  
+ 		(Datum_difference);
+	END_TYPE;
+
+	SUBTYPE_CONSTRAINT ddbm_model_parameter_subtypes FOR Model_parameter; 
+		ONEOF (Datum_difference_based_model_parameter,
+	 	Schema_based_model_parameter);
+	END_SUBTYPE_CONSTRAINT;
+
+  ENTITY Datum_difference;
+      precedent_datum  : Datum;
+      subsequent_datum : Datum;
+  END_ENTITY;
+
+  ENTITY Datum_difference_based_characteristic
+    SUBTYPE OF (Representation_item); --characteristic);
+      of_datum_difference : Datum_difference;
+  END_ENTITY;
+
+  ENTITY Datum_difference_based_model_parameter
+    SUBTYPE OF (Model_parameter);
+      of_datum_difference : Datum_difference;
+  END_ENTITY;
+
+  ENTITY Datum_difference_functional_unit_usage_view_terminal_assignment;
+      assigned_functional_terminal_definition : Functional_unit_usage_view_terminal_definition;
+      assigned_datum_difference               : Datum_difference;
+  END_ENTITY;
+
+END_SCHEMA;

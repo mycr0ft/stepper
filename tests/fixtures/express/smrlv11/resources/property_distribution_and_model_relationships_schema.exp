@@ -1,0 +1,83 @@
+(*
+$Id: property_distribution_and_model_relationships_schema.exp,v 1.4 2015/06/29 19:33:25 dgnedwards Exp $
+ISO 10303 TC184/SC4/WG12 N3261 - ISO/IS 10303-107
+
+EXPRESS Source:
+ISO 10303-107 ed1 Finite element analysis definition relationships - Property distribution and model relationships schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-107 ed1 Finite element analysis definition relationships - Property distribution and model relationships schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA property_distribution_and_model_relationships_schema '{iso standard 10303 part(107) version(1) object(1) property_distribution_and_model_relationships_schema(4)}';
+
+REFERENCE FROM analysis_schema
+  (model_property_distribution);
+
+REFERENCE FROM finite_element_analysis_control_and_result_schema
+  (state_definition);
+
+REFERENCE FROM product_analysis_schema
+  (domain_property);
+
+REFERENCE FROM product_property_definition_schema
+  (property_definition);
+
+REFERENCE FROM support_resource_schema
+  (identifier,
+   label,
+   text);
+
+TYPE discretised_distribution_model_select = EXTENSIBLE SELECT 
+  (model_property_distribution,
+   state_definition);
+END_TYPE;
+
+TYPE idealised_distribution_select = EXTENSIBLE SELECT 
+  (domain_property,
+   property_definition);
+END_TYPE;
+
+ENTITY distribution_view_relationship;
+  id : identifier;
+  name : label;
+  description : OPTIONAL text;
+  discretised_model : discretised_distribution_model_select;
+  idealised_distribution : idealised_distribution_select;
+END_ENTITY;
+
+ENTITY same_discretised_distribution_model;
+  id : identifier;
+  name : label;
+  description : OPTIONAL text;
+  equivalent_records : SET [1 : ?] OF discretised_distribution_model_select;
+END_ENTITY;
+
+ENTITY same_idealised_distribution;
+  id : identifier;
+  name : label;
+  description : OPTIONAL text;
+  equivalent_records : LIST [2 : ?] OF idealised_distribution_select;
+END_ENTITY;
+
+END_SCHEMA;
+

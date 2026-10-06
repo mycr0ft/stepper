@@ -1,0 +1,16 @@
+(*
+ISO TC184/SC4/WG12 N11336 - ISO/TS 10303-1503 tessellated_manifold_surface_shape_representation - EXPRESS MIM
+*)
+SCHEMA Tessellated_manifold_surface_shape_representation_mim;
+USE FROM Elemental_geometric_shape_mim;
+USE FROM geometric_model_schema
+         (shell_based_surface_model,
+          tessellated_closed_shell,
+          tessellated_edge_curve,
+          tessellated_face_surface,
+          tessellated_manifold_surface_shape_representation,
+          tessellated_open_shell,
+          tessellated_vertex_point);
+USE FROM topology_schema
+          (shell);
+END_SCHEMA;

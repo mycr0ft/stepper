@@ -1,0 +1,24 @@
+(*
+  Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.2 2012/10/11 05:49:25 liutkuviene Exp
+  ISO TC184/SC4/WG12 N7883 - ISO/CD-TS 10303-1795 Assembly feature relationship - EXPRESS MIM
+  Supersedes ISO TC184/SC4/WG12 N7320
+*)
+
+SCHEMA Assembly_feature_relationship_mim;
+
+USE FROM Contextual_shape_positioning_mim;  -- ISO 10303-1pc3
+
+USE FROM Foundation_representation_mim;  -- ISO 10303-1006
+
+USE FROM Kinematic_motion_representation_mim; -- ISO 10303-1xxx
+ 
+USE FROM Kinematic_structure_mim;  -- ISO 10303-1xxy
+
+USE FROM Shape_property_assignment_mim;  -- ISO 10303-1xxy
+
+
+USE FROM assembly_feature_relationship_schema;  -- ISO 10303-109
+
+
+END_SCHEMA;

@@ -1,0 +1,51 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.16 2019/06/10 20:32:29 kevin Exp
+   ISO TC184/SC4/WG12 N10520 - ISO/TS 10303-1782 Qualified measure - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N10428
+*)
+
+SCHEMA Qualified_measure_mim;
+
+USE FROM Maths_value_mim; -- ISO/TS 10303-1092
+
+USE FROM Measure_representation_mim; -- ISO/TS 10303-1118
+
+USE FROM qualified_measure_schema   -- ISO 10303-45
+  (expanded_uncertainty,
+  maths_value_precision_qualifier,
+  measure_qualification,
+  measure_representation_item,
+  qualified_representation_item,
+  qualitative_uncertainty,
+  precision_qualifier,
+  standard_uncertainty,
+  type_qualifier,
+  uncertainty_qualifier,
+  value_format_type_qualifier);
+
+USE FROM representation_schema   -- ISO 10303-43
+  (uncertainty_assigned_representation);
+
+
+RULE consistent_uncertainty 
+      FOR (global_uncertainty_assigned_context,
+           qualified_representation_item,
+           uncertainty_assigned_representation);
+WHERE
+WR1: SIZEOF ( QUERY ( guac <* global_uncertainty_assigned_context | 
+    SIZEOF ( QUERY ( u1 <* guac.uncertainty | 
+	SIZEOF ( QUERY ( u2 <* guac.uncertainty | u2.name =  u1.name ) ) >1 ) ) >0 ) ) =  0 ;
+WR2: SIZEOF ( QUERY ( uar <* uncertainty_assigned_representation | 
+	SIZEOF ( QUERY ( u1<* uar.uncertainty | 
+	SIZEOF ( QUERY ( u2 <* uar.uncertainty | u2.name =  u1.name ) ) >1 ) ) >0 ) ) =  0;
+WR3: SIZEOF ( QUERY ( qri <* qualified_representation_item |
+     SIZEOF ( QUERY ( u1 <* qri.qualifiers |
+     ('QUALIFIED_MEASURE_SCHEMA.' + 'UNCERTAINTY_QUALIFIER' IN TYPEOF ( u1 ) ) AND 
+	( SIZEOF ( QUERY ( u2 <* qri.qualifiers |
+     ( 'QUALIFIED_MEASURE_SCHEMA.' + 'UNCERTAINTY_QUALIFIER' IN TYPEOF ( u2 ) ) AND 
+	( u2\uncertainty_qualifier.measure_name =  u1\uncertainty_qualifier.measure_name ) )
+     ) >1 ) ) ) >0 ) ) =  0;
+END_RULE; 
+
+END_SCHEMA;

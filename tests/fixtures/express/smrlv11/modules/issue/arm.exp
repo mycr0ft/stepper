@@ -1,0 +1,26 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.9 2009/03/03 14:56:24 abhpf Exp
+   ISO TC184/SC4/WG12 N5878 - ISO/TS 10303-1490 Issue - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N4592
+*)
+
+SCHEMA Issue_arm;
+
+USE FROM Observation_arm;    -- ISO/TS 10303-1258
+
+ENTITY Issue
+  SUBTYPE OF (Observation);
+END_ENTITY;
+
+ENTITY Issue_consequence
+  SUBTYPE OF (Observation_consequence);
+END_ENTITY;
+
+ENTITY Issue_reference
+  SUBTYPE OF (Observation_assignment);
+END_ENTITY;
+
+END_SCHEMA;  -- Issue_arm
+
+

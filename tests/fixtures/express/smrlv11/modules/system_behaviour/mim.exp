@@ -1,0 +1,15 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.9 2009/08/11 14:37:28 abhpf Exp 
+   ISO_TC184/SC4/WG3_N2517_-_ISO/TS_10303-1448_System_behaviour_-_EXPRESS_MIM
+   Supersedes_ISO_TC184/SC4/WG3_N2336
+*)
+
+SCHEMA System_behaviour_mim;
+
+USE FROM Function_based_behaviour_mim;
+
+USE FROM State_based_behaviour_mim;
+
+END_SCHEMA;
+

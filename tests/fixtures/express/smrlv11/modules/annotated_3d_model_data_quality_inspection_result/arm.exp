@@ -1,0 +1,76 @@
+(*
+   $Id: arm.exp,v 1.1 2020/12/11 07:42:58 ftanaka Exp $
+   ISO TC184/SC4/WG12 N10823 - ISO/TS 10303-1849 annotated_3d_model_data_quality_inspection_result - EXPRESS ARM
+*)
+
+SCHEMA Annotated_3d_model_data_quality_inspection_result_arm;
+
+  USE FROM Annotated_3d_model_data_quality_criteria_arm;   -- ISO/TS 10303-1848
+
+  USE FROM Product_data_quality_inspection_result_arm;   -- ISO/TS 10303-1522
+  
+  REFERENCE FROM Support_resource_arm   -- ISO/TS 10303-1800
+    (bag_to_set);
+
+  TYPE a3m_data_quality_boolean_value = BOOLEAN;
+  END_TYPE;
+
+  TYPE a3m_data_quality_inspected_model_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE;
+
+  TYPE a3m_data_quality_measured_value_select = EXTENSIBLE SELECT
+    (a3m_data_quality_boolean_value);
+  END_TYPE;
+
+  TYPE a3m_inspected_accuracy_associated_target_select = EXTENSIBLE GENERIC_ENTITY SELECT
+       BASED_ON a3m_accuracy_associated_target_select WITH
+    (A3m_data_quality_inspection_result_representation, A3m_data_quality_inspection_result);
+  END_TYPE;
+
+  TYPE a3m_location_of_extreme_value_select = EXTENSIBLE SELECT;
+  END_TYPE;
+
+  ENTITY A3m_data_quality_inspected_model_and_the_result; 
+      inspected_model : a3m_data_quality_inspected_model_select;
+      inspection_result : A3m_data_quality_inspection_result_representation; 
+  END_ENTITY;
+
+  ENTITY A3m_data_quality_inspection_criterion_report_item
+    SUBTYPE OF(Data_quality_inspection_criterion_report_item);
+      representative_measured_value : a3m_data_quality_measured_value_select;
+      value_type_to_report : a3m_data_quality_summary_stats_value_type; 
+  END_ENTITY;
+
+  ENTITY A3m_data_quality_inspection_instance_report_item
+    SUBTYPE OF(Data_quality_inspection_instance_report_item);
+      representative_measured_value : a3m_data_quality_measured_value_select;
+      value_type_to_report: a3m_data_quality_summary_stats_value_type;
+  END_ENTITY; 
+
+  ENTITY A3m_data_quality_inspection_result
+    SUBTYPE OF(Data_quality_inspection_result_with_judgement);
+      SELF\Data_quality_inspection_result.criterion_inspected : A3m_data_quality_criterion;
+  END_ENTITY;
+
+  ENTITY A3m_data_quality_inspection_result_representation
+    SUBTYPE OF(Data_quality_inspection_result_representation);
+    WHERE
+      WR1: SIZEOF( QUERY( q <* SELF\Representation.items|
+                               'ANNOTATED_3D_MODEL_DATA_QUALITY_INSPECTION_RESULT_ARM.' + 
+                               'A3M_DATA_QUALITY_INSPECTION_RESULT' IN TYPEOF(q))) > 0;
+      WR2: SIZEOF(USEDIN(SELF, 'ANNOTATED_3D_MODEL_DATA_QUALITY_INSPECTION_RESULT_ARM.' + 
+                               'A3M_DATA_QUALITY_INSPECTED_MODEL_AND_THE_RESULT.'+ 'INSPECTION_RESULT'))>0;
+  END_ENTITY;
+
+  ENTITY A3m_extreme_instance
+    SUBTYPE OF (Representation_item);
+      locations_of_extreme_value : SET[1:?] OF a3m_location_of_extreme_value_select;
+      measured_value : a3m_data_quality_measured_value_select;
+  END_ENTITY;
+
+  ENTITY A3m_instance_report_item_with_extreme_instances
+    SUBTYPE OF(A3m_data_quality_inspection_instance_report_item);
+      extreme_instances: LIST [1:?] OF A3m_extreme_instance;
+  END_ENTITY; 
+
+END_SCHEMA;

@@ -1,0 +1,17 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.11 2019/06/26 17:41:33 kevin Exp
+ ISO TC184/SC4/WG12 N10492 - ISO/TS 10303-1092 Maths value - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N2802
+*)
+
+SCHEMA Maths_value_mim;
+
+USE FROM Generic_expression_mim; -- ISO/TS 10303-1341
+USE FROM iso13584_expressions_schema;-- ISO 13584-20
+USE FROM iso13584_generic_expressions_schema;-- ISO 13584-20
+USE FROM mathematical_functions_schema;    -- ISO 10303-50
+USE FROM Numeric_expression_mim; -- ISO/TS 10303-1526
+
+END_SCHEMA;
+

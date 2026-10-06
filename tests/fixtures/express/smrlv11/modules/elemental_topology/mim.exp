@@ -1,0 +1,27 @@
+(*
+$Id: mim.exp,v 1.10 2020/08/04 12:53:07 kevin Exp $
+ISO TC184/SC4/WG12 N10670 - ISO/TS 10303-1005 Elemental topology - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N8009
+*)
+   
+SCHEMA Elemental_topology_mim;
+  USE FROM Foundation_representation_mim; 
+  USE FROM topology_schema -- ISO 10303-42
+      (connected_edge_set,
+       connected_edge_sub_set,
+       connected_face_set,
+       connected_face_sub_set,
+       edge,
+       edge_loop,
+       face,
+       face_bound,
+       face_outer_bound,
+       loop,
+       oriented_edge,
+       path,
+       subedge,
+       subpath,
+       topological_representation_item,
+       vertex,
+       vertex_loop);
+END_SCHEMA;

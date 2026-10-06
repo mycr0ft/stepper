@@ -1,0 +1,45 @@
+(*
+ISO TC184/SC4/WG12 N11323 - ISO/TS 10303-1068 Constructive solid geometry 3d - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N7823
+*) 
+
+
+SCHEMA Constructive_solid_geometry_3d_mim;
+
+USE FROM Advanced_boundary_representation_mim; -- ISO/TS 10303-1514
+
+USE FROM Elemental_geometric_shape_mim;    -- ISO/TS 10303-1004
+
+USE FROM Faceted_boundary_representation_mim; -- ISO/TS 10303-1512
+
+USE FROM geometric_model_schema     -- ISO 10303-42
+ (block,
+ boolean_operand,
+ boolean_operator,
+ boolean_result,
+ box_domain,
+ boxed_half_space,
+ convex_hexahedron,
+ csg_primitive,
+ csg_select,
+ csg_shape_representation,
+ csg_solid,
+ cyclide_segment_solid,
+ eccentric_cone,
+ ellipsoid,
+ extruded_face_solid,
+ faceted_primitive,
+ half_space_solid,
+ rectangular_pyramid,
+ revolved_face_solid,
+ right_angular_wedge,
+ right_circular_cone,
+ right_circular_cylinder,
+ solid_replica,
+ sphere,
+ tetrahedron,
+ torus);
+
+USE FROM Primitive_solids_mim; -- ISO/TS 10303-1801
+
+END_SCHEMA;  -- Constructive_solid_geometry_3d_mim

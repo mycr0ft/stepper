@@ -1,0 +1,24 @@
+(*
+   ISO TC184/SC4/WG12 N7940 - ISO/TS 10303-1804 Product as individual assembly and test - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N7377
+*)
+
+SCHEMA Product_as_individual_assembly_and_test_mim;
+
+USE FROM Activity_mim; -- ISO/TS 10303-1047
+USE FROM Planned_characteristic_mim; -- ISO/TS 10303-1733
+USE FROM Process_plan_mim;   -- ISO/TS 10303-1803
+USE FROM Product_as_individual_mim; -- ISO/TS 10303-1164
+USE FROM Property_assignment_mim; -- ISO/TS 10303-1030
+
+
+
+TYPE paiaata_action_item = SELECT BASED_ON action_items WITH (
+	property_definition);
+END_TYPE;
+
+ENTITY evaluated_characteristic_of_product_as_individual_test_result
+  SUBTYPE OF (evaluated_characteristic);
+END_ENTITY;
+
+END_SCHEMA;

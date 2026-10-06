@@ -1,0 +1,88 @@
+(*
+   ISO TC184/SC4/WG12 N10121 - ISO/TS 10303-1845 General design connectivity - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N9882
+ *)
+
+SCHEMA General_design_connectivity_mim;
+
+USE FROM Assembly_constraints_mim;    -- ISO/TS 10303-1794
+USE FROM Design_product_data_management_mim; -- ISO/TS 10303-1628
+USE FROM Item_definition_structure_mim; -- ISO/TS 10303-1345
+USE FROM Part_shape_mim; -- ISO/TS 10303-1807
+USE FROM Shape_feature_mim; -- ISO/TS 10303-1764
+
+ENTITY assembly_shape_constraint
+  SUBTYPE OF (shape_aspect);
+END_ENTITY;
+
+ENTITY assembly_shape_constraint_item_relationship
+  SUBTYPE OF (shape_aspect_relationship);
+  SELF\shape_aspect_relationship.relating_shape_aspect : assembly_shape_constraint;
+END_ENTITY;
+
+ENTITY assembly_shape_joint
+  SUBTYPE OF (shape_aspect);
+END_ENTITY;
+
+ENTITY assembly_shape_joint_item_relationship
+  SUBTYPE OF (shape_aspect_relationship);
+  SELF\shape_aspect_relationship.relating_shape_aspect : assembly_shape_joint;
+END_ENTITY;
+
+ENTITY connectivity_definition
+  SUBTYPE OF (shape_aspect);
+END_ENTITY;
+
+ENTITY connectivity_definition_item_relationship
+  SUBTYPE OF (shape_aspect_relationship);
+  SELF\shape_aspect_relationship.relating_shape_aspect : connectivity_definition;
+END_ENTITY;
+
+ENTITY contact_feature
+  SUBTYPE OF (shape_aspect);
+END_ENTITY;
+
+ENTITY contact_feature_definition
+  SUBTYPE OF (shape_feature_definition);
+END_ENTITY;  
+
+ENTITY contact_feature_definition_fit_relationship
+  SUBTYPE OF (shape_feature_definition_fit_relationship);
+  SELF\characterized_object_relationship.relating_object : contact_feature_definition;
+  SELF\characterized_object_relationship.related_object : contact_feature_definition;
+END_ENTITY;
+
+ENTITY shape_feature_definition_fit_relationship
+  SUBTYPE OF (shape_feature_definition_relationship);
+END_ENTITY;
+
+ENTITY shape_feature_fit_relationship
+  SUBTYPE OF (shape_aspect_relationship, characterized_object);
+DERIVE
+  SELF\characterized_object.name : label := SELF\shape_aspect_relationship.name;
+  SELF\characterized_object.description : text := SELF\shape_aspect_relationship.description;
+END_ENTITY;
+
+ENTITY contact_feature_fit_relationship
+  SUBTYPE OF (shape_feature_fit_relationship);
+  SELF\shape_aspect_relationship.relating_shape_aspect : contact_feature;
+  SELF\shape_aspect_relationship.related_shape_aspect : contact_feature;
+END_ENTITY;
+
+ENTITY terminal_feature
+  SUBTYPE OF (contact_feature);
+END_ENTITY;
+
+ENTITY transport_feature
+  SUBTYPE OF (shape_aspect);
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT gdc_shape_aspect_subtypes FOR shape_aspect;
+  ONEOF (assembly_shape_constraint, assembly_shape_joint, connectivity_definition, contact_feature, transport_feature);
+END_SUBTYPE_CONSTRAINT;
+
+SUBTYPE_CONSTRAINT gdc_shape_aspect_relationship_subtypes FOR shape_aspect_relationship;
+  ONEOF (assembly_shape_joint_item_relationship, assembly_shape_constraint_item_relationship, connectivity_definition_item_relationship, shape_feature_fit_relationship);
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;

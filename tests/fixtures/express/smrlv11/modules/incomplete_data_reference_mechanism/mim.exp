@@ -1,0 +1,26 @@
+(*  
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.22 2019/04/03 14:35:08 kevin Exp
+   ISO TC184/SC4/WG12 N10416 - ISO/TS 10303-1349 Incomplete data reference mechanism - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N9596
+*)
+SCHEMA Incomplete_data_reference_mechanism_mim;
+
+USE FROM Classification_assignment_mim;   -- ISO/TS 10303-1114
+
+USE FROM Document_definition_mim;   -- ISO/TS 10303-1123
+
+USE FROM Part_view_definition_mim;   -- ISO/TS 10303-1023
+
+  TYPE idrm_marked_item = SELECT
+    (document_file,
+     product_definition);
+  END_TYPE;
+
+ENTITY idrm_classification_assignment
+  SUBTYPE OF (classification_assignment);
+  items : SET[1:?] OF idrm_marked_item;
+END_ENTITY;
+
+END_SCHEMA;
+

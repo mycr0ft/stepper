@@ -1,0 +1,162 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.93 2017/04/11 10:38:19 verodub Exp
+   ISO TC184/SC4/WG12 N9464 - ISO/TS 10303-1728 Physical unit design view - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N8206
+*)
+
+SCHEMA Physical_unit_design_view_arm;
+
+USE FROM Assembly_component_arm;   -- ISO/TS 10303-1802
+USE FROM Interface_component_arm;	-- ISO/TS 10303-1691
+USE FROM Part_template_arm; -- ISO/TS 10303-1722
+USE FROM Physical_unit_usage_view_arm;	-- ISO/TS 10303-1732
+USE FROM Specification_document_arm;	-- ISO/TS 10303-1747
+	
+REFERENCE FROM Support_resource_arm(bag_to_set);  -- ISO/TS 10303-1800
+
+  TYPE assembly_component_or_item_number = SELECT
+    (Assembly_item_number,
+     Assembly_component_relationship);
+  END_TYPE;
+	
+  TYPE assembly_item_number_or_process_specification = SELECT
+    (Assembly_item_number,
+     Process_specification);
+  END_TYPE;
+	
+  TYPE bonding_or_coating = ENUMERATION OF
+    (bonding, coating);
+  END_TYPE;    
+	
+  TYPE pudv_groupable_item = SELECT BASED_ON groupable_item WITH 
+    (Assembly_component,
+    Assembly_component_relationship);
+  END_TYPE; 
+
+  TYPE pudv_physical_unit = SELECT BASED_ON physical_unit WITH 
+    (Part_design_view);
+  END_TYPE; 
+
+  SUBTYPE_CONSTRAINT pudv_part_view_definition_subtypes FOR Part_view_definition; 
+    (ONEOF (Part_usage_view,
+    Part_design_view));
+  END_SUBTYPE_CONSTRAINT; 
+
+  TYPE pudv_extended_value_with_unit = EXTENSIBLE SELECT BASED_ON extended_value_with_unit WITH 
+    (textual_quantity_specification);
+  END_TYPE; 
+
+  TYPE pudv_requirement_assignment_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON requirement_assignment_item WITH 
+    (Assembly_item_number,
+     Assembly_component_relationship,
+     Component_material_relationship);
+  END_TYPE;
+	
+  TYPE textual_quantity_specification = STRING;
+  END_TYPE;
+	
+  ENTITY Assembly_alternate_product
+    SUBTYPE OF (Alternate_product_relationship);
+      basis_context : Part_design_view;
+    WHERE
+      WR1: NOT EXISTS (SELF\Alternate_product_relationship.criteria);
+  END_ENTITY;
+
+  ENTITY Assembly_item_number;
+      assembly_usage : SET[1:?] OF Assembly_component_relationship;
+      item_number    : STRING;
+    DERIVE
+      assembly : Product_view_definition := assembly_usage[1].relating_view;
+      part     : Product := assembly_usage[1].related_view\Definition_based_product_occurrence.derived_from\Product_view_definition.defined_version.of_product;
+    UNIQUE
+      UR1 : assembly, item_number;
+    WHERE
+      WR1 : SIZEOF(QUERY(au <* assembly_usage | NOT (au.relating_view\Definition_based_product_occurrence.derived_from\Product_view_definition.defined_version.of_product = Part))) = 0;
+      WR2 : SIZEOF(QUERY(au <* assembly_usage | NOT (au.relating_view = assembly))) = 0;
+  END_ENTITY;
+
+  ENTITY Component_material_relationship;
+      associated_design : Part_design_view;  
+      component_1   : assembly_component_or_item_number;
+      component_2   : OPTIONAL assembly_component_or_item_number;
+      material : OPTIONAL assembly_component_or_item_number;
+      role          : bonding_or_coating;
+      specification : OPTIONAL assembly_item_number_or_process_specification;
+    WHERE
+      WR1 : component_1 <> component_2;
+      WR2 : component_1 <> material;
+      WR3 : component_1 <> specification;
+      WR4 : component_2 <> material;
+      WR5 : component_2 <> specification;
+      WR6 : material <> specification;
+      WR7 : valid_assembly_context_for_bond(associated_design, component_1);
+      WR8 : valid_assembly_context_for_bond(associated_design, component_2);
+      WR9 : valid_assembly_context_for_bond(associated_design, material);
+     WR10 : valid_assembly_context_for_bond(associated_design, specification);
+  END_ENTITY;
+
+  ENTITY Component_to_physical_usage_view_assignment
+  	SUBTYPE OF (View_definition_relationship);
+      SELF\View_definition_relationship.relating_view RENAMED design_view_component : Assembly_component;  	
+      SELF\View_definition_relationship.related_view RENAMED usage_view_component  	: Assembly_component;
+    WHERE
+      WR1 : design_view_component <> usage_view_component;
+      WR2 : NOT EXISTS(SELF\View_definition_relationship.relation_type);
+  END_ENTITY;
+
+  ENTITY Component_feature_to_physical_usage_view_assignment;
+      defined_part_feature   : Part_feature;
+      assigned_design_object : Component_feature;
+    UNIQUE 
+    	UR1 : assigned_design_object;
+    	UR2 : defined_part_feature;
+  END_ENTITY;
+
+  ENTITY Connection_zone_in_design_view
+  	SUBTYPE OF (Connection_zone);
+      SELF\Shape_element.associated_definition : Part_design_view;
+    WHERE
+      WR1 : NOT EXISTS(SELF\Shape_element.element_name);
+  END_ENTITY; 
+
+  ENTITY Next_assembly_usage_occurrence_relationship
+    SUBTYPE OF (Next_assembly_usage);
+    UNIQUE
+      UR1 : SELF\Product_occurrence_definition_relationship.relating_view, 
+            SELF\Assembly_component_relationship.location_indicator;
+  END_ENTITY;
+
+  ENTITY Part_design_view
+    SUBTYPE OF (Part_view_definition);
+      usage_view : OPTIONAL Part_usage_view;
+    WHERE
+      WR1 : SIZEOF(QUERY(nauo <* USEDIN(SELF, 'PRODUCT_VIEW_DEFINITION_RELATIONSHIP_ARM.VIEW_DEFINITION_RELATIONSHIP.RELATING_VIEW') |
+                 (('PHYSICAL_UNIT_DESIGN_VIEW_ARM.NEXT_ASSEMBLY_USAGE_OCCURRENCE_RELATIONSHIP' IN TYPEOF(nauo)) XOR
+                  ('ASSEMBLY_STRUCTURE_ARM.NEXT_ASSEMBLY_USAGE' IN TYPEOF(nauo)))                 
+                 )) = 0;
+  END_ENTITY;
+
+  RULE unique_assembly_item_number FOR (Assembly_item_number);
+    LOCAL
+      acr : BAG OF Assembly_component_relationship := [];
+    END_LOCAL;
+    REPEAT i := 1 to SIZEOF(Assembly_item_number) by 1;
+      acr  := acr + Assembly_item_number[i].assembly_usage;
+    END_REPEAT;  
+    WHERE
+      WR1 : SIZEOF(acr) = SIZEOF(bag_to_set(acr));
+  END_RULE;
+
+  FUNCTION valid_assembly_context_for_bond(input1 : Part_design_view;
+                                           input2 : GENERIC_ENTITY) : BOOLEAN;
+    RETURN(TRUE);
+  END_FUNCTION;                                         
+
+  SUBTYPE_CONSTRAINT pudv_connection_zone_subtypes FOR Connection_zone;     
+    ONEOF (Connection_zone_in_usage_view,
+           Connection_zone_in_design_view);
+  END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;
+

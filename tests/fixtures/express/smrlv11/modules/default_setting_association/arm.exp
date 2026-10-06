@@ -1,0 +1,71 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.11 2016/10/20 12:14:28 kevletu Exp
+    ISO TC184/SC4/WG12 N9300 - ISO/TS 10303-1809 Default setting association - EXPRESS ARM
+    Supersedes ISO TC184/SC4/WG12 N7888
+*)
+    
+
+SCHEMA Default_setting_association_arm;
+
+USE FROM Shape_property_assignment_arm;
+USE FROM Value_with_unit_extension_arm;
+
+ENTITY Default_shape_property
+  ABSTRACT SUPERTYPE OF (ONEOF (
+    Default_chamfer,
+    Default_draft_angle,
+    Default_edge_round,
+    Default_fillet,
+    Default_thickness
+  )) 
+  SUBTYPE OF (Assigned_shape_property);
+  SELF\Assigned_shape_property.described_element : shapeable_item;
+END_ENTITY;
+
+ENTITY Default_chamfer
+  SUBTYPE OF (Default_shape_property);
+  offset_value: Length_data_element;
+DERIVE
+  SELF\Assigned_property.name : STRING := 'default chamfer';  
+END_ENTITY; 
+
+ENTITY Default_draft_angle
+  SUBTYPE OF (Default_shape_property);
+  draft_angle_value: Angle_data_element;
+DERIVE
+  SELF\Assigned_property.name : STRING := 'default draft angle';  
+END_ENTITY;
+
+ENTITY Default_edge_round
+  SUBTYPE OF (Default_shape_property);
+  radius_value: Length_data_element;
+DERIVE
+  SELF\Assigned_property.name : STRING := 'default edge round';  
+END_ENTITY;
+
+ENTITY Default_fillet
+  SUBTYPE OF (Default_shape_property);
+          radius_value: Length_data_element;
+DERIVE
+  SELF\Assigned_property.name : STRING := 'default fillet';  
+END_ENTITY;
+
+(*
+ENTITY Default_surface_texture;
+  SUBTYPE OF (Default_shape_property);
+          measuring_method: undefined_object;
+DERIVE
+  SELF\Assigned_property.name : STRING := 'default texture';  
+END_ENTITY;
+*)
+
+ENTITY Default_thickness
+  SUBTYPE OF (Default_shape_property);
+  thickness_value: Length_data_element;
+  parameter_name: OPTIONAL STRING;
+DERIVE
+  SELF\Assigned_property.name : STRING := 'default thickness';  
+END_ENTITY;
+
+END_SCHEMA;

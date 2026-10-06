@@ -1,0 +1,112 @@
+(*
+
+ISO 10303 TC184/SC4/WG12 N8482
+
+EXPRESS Source:
+ISO 10303-105 ed2 Kinematics - Kinematic analysis control and result schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-105 ed2 Kinematics - Kinematic analysis control and result schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA kinematic_analysis_control_and_result_schema '{iso standard 10303 part(105) version(4) object(1) kinematic_analysis_control_and_result_schema(6)}';
+
+REFERENCE FROM kinematic_motion_representation_schema
+    (link_motion_representation_along_path,
+     interpolated_configuration_sequence);
+
+REFERENCE FROM kinematic_topology_schema (
+	kinematic_joint);
+
+REFERENCE FROM kinematic_structure_schema
+    (kinematic_link_representation,
+     mechanism_representation,
+     rigid_placement);
+
+REFERENCE FROM geometry_schema
+    (geometric_representation_context);
+
+REFERENCE FROM representation_schema
+    (representation,
+     representation_relationship);
+
+REFERENCE FROM measure_schema
+    (measure_with_unit,
+     parameter_value);
+
+REFERENCE FROM product_property_representation_schema
+    (shape_representation);     
+
+TYPE kinematic_analysis_definition = SELECT
+  (interpolated_configuration_sequence,
+   prescribed_path);
+END_TYPE;
+
+TYPE kinematic_result = SELECT
+  (interpolated_configuration_sequence,
+   resulting_path);
+END_TYPE;
+
+ENTITY kinematic_control;
+  controlled_mechanism : mechanism_representation; 
+  contained_kinematic_programs : kinematic_analysis_definition;
+END_ENTITY;
+
+ENTITY prescribed_path
+  SUBTYPE OF (link_motion_representation_along_path);
+  controlling_joints : OPTIONAL SET [1 : 6] OF kinematic_joint;
+END_ENTITY;
+
+ENTITY kinematic_analysis_result;
+  analysed_mechanism : mechanism_representation; -- LK
+  result : kinematic_result;
+(*  
+WHERE
+WR1: ('KINEMATIC_ANALYSIS_CONTROL_AND_RESULT_SCHEMA.RESULTING_PATH' IN TYPEOF (result))
+     XOR
+     (SIZEOF (QUERY (result <* contained_kinematic_results |
+       (('KINEMATIC_ANALYSIS_CONTROL_AND_RESULT_SCHEMA.'+
+         'INTERPOLATED_CONFIGURATION_SEQUENCE' IN TYPEOF (result))
+              AND
+       (SIZEOF (QUERY (sequence <* result\
+                interpolated_configuration_sequence.interpolation |
+                (sequence.interpolation <> undefined ))) > 0)))) = 0);
+*)                
+END_ENTITY;
+
+ENTITY kinematic_analysis_consistency;
+  control : kinematic_control;
+  result  : kinematic_analysis_result;
+WHERE
+  WR1: control.controlled_mechanism :=: result.analysed_mechanism;
+END_ENTITY;
+
+ENTITY resulting_path
+  SUBTYPE OF (link_motion_representation_along_path);
+  controlling_joints : SET [1 : ?] OF kinematic_joint;
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT link_motion_representation_along_path_subtypes FOR link_motion_representation_along_path;
+          ONEOF (prescribed_path, resulting_path);
+END_SUBTYPE_CONSTRAINT; 
+
+END_SCHEMA;              -- end kinematic_analysis_control_and_result_schema

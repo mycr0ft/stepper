@@ -1,0 +1,15 @@
+(*
+ ISO TC184/SC4/WG12 N11353 - ISO/TS 10303-1514 Advanced boundary representation - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N6858
+*)
+
+SCHEMA Advanced_boundary_representation_mim;
+
+USE FROM Topologically_bounded_surface_mim; --ISO/TS 10303-1511:2004
+USE FROM Solid_model_mim;
+USE FROM geometric_model_schema ( --ISO 10303-42
+        advanced_brep_shape_representation,
+	manifold_solid_brep);
+
+END_SCHEMA;
+

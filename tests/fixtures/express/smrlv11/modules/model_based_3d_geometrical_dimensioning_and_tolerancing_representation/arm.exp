@@ -1,0 +1,90 @@
+(*
+   $Id: arm.exp,v 1.22 2021/06/11 21:01:58 tom Exp $
+   ISO TC184/SC4/WG12 N11305 - ISO/TS 10303-1816 Model based 3d geometrical dimensioning and tolerancing representation - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N9304
+*)
+
+SCHEMA Model_based_3d_geometrical_dimensioning_and_tolerancing_representation_arm;
+
+USE FROM Description_assignment_arm; -- ISO/TS 10303-1473
+USE FROM Geometric_tolerance_arm; -- ISO/TS 10303-1051
+USE FROM Part_shape_arm;
+USE FROM Product_and_manufacturing_information_with_nominal_3d_models_arm;
+
+TYPE nominal_3d_integral_feature_geometry = SELECT (
+  Advanced_face, 
+  Edge_curve,
+  Vertex_point, 
+  Connected_face_set,
+  Edge_loop);
+END_TYPE;
+
+TYPE nominal_3d_derived_feature_geometry = SELECT (
+  Curve,
+  Point,
+  Surface);
+END_TYPE;
+
+TYPE mb3gdtsr_edge_of_undefined_shape_size_element = SELECT 
+  BASED_ON edge_of_undefined_shape_size_element WITH (
+  Nominal_3D_edge);  
+END_TYPE;
+
+TYPE mb3dgdt_additional_application_domain_enumeration = ENUMERATION BASED_ON additional_application_domain_enumeration WITH (
+  geometrical_dimensioning_and_tolerancing_representation);
+END_TYPE;
+
+ TYPE mb3gdtsr_string_select = SELECT BASED_ON string_select WITH 
+    (Dimensional_location,
+Geometric_tolerance);
+  END_TYPE;
+  
+ TYPE mb3gdtsr_description_item = SELECT BASED_ON description_item WITH 
+    (Dimensional_location,
+    Geometric_tolerance);
+ END_TYPE;
+ 
+ TYPE mb3gdtsr_identification_item = SELECT BASED_ON identification_item WITH
+    (Geometric_dimension,
+    Geometric_tolerance);
+ END_TYPE;
+
+ENTITY Nominal_3d_edge
+  SUBTYPE OF (Nominal_3d_integral_feature);
+  SELF\Shape_element.identified_item : Edge_curve;
+END_ENTITY;
+
+ENTITY Nominal_3d_feature 
+  ABSTRACT SUPERTYPE OF (ONEOF (Nominal_3d_integral_feature, Nominal_3d_derived_feature))
+  SUBTYPE OF (Part_shape_element);
+WHERE
+  WR1: SIZEOF ( QUERY ( pa <* SELF\Shape_element.associated_definition\Product_view_definition.additional_contexts | pa.application_domain = mb3dgdt_additional_application_domain_enumeration.geometrical_dimensioning_and_tolerancing_representation) ) > 0;
+  WR2: SELF\Shape_element.associated_definition\Product_view_definition.shape_type = pmiwn3m_product_shape_type_enumeration.nominal_shape;
+  WR3: 'Part_view_definition_arm.Part_view_definition' IN TYPEOF(SELF\Shape_element.associated_definition);
+END_ENTITY;
+
+ENTITY Nominal_3d_integral_feature
+  SUBTYPE OF (General_part_feature, Nominal_3d_feature);
+  SELF\Shape_element.identified_item : nominal_3d_integral_feature_geometry;
+END_ENTITY;    
+
+ENTITY Nominal_3d_derived_feature
+  SUBTYPE OF (Nominal_3d_feature, Derived_shape_element);
+  SELF\Derived_shape_element.derived_from: SET [1:?] OF Nominal_3d_feature;
+  SELF\Shape_element.identified_item : nominal_3d_derived_feature_geometry;
+END_ENTITY;   
+
+RULE gdt_representation_view_context_constraint FOR (Part_view_definition);
+WHERE
+  WR1: SIZEOF ( QUERY ( p <* Part_view_definition | 
+        (SIZEOF ( QUERY ( pa <* p.additional_contexts | pa.application_domain = mb3dgdt_additional_application_domain_enumeration.geometrical_dimensioning_and_tolerancing_representation) ) > 0)
+           AND ( 
+                 (p.initial_context.application_domain <> pamap_initial_application_domain_enumeration.model_based_product_geometry)
+                 OR 
+                 (p.initial_context.life_cycle_stage <> pvd_life_cycle_stage_enumeration.design)
+               )
+                      ) 
+               ) = 0 ;
+END_RULE; 
+
+END_SCHEMA;

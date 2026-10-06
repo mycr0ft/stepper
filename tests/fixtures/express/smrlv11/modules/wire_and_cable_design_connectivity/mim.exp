@@ -1,0 +1,14 @@
+(*
+   ISO TC184/SC4/WG12 N9908 - ISO/TS 10303-1845 Wire and cable design connectivity - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N9705
+*)
+
+SCHEMA Wire_and_cable_design_connectivity_mim;
+
+USE FROM General_design_connectivity_mim; -- ISO/TS 10303-1844
+
+ENTITY terminal_location_group
+	SUBTYPE OF (terminal_feature);
+END_ENTITY;
+
+END_SCHEMA;

@@ -1,0 +1,12 @@
+(*
+   ISO TC184/SC4/WG12 N10799 - ISO/TS 10303-1847 assignment_object_relationship - EXPRESS MIM
+*)
+
+SCHEMA Assignment_object_relationship_mim;
+
+USE FROM management_resources_schema   -- ISO 10303-41
+  (assignment_object_relationship,
+   assignment_object_select);
+
+END_SCHEMA;  -- Assignment_object_relationship_mim
+

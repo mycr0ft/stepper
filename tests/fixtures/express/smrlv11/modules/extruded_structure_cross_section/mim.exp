@@ -1,0 +1,48 @@
+(*
+   $Id: mim.exp,v 1.7 2017/06/27 16:13:03 kevletu Exp $
+   N9525 - ISO/TS 10303-1827 extruded_structure_cross_section - EXPRESS MIM
+*)
+
+SCHEMA Extruded_structure_cross_section_mim;
+
+USE FROM General_design_connectivity_mim; -- ISO/TS 10303-1844
+USE FROM Value_with_unit_extension_mim; -- ISO/TS 10303-1753
+
+ENTITY cross_sectional_part_shape_element
+  SUPERTYPE OF (ONEOF ( cross_sectional_alternative_shape_element,
+                        cross_sectional_group_shape_element))
+  SUBTYPE OF (shape_aspect);
+END_ENTITY;
+
+ENTITY cross_sectional_alternative_shape_element
+  SUBTYPE OF (cross_sectional_part_shape_element); 
+INVERSE
+  items : SET [2:?] OF shape_aspect_relationship FOR relating_shape_aspect;
+END_ENTITY;
+
+ENTITY cross_sectional_group_shape_element
+  SUPERTYPE OF ( ONEOF (cross_sectional_group_shape_element_with_tubular_cover, 
+                        cross_sectional_group_shape_element_with_lacing, 
+                        twisted_cross_sectional_group_shape_element) )
+  SUBTYPE OF (cross_sectional_part_shape_element); 
+INVERSE
+  items : SET [1:?] OF shape_aspect_relationship FOR relating_shape_aspect;
+END_ENTITY;
+
+ENTITY cross_sectional_group_shape_element_with_tubular_cover 
+  SUBTYPE OF (cross_sectional_group_shape_element);
+END_ENTITY;
+
+ENTITY cross_sectional_group_shape_element_with_lacing
+  SUBTYPE OF (cross_sectional_group_shape_element);
+END_ENTITY;
+
+ENTITY twisted_cross_sectional_group_shape_element
+  SUBTYPE OF (cross_sectional_group_shape_element);
+END_ENTITY;
+
+ENTITY cross_sectional_occurrence_shape_element
+  SUBTYPE OF (shape_aspect);
+END_ENTITY;
+
+END_SCHEMA;

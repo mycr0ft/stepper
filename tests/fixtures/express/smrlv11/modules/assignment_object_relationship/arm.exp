@@ -1,0 +1,21 @@
+(*
+   ISO TC184/SC4/WG12 N10798 - ISO/TS 10303-1847 assignment_object_relationship - EXPRESS ARM
+*)
+
+SCHEMA Assignment_object_relationship_arm;
+
+TYPE assignment_object_select = EXTENSIBLE GENERIC_ENTITY SELECT ;
+END_TYPE;
+
+ENTITY Assignment_object_relationship;
+  id : OPTIONAL STRING;
+  description : OPTIONAL STRING;
+  relating : assignment_object_select;
+  related : assignment_object_select;
+  relation_type : STRING;
+WHERE
+    WR1: relating :<>: related;
+END_ENTITY;
+
+END_SCHEMA;  -- Assignment_object_relationship_arm
+

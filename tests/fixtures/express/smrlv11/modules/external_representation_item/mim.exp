@@ -1,0 +1,32 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.6 2012/10/11 19:09:51 thomasrthurman Exp
+   ISO TC184/SC4/WG12 N7778 - ISO/TS 10303-1779 External representation item - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N5384
+*)
+
+SCHEMA External_representation_item_mim;
+
+USE FROM External_library_mim; -- ISO/TS 10303-1778
+
+USE FROM Foundation_representation_mim; -- ISO/TS 10303-1006
+
+  TYPE eri_external_identification = SELECT BASED_ON external_identification_item WITH 
+    (externally_defined_representation_item);
+  END_TYPE;
+
+  ENTITY externally_defined_representation_item
+    SUBTYPE OF (representation_item, externally_defined_item);
+  END_ENTITY;
+
+  ENTITY externally_defined_string
+    SUBTYPE OF (externally_defined_representation_item);
+  END_ENTITY;
+  
+  
+  ENTITY externally_defined_representation
+    SUBTYPE OF (representation, externally_defined_item);
+    SELF\representation.items : SET [1:?] OF externally_defined_representation_item;
+  END_ENTITY;
+
+END_SCHEMA;

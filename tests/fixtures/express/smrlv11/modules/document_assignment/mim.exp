@@ -1,0 +1,55 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.25 2015/10/20 20:37:44 lothartklein Exp
+ISO TC184/SC4/WG12 N8680 - ISO/TS 10303-1122 Document assignment - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N7715
+*)
+
+
+
+SCHEMA Document_assignment_mim;
+
+USE FROM Document_and_version_identification_mim;    -- ISO/TS 10303-1121
+
+USE FROM Document_definition_mim;    -- ISO/TS 10303-1123
+
+USE FROM document_schema   -- ISO 10303-41
+  (document_product_association); 
+
+USE FROM File_identification_mim;    -- ISO/TS 10303-1127
+
+USE FROM management_resources_schema   -- ISO 10303-41
+  (document_reference,
+   document_usage_constraint_assignment); 
+   
+USE FROM basic_attribute_schema(role_association, object_role);  -- ISO 10303-41
+
+
+TYPE document_reference_item = EXTENSIBLE GENERIC_ENTITY SELECT;
+END_TYPE; 
+
+ENTITY applied_document_reference
+  SUBTYPE OF (document_reference);
+  items : SET[1:?] OF document_reference_item;
+END_ENTITY;
+
+ENTITY applied_document_usage_constraint_assignment
+  SUBTYPE OF (document_usage_constraint_assignment);
+  items : SET[1:?] OF document_reference_item;
+END_ENTITY;
+
+ENTITY document_product_equivalence
+  SUBTYPE OF (document_product_association);
+WHERE
+  WR1: SELF\document_product_association.name = 'equivalence';
+  WR2: NOT ('PRODUCT_DEFINITION_SCHEMA.PRODUCT' IN TYPEOF(SELF\document_product_association.related_product)) OR ((SELF\document_product_association.relating_document.kind.product_data_type = 'configuration controlled document') AND (SIZEOF(QUERY(prpc <* USEDIN(SELF\document_product_association.related_product, 'PRODUCT_DEFINITION_SCHEMA.' + 'PRODUCT_RELATED_PRODUCT_CATEGORY.PRODUCTS') | prpc.name = 'document')) = 1));
+  WR3: NOT ('PRODUCT_DEFINITION_SCHEMA.PRODUCT_DEFINITION_FORMATION' IN TYPEOF(SELF.related_product)) OR ((SELF\document_product_association.relating_document.kind.product_data_type = 'configuration controlled document version') AND (SIZEOF(QUERY(prpc <* USEDIN(SELF.related_product\product_definition_formation.of_product, 'PRODUCT_DEFINITION_SCHEMA.PRODUCT_RELATED_PRODUCT_CATEGORY.PRODUCTS') | prpc.name = 'document')) = 1));
+  WR4: NOT ('PRODUCT_DEFINITION_SCHEMA.PRODUCT_DEFINITION' IN TYPEOF(SELF.related_product)) OR ((SELF\document_product_association.relating_document.kind.product_data_type = 'configuration controlled document definition') AND (SIZEOF(QUERY(prpc <* USEDIN(SELF\document_product_association.related_product\product_definition.formation.of_product, 'PRODUCT_DEFINITION_SCHEMA.PRODUCT_RELATED_PRODUCT_CATEGORY.PRODUCTS') | prpc.name = 'document')) = 1));
+END_ENTITY;
+
+
+SUBTYPE_CONSTRAINT subtype_mandatory_document_product_association FOR document_product_association;
+  ABSTRACT SUPERTYPE;
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;  -- Document_assignment_mim

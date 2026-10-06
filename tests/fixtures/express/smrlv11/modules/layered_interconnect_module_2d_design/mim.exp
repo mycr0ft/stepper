@@ -1,0 +1,14 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.13 2009/04/23 11:39:34 liutkuviene Exp
+   ISO TC184/SC4/WG12 N6430 - ISO/TS 10303-1695 Layered interconnect module 2d design - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N5696
+*)
+
+SCHEMA Layered_interconnect_module_2d_design_mim;
+
+USE FROM Layered_interconnect_module_design_mim;	-- ISO/TS 10303-1698
+
+END_SCHEMA;
+
+

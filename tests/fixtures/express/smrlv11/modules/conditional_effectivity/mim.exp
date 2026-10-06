@@ -1,0 +1,18 @@
+(*
+ ISO TC184/SC4/WG12 N11091 - ISO/TS 10303-1397 Conditional effectivity - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N10290
+*) 
+
+
+SCHEMA Conditional_effectivity_mim;
+
+USE FROM Condition_mim;    -- ISO/TS 10303-1253
+
+USE FROM Effectivity_mim;    -- ISO/TS 10303-1057
+
+USE FROM effectivity_schema   -- ISO 10303-41
+  (conditional_configuration,
+   conditional_effectivity,
+   effectivity);
+
+END_SCHEMA;  -- Conditional_effectivity_mim

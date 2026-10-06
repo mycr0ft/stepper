@@ -1,0 +1,38 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.6 2018/06/18 15:01:46 kevin Exp
+   ISO TC184/SC4/WG12 N10000 - ISO/TS 10303-1837 product_data_equivalence_definition - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N9822
+   *)
+
+SCHEMA Product_data_equivalence_definition_mim;
+
+  USE FROM Date_time_assignment_mim;    --  ISO/TS 10303-1014
+
+  USE FROM Person_organization_assignment_mim;    --  ISO/TS 10303-1013
+
+  USE FROM product_data_equivalence_definition_schema;    --  ISO 10303-62
+
+  USE FROM Product_view_definition_relationship_mim;    --  ISO/TS 10303-1041
+  
+  TYPE pde_date_and_time_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON date_and_time_item WITH
+    (data_equivalence_definition);
+  END_TYPE;
+
+  TYPE pde_date_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON date_item WITH
+    (data_equivalence_definition);
+  END_TYPE;
+
+  TYPE pde_organization_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON organization_item WITH
+    (data_equivalence_definition);
+  END_TYPE;
+
+  TYPE pde_person_and_organization_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON person_and_organization_item WITH
+    (data_equivalence_definition);
+  END_TYPE;
+  
+  TYPE pde_validation_criteria_or_results_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON validation_criteria_or_results_select WITH
+    (data_equivalence_definition_representation_relationship);
+  END_TYPE;
+
+END_SCHEMA;

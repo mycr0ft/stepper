@@ -1,0 +1,104 @@
+(*
+ $Id: arm.exp,v 1.29 2017/11/16 14:21:36 verodub Exp $
+ ISO TC184/SC4/WG12 N9894 - ISO/TS 10303-1772 Ply orientation specification - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N7753
+*)
+
+SCHEMA Ply_orientation_specification_arm;
+
+USE FROM Measure_representation_arm; -- ISO TS 10303-1118
+USE FROM Part_and_zone_laminate_tables_arm; -- ISO/TS 10303-1770
+USE FROM Value_with_unit_arm; -- ISO TS 10303-1054
+
+  TYPE direction_select = SELECT
+    (Cartesian_11,
+     Curve_11,
+     Cylindrical_11,
+     Direction,
+     Point_array,
+     Polar_11,
+     User_defined_11);
+  END_TYPE;
+
+  ENTITY Cartesian_11
+    SUBTYPE OF (Detailed_geometric_model_element);
+      placement:  Axis_placement_3d;
+ END_ENTITY;
+
+  ENTITY Curve_11
+    SUBTYPE OF (Detailed_geometric_model_element);
+      guide_curves       : LIST [1:?] OF Curve;
+      fiber_11_offset    : Value_with_unit;
+  END_ENTITY;
+ 
+  ENTITY Cylindrical_11
+    SUBTYPE OF (Detailed_geometric_model_element);
+      guide_curves       : LIST [1:?] OF Curve;
+  END_ENTITY;
+ 
+  ENTITY Draped_orientation_angle
+    SUBTYPE OF (Ply_orientation_angle);
+  END_ENTITY;
+
+  ENTITY Laid_orientation_angle
+    SUBTYPE OF (Ply_orientation_angle);
+  END_ENTITY;
+ 
+  ENTITY Ply_angle_representation
+    SUBTYPE OF (Representation);
+      self\Representation.items : SET [1:1] OF Measure_item;
+  END_ENTITY;
+ 
+  ENTITY Ply_orientation_angle
+    SUPERTYPE OF (ONEOF (Draped_orientation_angle, 
+                         Laid_orientation_angle)) 
+    SUBTYPE OF (Representation_relationship);  
+      SELF\Representation_relationship.rep_1 : Ply_angle_representation;
+      SELF\Representation_relationship.rep_2 : Reinforcement_orientation_basis; 
+  END_ENTITY;
+
+  ENTITY Point_and_vector
+    SUBTYPE OF (Detailed_geometric_model_element);
+      location : Point;
+      vector   : LIST [1:2] OF Direction;
+  END_ENTITY;
+
+  ENTITY Point_array
+    SUBTYPE OF (Detailed_geometric_model_element);
+      directions : LIST [1:?] OF Point_and_vector;
+  END_ENTITY;
+ 
+  ENTITY Polar_11
+    SUBTYPE OF(Detailed_geometric_model_element);
+      placement : Axis_placement_3d;
+  END_ENTITY;
+ 
+  ENTITY Reinforcement_orientation_basis
+    SUBTYPE OF (Representation);
+      SELF\Representation.context_of_items       : Geometric_coordinate_space;
+      SELF\Representation.items                  : SET [1:1] OF Axis_placement_3d;
+      basis_11_direction                         : direction_select;
+    DERIVE
+      basis_placement_location : Cartesian_point := SELF\Representation.items[1]\Axis_placement.location;
+    INVERSE
+      table       : Laminate_table FOR basis;
+      orientation : Ply_orientation_angle FOR rep_2;
+    WHERE
+      WR1: 'PLY_ORIENTATION_SPECIFICATION_ARM.AXIS_PLACEMENT_3D' IN TYPEOF(SELF\Representation.items[1]);
+    END_ENTITY;
+
+  ENTITY User_defined_11
+    SUBTYPE OF (Representation_item);
+      definition : String_representation_item;
+  END_ENTITY;
+ 
+  SUBTYPE_CONSTRAINT pos_detailed_geometric_model_element_subtypes FOR Detailed_geometric_model_element;
+    ONEOF (Point_and_vector,
+           Point_array,
+           Cartesian_11,
+           Curve_11,
+           Cylindrical_11,
+           Polar_11);
+  END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;

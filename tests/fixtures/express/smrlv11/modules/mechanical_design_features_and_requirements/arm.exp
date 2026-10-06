@@ -1,0 +1,293 @@
+(*
+   $Id: arm.exp,v 1.30 2021/07/30 18:14:12 kevin Exp $
+   ISO TC184/SC4/WG12 N10896 - ISO/TS - 10303-1846 mechanical_design_features_and_requirements - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N10175
+*)
+SCHEMA Mechanical_design_features_and_requirements_arm;
+
+USE FROM Assembly_structure_arm;    -- ISO/TS 10303-1026
+
+USE FROM Associative_draughting_elements_arm;    -- ISO/TS 10303-1311
+
+USE FROM Characterizable_object_arm;    -- ISO/TS 10303-1765
+
+USE FROM Dimension_tolerance_arm;    -- ISO 10303-113
+
+USE FROM Elemental_geometric_shape_arm;    -- ISO/TS 10303-1050
+   
+USE FROM Geometric_tolerance_arm;    -- ISO/TS 10303-1004
+
+USE FROM Machining_features_arm;    -- ISO/TS 10303-1051
+
+USE FROM Part_view_definition_arm;    -- ISO/TS 10303-1023
+
+USE FROM Requirement_assignment_arm;    -- ISO/TS 10303-1233
+   
+USE FROM Shape_property_assignment_arm;    -- ISO/TS 10303-1032
+  
+USE FROM Value_with_unit_extension_arm;    -- ISO/TS 10303-1753
+
+TYPE md_requirement_assignment_item = SELECT BASED_ON requirement_assignment_item WITH
+    (Characterizable_object,
+     Geometric_dimension,
+     Geometric_tolerance,
+     Product,
+     Product_version,
+     Product_view_definition,
+     Shape_element,
+     View_definition_relationship);
+END_TYPE;
+
+TYPE md_requirement_source_item = SELECT BASED_ON requirement_source_item WITH
+    (Characterizable_object,
+     Geometric_dimension,
+     Geometric_tolerance,
+     Product,
+     Product_version,
+     Product_view_definition,
+     Shape_element,
+     View_definition_relationship);
+END_TYPE;
+
+TYPE md_tolerance_value_or_limits_and_fits = SELECT (Length_plus_minus_bounds,
+               Limits_and_fits);
+END_TYPE;
+
+ENTITY Basic_round_hole
+  SUBTYPE OF (Hole);
+  depth              : OPTIONAL Positive_length_data_element;
+  depth_tolerance    : OPTIONAL Length_plus_minus_bounds;
+  diameter           : Positive_length_data_element;
+  diameter_tolerance : OPTIONAL md_tolerance_value_or_limits_and_fits;
+  through_hole       : BOOLEAN;
+  SELF\characterizable_object.primary_shape_representation RENAMED placement_model : Geometric_model;
+DERIVE
+  SELF\machining_feature.placement : Axis_placement_3d := get_the_placement(placement_model);
+WHERE
+    WR1: SIZEOF(QUERY( ri <* placement_model\Geometric_model.items |
+               ('ELEMENTAL_GEOMETRIC_SHAPE_ARM.AXIS_PLACEMENT_3D' IN TYPEOF (ri))
+               )) = 1;
+   WR2: SIZEOF(['MACHINING_FEATURES_ARM.COUNTERBORE_HOLE',
+                'MACHINING_FEATURES_ARM.COUNTERSUNK_HOLE',
+                'MACHINING_FEATURES_ARM.ROUND_HOLE',
+                'MECHANICAL_DESIGN_FEATURES_AND_REQUIREMENTS_ARM.EXPLICIT_COMPOSITE_HOLE'] * TYPEOF(SELF)) = 0;
+   WR3: NOT EXISTS(SELF\multi_axis_feature.maximum_feature_limit);
+   WR4: NOT EXISTS(SELF\characterizable_object.auxiliary_shape_representations);
+   WR5: NOT EXISTS(SELF\characterizable_object.shape_type);
+   WR6: NOT EXISTS(SELF\characterizable_object.description);
+   WR7: through_hole XOR EXISTS(depth); 
+END_ENTITY;
+
+ENTITY Basic_round_hole_occurrence
+  SUBTYPE OF (Shape_element);
+   definition : Basic_round_hole;
+  WHERE
+   WR1: 'PART_VIEW_DEFINITION_ARM.PART_VIEW_DEFINITION' IN TYPEOF(SELF\Shape_element.associated_definition);
+   WR2: SELF\shape_element.product_definitional = TRUE;
+END_ENTITY;
+
+ENTITY Basic_round_hole_occurrence_in_assembly
+  SUBTYPE OF (Basic_round_hole_occurrence);
+  modified_components : LIST [1:?] OF UNIQUE Multi_level_reference_designator;
+END_ENTITY;
+
+ENTITY Explicit_round_hole
+  SUBTYPE OF (Hole);
+  depth              : Positive_length_data_element;
+  depth_tolerance    : OPTIONAL Length_plus_minus_bounds; -- modified
+  diameter           : Positive_length_data_element;
+  diameter_tolerance : OPTIONAL md_tolerance_value_or_limits_and_fits;
+  SELF\Characterizable_object.primary_shape_representation RENAMED placement_model : Geometric_model;
+ DERIVE
+  SELF\machining_feature.placement : axis_placement_3d := get_the_placement(placement_model);
+ WHERE
+    WR1: SIZEOF(QUERY( ri <* placement_model\Geometric_model.items |
+               ('ELEMENTAL_GEOMETRIC_SHAPE_ARM.AXIS_PLACEMENT_3D' IN TYPEOF (ri))
+               )) = 1;
+    --One item in the placement_model shall be an axis_placement_3d
+    --There is no explicit shape needed for an explicit round hole.
+   WR2: SIZEOF(['MACHINING_FEATURES_ARM.COUNTERBORE_HOLE',
+                'MACHINING_FEATURES_ARM.COUNTERSUNK_HOLE',
+                'MACHINING_FEATURES_ARM.ROUND_HOLE',
+                'MECHANICAL_DESIGN_FEATURES_AND_REQUIREMENTS_ARM.EXPLICIT_COMPOSITE_HOLE'] * TYPEOF(SELF)) = 0;
+  -- An Explicit_round_hole shall not be Counterbore_hole, Countersunk_hole or Round_hole.
+   WR3: NOT EXISTS(SELF\multi_axis_feature.maximum_feature_limit);
+   WR4: NOT EXISTS(SELF\characterizable_object.auxiliary_shape_representations);
+   WR5: NOT EXISTS(SELF\characterizable_object.shape_type);
+   WR6: NOT EXISTS(SELF\characterizable_object.description);
+END_ENTITY;
+
+ENTITY Explicit_composite_hole
+  SUBTYPE OF (Hole);
+  SELF\Characterizable_object.primary_shape_representation RENAMED placement_model : Geometric_model;
+ DERIVE
+  SELF\machining_feature.placement : axis_placement_3d := get_the_placement(placement_model);
+  WHERE
+    WR1: SIZEOF(QUERY( ri <* placement_model\Geometric_model.items |
+               ('ELEMENTAL_GEOMETRIC_SHAPE_ARM.AXIS_PLACEMENT_3D' IN TYPEOF (ri))
+               )) = 1;
+    --One item in the placement_model shall be an axis_placement_3d
+    --The placement_model shall be the used_Geometric_model for each member of explicit_shape.
+    WR2: SIZEOF(['MACHINING_FEATURES_ARM.COUNTERBORE_HOLE',
+                'MACHINING_FEATURES_ARM.COUNTERSUNK_HOLE',
+                'MACHINING_FEATURES_ARM.ROUND_HOLE',
+                'MECHANICAL_DESIGN_FEATURES_AND_REQUIREMENTS_ARM.EXPLICIT_ROUND_HOLE'] * TYPEOF(SELF)) = 0;
+  -- An Explicit_composite_hole shall not be Counterbore_hole, Countersunk_hole or Round_hole.
+   WR3: NOT EXISTS(SELF\multi_axis_feature.maximum_feature_limit);
+   WR4: NOT EXISTS(SELF\characterizable_object.auxiliary_shape_representations);
+   WR5: NOT EXISTS(SELF\characterizable_object.shape_type);
+   WR6: NOT EXISTS(SELF\characterizable_object.description);
+-- Informal proposition
+--- IP1: The axis_placement_3d in the placement shall define the reference position and orientation for the counterbore_hole_definition.
+--- IP2: The z axis of the axis_placement_3d shall point into the material of the item being bored.
+--- IP3: The placement of the axis_placement_3d shall be on the surface of the item being bored.
+--- IP4: The drill axis and each bore axis shall be congruent with the z axis of the placement.
+END_ENTITY;
+
+ENTITY Md_counterbore_hole_definition
+  SUBTYPE OF (Explicit_composite_hole);
+       counterbore_definition   : LIST [1:?] of UNIQUE Explicit_round_hole;
+drilled_hole_depth         : OPTIONAL Positive_length_data_element;
+   drilled_hole_depth_tolerance   : OPTIONAL Length_plus_minus_bounds;
+  	   drilled_hole_diameter      : Positive_length_data_element;
+  drilled_hole_diameter_tolerance : OPTIONAL md_tolerance_value_or_limits_and_fits;
+  	   through_hole				: Boolean;
+  	   shape_model   			: Geometric_model;
+  WHERE
+    WR1: through_hole XOR EXISTS(drilled_hole_depth);
+END_ENTITY;
+
+ENTITY Simplified_md_counterbore_hole_definition
+	SUBTYPE OF (Md_counterbore_hole_definition);
+	  SELF\Md_counterbore_hole_definition.shape_model RENAMED position	:	Geometric_model;
+  WHERE
+    WR1: SIZEOF(position\Geometric_model.items) = 1;
+
+END_ENTITY;
+
+ENTITY Md_counterbore_hole_occurrence
+  SUBTYPE OF (Shape_element);
+   definition : Md_counterbore_hole_definition;
+  WHERE
+   WR1: 'PART_VIEW_DEFINITION_ARM.PART_VIEW_DEFINITION' IN TYPEOF(SELF\Shape_element.associated_definition);
+   WR2: SELF\Shape_element.product_definitional = TRUE;
+END_ENTITY;
+
+ENTITY Md_counterbore_hole_occurrence_in_assembly
+  SUBTYPE OF (Md_counterbore_hole_occurrence);
+  modified_components : LIST [1:?] OF UNIQUE Multi_level_reference_designator;
+END_ENTITY;
+
+ENTITY Md_countersink_hole_definition
+  SUBTYPE OF (Explicit_composite_hole);
+countersink_diameter         : Positive_length_data_element;
+ countersink_diameter_tolerance   : OPTIONAL md_tolerance_value_or_limits_and_fits;
+     countersink_angle           : Positive_angle_data_element;
+     countersink_angle_tolerance : OPTIONAL Angle_plus_minus_bounds;
+drilled_hole_depth         : OPTIONAL Positive_length_data_element;
+   drilled_hole_depth_tolerance   : OPTIONAL Length_plus_minus_bounds;
+  	   drilled_hole_diameter      : Positive_length_data_element;
+  drilled_hole_diameter_tolerance : OPTIONAL md_tolerance_value_or_limits_and_fits;
+     through_hole			     : Boolean;
+     shape_model			     : Geometric_model;
+  WHERE
+    WR1: through_hole XOR EXISTS(drilled_hole_depth);
+END_ENTITY;
+
+ENTITY Simplified_md_countersink_hole_definition
+	SUBTYPE OF (Md_countersink_hole_definition);
+		SELF\Md_countersink_hole_definition.shape_model RENAMED position : Geometric_model;
+  WHERE
+    WR1: SIZEOF(position\Geometric_model.items) = 1;
+END_ENTITY;
+
+ENTITY Md_countersink_hole_occurrence
+  SUBTYPE OF (Shape_element);
+   definition                    : Md_countersink_hole_definition;
+  WHERE
+   WR1: 'PART_VIEW_DEFINITION_ARM.PART_VIEW_DEFINITION' IN TYPEOF(SELF\Shape_element.associated_definition);
+   WR2: SELF\Shape_element.product_definitional = TRUE;
+END_ENTITY;
+
+ENTITY Md_countersink_hole_occurrence_in_assembly
+  SUBTYPE OF (Md_countersink_hole_occurrence);
+  modified_components : LIST [1:?] OF UNIQUE Multi_level_reference_designator;
+END_ENTITY;
+
+ENTITY Md_counterdrill_hole_definition
+  SUBTYPE OF (Explicit_composite_hole);
+    counterbore   	  : Explicit_round_hole;
+    counterdrill_angle            : Positive_angle_data_element;
+    counterdrill_angle_tolerance  : OPTIONAL Angle_plus_minus_bounds;
+drilled_hole_depth         : OPTIONAL Positive_length_data_element;
+   drilled_hole_depth_tolerance   : OPTIONAL Length_plus_minus_bounds;
+  	   drilled_hole_diameter      : Positive_length_data_element;
+  drilled_hole_diameter_tolerance : OPTIONAL md_tolerance_value_or_limits_and_fits;
+    through_hole				  : Boolean;
+    shape_model				      : Geometric_model;
+  WHERE 
+    WR1: through_hole XOR EXISTS(drilled_hole_depth); 
+END_ENTITY;
+  
+ENTITY Simplified_md_counterdrill_hole_definition
+	SUBTYPE OF (Md_counterdrill_hole_definition);
+	  SELF\Md_counterdrill_hole_definition.shape_model RENAMED position : Geometric_model;
+ WHERE
+    WR1: SIZEOF(position\Geometric_model.items) = 1;
+    --There shall be exactly one item in the Geometric_model.
+END_ENTITY;
+
+ENTITY Md_counterdrill_hole_occurrence
+  SUBTYPE OF (Shape_element);
+   definition                    : Md_counterdrill_hole_definition;
+  WHERE
+   WR1: 'PART_VIEW_DEFINITION_ARM.PART_VIEW_DEFINITION' IN TYPEOF(SELF\Shape_element.associated_definition);
+   WR2: SELF\Shape_element.product_definitional = TRUE;
+END_ENTITY;
+
+ENTITY Md_counterdrill_hole_occurrence_in_assembly
+  SUBTYPE OF (Md_counterdrill_hole_occurrence);
+  modified_components : LIST [1:?] OF UNIQUE Multi_level_reference_designator;
+END_ENTITY;
+
+ENTITY Spotface_definition
+  SUBTYPE OF (Explicit_round_hole);
+        spotface_radius 		  : Positive_length_data_element;
+        spotface_radius_tolerance : OPTIONAL Length_plus_minus_bounds;
+END_ENTITY;
+
+ENTITY Spotface_hole_definition
+  SUBTYPE OF (Md_counterbore_hole_definition);
+    SELF\Md_counterbore_hole_definition.counterbore_definition RENAMED spotface : LIST [1:?] OF UNIQUE Spotface_definition;
+END_ENTITY;
+
+ENTITY Simplified_spotface_hole_definition
+	SUBTYPE OF (Spotface_hole_definition, Simplified_md_counterbore_hole_definition);
+END_ENTITY;
+
+ENTITY Spotface_occurrence
+  SUBTYPE OF (Md_counterbore_hole_occurrence);
+   SELF\Md_counterbore_hole_occurrence.definition   : Spotface_hole_definition;
+END_ENTITY;
+
+ENTITY Spotface_occurrence_in_assembly
+  SUBTYPE OF (Md_counterbore_hole_occurrence_in_assembly);
+   SELF\Md_counterbore_hole_occurrence.definition   : Spotface_hole_definition;
+END_ENTITY;
+
+ENTITY Mechanical_design_requirement_item_association
+  SUBTYPE OF ( Item_identified_representation_usage );
+    requirement : Requirement_assignment; 
+END_ENTITY;
+
+FUNCTION get_the_placement(input : Geometric_model) : Axis_placement_3d;
+LOCAL 
+   ap : SET OF Axis_placement_3d := QUERY( ri <* input\Geometric_model.items |
+               ('ELEMENTAL_GEOMETRIC_SHAPE_ARM.AXIS_PLACEMENT_3D' IN TYPEOF (ri))
+               );
+END_LOCAL;
+
+RETURN(ap[LOINDEX(ap)]);
+END_FUNCTION;
+
+END_SCHEMA;

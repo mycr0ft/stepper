@@ -1,0 +1,25 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.15 2012/10/11 05:49:13 liutkuviene Exp
+ ISO TC184/SC4/WG12 N7997 - ISO/TS 10303-1126 Document properties - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N7431
+*) 
+
+
+SCHEMA Document_properties_mim;
+
+USE FROM Document_definition_mim;    -- ISO/TS 10303-1123
+
+USE FROM File_identification_mim;    -- ISO/TS 10303-1127
+
+USE FROM Foundation_representation_mim;    -- ISO/TS 10303-1006
+
+USE FROM Measure_representation_mim;    -- ISO/TS 10303-1118
+
+USE FROM Property_assignment_mim;    -- ISO/TS 10303-1030
+
+USE FROM product_property_definition_schema   -- ISO 10303-41
+  (characterized_product_definition); 
+
+
+END_SCHEMA;  -- Document_properties_mim

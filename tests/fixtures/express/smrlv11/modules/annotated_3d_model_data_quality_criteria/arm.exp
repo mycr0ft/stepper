@@ -1,0 +1,120 @@
+(*
+   $Id: arm.exp,v 1.1 2020/12/11 07:42:55 ftanaka Exp $
+   ISO TC184/SC4/WG12 N10817 - ISO/TS 10303-1848 annotated_3d_model_data_quality_criteria - EXPRESS ARM
+*)
+
+SCHEMA Annotated_3d_model_data_quality_criteria_arm;
+
+  USE FROM Product_data_quality_criteria_arm;  -- ISO/TS 10303-1520 
+  
+  USE FROM Qualified_measure_arm;	-- ISO/TS 10303-1782
+
+  TYPE a3m_accuracy_associated_target_select = EXTENSIBLE GENERIC_ENTITY SELECT
+    (A3m_data_quality_criteria_representation, A3m_data_quality_criterion);
+  END_TYPE;
+
+  TYPE a3m_data_quality_accuracy_type_name = EXTENSIBLE ENUMERATION OF (a3mdqa_inapt);
+  END_TYPE;
+
+  TYPE a3m_data_quality_assessment_specification_select = SELECT
+    (A3m_data_quality_assessment_by_logical_test,
+     A3m_data_quality_assessment_by_numerical_test);
+  END_TYPE;
+
+  TYPE a3m_data_quality_inspected_element_type_name = EXTENSIBLE ENUMERATION;
+  END_TYPE;
+
+  TYPE a3m_data_quality_measured_data_type_name = EXTENSIBLE ENUMERATION;
+  END_TYPE;
+
+  TYPE a3m_data_quality_summary_stats_value_type = ENUMERATION OF
+      (average_value,
+ 	   max_value,
+	   min_value);
+  END_TYPE;
+
+  TYPE a3m_data_quality_type_name_for_location_of_extreme_value = EXTENSIBLE ENUMERATION;
+  END_TYPE;
+
+  TYPE a3m_data_quality_value_limit_type_select = SELECT
+    (A3m_data_quality_value_limit,
+     A3m_data_quality_value_range);
+  END_TYPE;
+
+  ENTITY A3m_data_quality_assessment_by_logical_test
+    SUBTYPE OF(Data_quality_assessment_specification);
+  END_ENTITY;
+
+  ENTITY A3m_data_quality_assessment_by_numerical_test
+    SUBTYPE OF(Data_quality_assessment_specification);
+     threshold : a3m_data_quality_value_limit_type_select;
+  END_ENTITY;
+  
+  ENTITY A3m_data_quality_criteria_representation
+    SUBTYPE OF(Data_quality_criteria_representation);
+    WHERE
+      WR1: SIZEOF( QUERY( q <* SELF\Representation.items| 
+                               'ANNOTATED_3D_MODEL_DATA_QUALITY_CRITERIA_ARM.' + 
+                               'A3M_DATA_QUALITY_CRITERION' IN TYPEOF(q))) > 0;
+  END_ENTITY;
+
+  ENTITY A3m_data_quality_criterion
+    ABSTRACT SUPERTYPE
+    SUBTYPE OF(Data_quality_criterion,Data_quality_measurement_requirement);
+      assessment_specification : a3m_data_quality_assessment_specification_select;
+      measured_data_type : a3m_data_quality_measured_data_type_name;
+      inspected_elements_types: LIST[1:?] OF a3m_data_quality_inspected_element_type_name;
+      accuracy_types : LIST [0:?] OF a3m_data_quality_accuracy_type_name;
+      location_of_extreme_value_types: LIST[0:?] OF a3m_data_quality_type_name_for_location_of_extreme_value;
+  END_ENTITY;
+
+  ENTITY A3m_data_quality_detailed_report_request
+    SUBTYPE OF(Detailed_report_request_with_number_of_data);
+      value_type_requested : a3m_data_quality_summary_stats_value_type;
+  END_ENTITY;
+
+  ENTITY A3m_data_quality_inspection_accuracy;
+      description : text;
+      range       : a3m_data_quality_value_limit_type_select;
+  END_ENTITY;
+  
+  ENTITY A3m_data_quality_lower_value_limit
+    SUBTYPE OF(A3m_data_quality_value_limit);
+    WHERE
+      WR1 : SELF\Qualified_representation_item.qualifiers[1]\Type_qualifier.name = 'minimum';
+  END_ENTITY;
+
+  ENTITY A3m_data_quality_summary_report_request_with_representative_value
+    SUBTYPE OF(Summary_report_request);
+      value_type_requested : a3m_data_quality_summary_stats_value_type;
+  END_ENTITY;
+
+  ENTITY A3m_data_quality_target_accuracy_association;
+      id : identifier;
+      name : label;
+      description : OPTIONAL text;
+      accuracy_specification : A3m_data_quality_inspection_accuracy;
+      target_to_associate : a3m_accuracy_associated_target_select;
+  END_ENTITY;
+  
+  ENTITY A3m_data_quality_upper_value_limit
+    SUBTYPE OF(A3m_data_quality_value_limit);
+    WHERE
+      WR1 : SELF\Qualified_representation_item.qualifiers[1]\Type_qualifier.name = 'maximum';
+  END_ENTITY;
+  
+  ENTITY A3m_data_quality_value_limit
+    ABSTRACT SUPERTYPE OF (ONEOF(A3m_data_quality_upper_value_limit, A3m_data_quality_lower_value_limit))
+    SUBTYPE OF(Numerical_item_with_unit, Qualified_representation_item);
+      SELF\Qualified_representation_item.qualifiers : SET[1:1] OF Pre_defined_type_qualifier;
+  WHERE
+    WR1: SELF\Qualified_representation_item.qualifiers[1]\Type_qualifier.name IN ['minimum', 'maximum'];
+  END_ENTITY;
+ 
+  ENTITY A3m_data_quality_value_range
+    SUBTYPE OF(Measure_item);
+      lower_limit : Numerical_item_with_unit;
+      upper_limit : Numerical_item_with_unit;
+  END_ENTITY;
+
+END_SCHEMA;

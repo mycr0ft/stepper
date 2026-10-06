@@ -1,0 +1,54 @@
+(*
+   ISO TC184/SC4/WG12 N11468 - ISO/TS 10303-1206 Draughting annotation - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N7801
+*)
+
+SCHEMA Draughting_annotation_arm;
+
+USE FROM Draughting_element_arm; -- ISO/TS 10303-1310
+
+  TYPE da_draughting_callout_content_select = SELECT BASED_ON draughting_callout_content_select WITH 
+    (Annotation_subfigure, 
+    Annotation_symbol);
+  END_TYPE; 
+
+  TYPE symbol_definition_select = SELECT
+    (Dimension_symbol, 
+     General_symbol, 
+     Geometric_tolerance_symbol, 
+     Marker, 
+     Surface_condition_symbol, 
+     Terminator);
+  END_TYPE; 
+
+  ENTITY Annotation_subfigure
+    SUBTYPE OF (Annotation_element);
+  END_ENTITY;
+
+  ENTITY Annotation_symbol
+    SUBTYPE OF (Annotation_element);
+      symbol_definition : symbol_definition_select;
+  END_ENTITY;
+
+  ENTITY Dimension_curve_terminator
+    SUBTYPE OF (Terminator_symbol);
+  END_ENTITY;
+
+  ENTITY Dimension_symbol; 
+  END_ENTITY;
+
+  ENTITY General_symbol 
+    SUBTYPE of (Representation);
+  END_ENTITY;
+
+  ENTITY Geometric_tolerance_symbol; 
+  END_ENTITY;
+
+  ENTITY Surface_condition_symbol; 
+  END_ENTITY;
+
+  ENTITY Terminator_symbol
+    SUBTYPE OF (Annotation_symbol);
+  END_ENTITY;
+
+END_SCHEMA;

@@ -1,0 +1,120 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.34 2014/01/24 14:58:34 darla Exp
+ ISO TC184/SC4/WG12 N8413 - ISO/TS 10303-1342 Expression - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N7861
+*)
+
+
+(*
+	New version is logically identical to old but imports numeric expressions from new proposed module
+	
+	*)
+	
+	SCHEMA Expression_arm;
+	
+	USE FROM Generic_expression_arm;
+	USE FROM Numeric_expression_arm;
+	REFERENCE FROM Numeric_expression_arm(Is_int_expr);
+	
+ 	ENTITY Concat_expression
+ 	SUBTYPE OF (String_expression, Multiple_arity_generic_expression);
+ 	SELF\Multiple_arity_generic_expression.operands: LIST [2 : ?] OF String_expression;
+ 	END_ENTITY;
+ 	
+ 	
+ 	ENTITY Format_function
+ 	SUBTYPE OF (String_expression, Binary_generic_expression);
+ 	DERIVE
+ 	value_to_format: Generic_expression:=SELF\Binary_generic_expression.operands[1];
+ 	format_string:Generic_expression:=SELF\Binary_generic_expression.operands[2];
+ 	WHERE
+ 	WR1: (('EXPRESSION_ARM.NUMERIC_EXPRESSION')
+ 	IN TYPEOF(value_to_format))
+ 	AND (('EXPRESSION_ARM.STRING_EXPRESSION')
+ 	IN TYPEOF(format_string));
+ 	END_ENTITY;
+ 	
+ 	ENTITY Index_expression
+ 	SUBTYPE OF (String_expression, Binary_generic_expression);
+ 	
+ 	DERIVE
+ 	operand:Generic_expression:= SELF\Binary_generic_expression.operands[1];
+ 	index:Generic_expression:= SELF\Binary_generic_expression.operands[2];
+ 	WHERE
+ 	WR1: ('EXPRESSION_ARM.STRING_EXPRESSION' IN TYPEOF(operand))
+ 	AND ('NUMERIC_EXPRESSION_ARM.NUMERIC_EXPRESSION' IN TYPEOF(index));
+ 	WR2: Is_int_expr (index);
+ 	END_ENTITY;
+	
+  	
+ 	 	
+ 	ENTITY Like_expression
+ 	SUBTYPE OF (Comparison_expression);
+ 	WHERE
+ 	WR1: ('EXPRESSION_ARM.STRING_EXPRESSION'
+ 	IN TYPEOF(SELF\Comparison_expression.operands[1])) AND
+ 	('EXPRESSION_ARM.STRING_EXPRESSION'
+ 	IN TYPEOF(SELF\Comparison_expression.operands[2]));
+ 	END_ENTITY;
+ 	
+ 	
+ 	ENTITY Simple_string_expression
+ 	ABSTRACT SUPERTYPE OF (ONEOF (String_literal,String_variable))
+ 	SUBTYPE OF (String_expression, Simple_generic_expression);
+ 	END_ENTITY;
+ 	
+ 	ENTITY Sql_mappable_defined_function
+		ABSTRACT SUPERTYPE
+		SUBTYPE OF (Defined_function);
+        END_ENTITY;
+ 	
+ 	ENTITY String_defined_function
+ 	ABSTRACT SUPERTYPE
+ 	SUBTYPE OF (Defined_function, String_expression);
+ 	END_ENTITY ;
+ 	
+ 	ENTITY String_expression
+ 	ABSTRACT SUPERTYPE OF (ONEOF (Simple_string_expression,
+ 	Index_expression,
+ 	Substring_expression,
+ 	Concat_expression,
+ 	Format_function,
+ 	String_defined_function))
+ 	SUBTYPE OF (Expression);
+ 	END_ENTITY;
+ 	
+ 	ENTITY String_literal
+ 	SUBTYPE OF (Simple_string_expression, Generic_literal);
+ 	the_value: STRING;
+ 	END_ENTITY;
+ 	
+ 	ENTITY String_variable
+ 	SUBTYPE OF (Simple_string_expression, Variable);
+ 	END_ENTITY;
+ 	
+ 	ENTITY Substring_expression
+ 	SUBTYPE OF (String_expression, Multiple_arity_generic_expression);
+ 	
+ 	DERIVE
+ 	operand:Generic_expression:=SELF\Multiple_arity_generic_expression.operands[1];
+ 	index1:Generic_expression:=SELF\Multiple_arity_generic_expression.operands[2];
+ 	index2:Generic_expression:=SELF\Multiple_arity_generic_expression.operands[3];
+ 	WHERE
+ 	WR1: ('EXPRESSION_ARM.STRING_EXPRESSION'
+ 	IN TYPEOF(operand))
+ 	AND ('EXPRESSION_ARM.NUMERIC_EXPRESSION'
+ 	IN TYPEOF(index1))
+ 	AND ('EXPRESSION_ARM.NUMERIC_EXPRESSION'
+ 	IN TYPEOF(index2));
+ 	WR2: SIZEOF(SELF\Multiple_arity_generic_expression.operands)=3;
+ 	WR3: Is_int_expr (index1);
+ 	WR4: Is_int_expr (index2);
+ 	END_ENTITY;
+ 	
+ 	
+ 
+ 	
+ 
+	
+	END_SCHEMA; 

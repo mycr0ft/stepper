@@ -1,0 +1,355 @@
+(*
+$Id: counterbore_countersink_schema.exp,v 1.50 2021/07/20 14:18:46 kevin Exp $
+ISO 10303 TC184/SC4/WG12 10931
+
+EXPRESS Source:
+ISO/DIS 10303-113 ed2 Mechanical features - Counterbore countersink schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"),
+and derivations of the Schema:
+
+Copyright ISO 2021  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing,
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so,
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO/FDIS 10303-113 ed2 Mechanical features - Counterbore countersink schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+SCHEMA counterbore_countersink_schema '{iso standard 10303 part(113) version(2) object(1) counterbore_countersink_schema(1)}';
+
+REFERENCE FROM geometry_schema --ISO 10303-42
+      (axis2_placement_3d);
+
+REFERENCE FROM machining_feature_schema -- ISO 10303-113
+      (composite_hole,
+       round_hole);
+
+REFERENCE FROM measure_schema   --ISO 10303-41
+         (length_measure_with_unit,
+          plane_angle_measure_with_unit,
+          positive_length_measure_with_unit,
+          positive_plane_angle_measure_with_unit);
+
+REFERENCE FROM product_definition_schema --ISO 10303-41
+          (product_definition);
+
+REFERENCE FROM product_property_definition_schema --ISO 10303-41
+         (characterized_object,
+          property_definition,
+          shape_aspect,
+          shape_aspect_occurrence);
+
+REFERENCE FROM product_property_representation_schema --ISO 10303-41
+		(item_identified_representation_usage,
+		 item_identified_representation_usage_definition,
+		 shape_representation);
+
+REFERENCE FROM product_structure_schema --ISO 10303-44
+          (multi_level_reference_designator);
+
+REFERENCE FROM representation_schema --ISO 10303-43
+		(representation);
+
+REFERENCE FROM shape_tolerance_schema   --ISO 10303-47
+         (limits_and_fits,
+         tolerance_value);
+
+TYPE ccs_item_identified_representation_usage_definition = SELECT BASED_ON item_identified_representation_usage_definition WITH(
+    characterized_object);
+END_TYPE;
+
+TYPE tolerance_value_or_limits_and_fits = SELECT (tolerance_value, -- modified
+               limits_and_fits);
+END_TYPE;
+
+
+ENTITY basic_round_hole
+  SUBTYPE OF (round_hole);
+  depth              : OPTIONAL positive_length_measure_with_unit;
+  depth_tolerance    : OPTIONAL tolerance_value;
+  diameter           : positive_length_measure_with_unit;
+  diameter_tolerance : OPTIONAL tolerance_value_or_limits_and_fits;
+  placement          : shape_representation;
+  through_hole       : BOOLEAN;
+WHERE
+  WR1: SIZEOF(placement\representation.items) = 1;
+  WR2: SIZEOF(QUERY( ri <* placement\representation.items |
+               ('GEOMETRY_SCHEMA.AXIS2_PLACEMENT_3D' IN TYPEOF (ri))
+               )) = 1;
+  WR3: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(depth_tolerance\tolerance_value.lower_bound);
+  WR4: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(depth_tolerance\tolerance_value.upper_bound);
+  WR5: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(diameter_tolerance)) OR
+    ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(diameter_tolerance\tolerance_value.lower_bound));
+  WR6: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(diameter_tolerance)) OR
+     ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(diameter_tolerance\tolerance_value.upper_bound));
+  WR7: through_hole XOR EXISTS(depth);
+END_ENTITY;
+
+ENTITY basic_round_hole_occurrence
+  SUBTYPE OF (shape_aspect_occurrence);
+   SELF\shape_aspect_occurrence.definition : basic_round_hole;
+  WHERE
+   WR1: 'PRODUCT_DEFINITION_SCHEMA.PRODUCT_DEFINITION' IN TYPEOF(SELF\shape_aspect.of_shape\property_definition.definition);
+   WR2: SELF\shape_aspect.product_definitional = TRUE;
+   --desc: The placement of the hole shall be on the surface of the item.
+END_ENTITY;
+
+ENTITY basic_round_hole_occurrence_in_assembly
+  SUBTYPE OF (basic_round_hole_occurrence);
+  modified_components : LIST [1:?] OF UNIQUE multi_level_reference_designator;
+-- Informal proposition:
+--- The placement of the hole shall be on the surface of the first member of modified_components.
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT round_hole_subtypes FOR round_hole;
+  ONEOF (  
+    basic_round_hole,
+    explicit_round_hole);
+END_SUBTYPE_CONSTRAINT;
+
+ENTITY explicit_round_hole
+  SUBTYPE OF (round_hole);
+  depth              : positive_length_measure_with_unit;
+  depth_tolerance    : OPTIONAL tolerance_value; -- modified
+  diameter           : positive_length_measure_with_unit;
+  diameter_tolerance : OPTIONAL tolerance_value_or_limits_and_fits;
+  placement          : shape_representation;
+ WHERE
+    WR1: SIZEOF(QUERY( ri <* placement\representation.items |
+               ('GEOMETRY_SCHEMA.AXIS2_PLACEMENT_3D' IN TYPEOF (ri))
+               )) = 1;
+    --One item in the placement shall be an axis2_placement_3d
+    --There is no explicit shape needed for an explicit round hole.
+    WR2: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(depth_tolerance\tolerance_value.lower_bound);
+    WR3: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(depth_tolerance\tolerance_value.upper_bound);
+    WR4: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(diameter_tolerance)) OR
+    ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(diameter_tolerance\tolerance_value.lower_bound));
+    WR5: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(diameter_tolerance)) OR
+     ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(diameter_tolerance\tolerance_value.upper_bound));
+END_ENTITY;
+
+ENTITY explicit_composite_hole
+  SUBTYPE OF (composite_hole);
+  	   placement                  : shape_representation;
+  INVERSE
+    explicit_shape                : SET [0:?] OF item_identified_representation_usage for definition;
+  WHERE
+    WR1: SIZEOF(QUERY( ri <* placement\representation.items |
+               ('GEOMETRY_SCHEMA.AXIS2_PLACEMENT_3D' IN TYPEOF (ri))
+               )) = 1;
+    --One item in the placement shall be an axis2_placement_3d
+    WR2: (SIZEOF(explicit_shape) = 0) OR 
+         (SIZEOF(QUERY(es <* explicit_shape |
+            NOT (placement = es\item_identified_representation_usage.used_representation)
+               )) = 0);
+    --The placement shall be the used_representation for each member of explicit_shape.
+-- Informal proposition
+--- IP1: The axis2_placement_3d in the placement shall define the reference position and orientation for the counterbore_hole_definition.
+--- IP2: The z axis of the axis2_placement_3d shall point into the material of the item being machined.
+--- IP3: The placement of the axis2_placement_3d shall be on the surface of the item being machined.
+--- IP4: The drill axis and each bore axis shall be congruent with the z axis of the placement.
+END_ENTITY;
+
+ENTITY counterbore_hole_definition
+  SUBTYPE OF (explicit_composite_hole);
+       counterbore                : LIST [1:?] OF UNIQUE explicit_round_hole;
+  	   drilled_hole_depth         : OPTIONAL positive_length_measure_with_unit;
+   drilled_hole_depth_tolerance   : OPTIONAL tolerance_value;
+  	   drilled_hole_diameter      : positive_length_measure_with_unit;
+  drilled_hole_diameter_tolerance : OPTIONAL tolerance_value_or_limits_and_fits;
+  	   through_hole				  : Boolean;
+  WHERE
+    WR1: through_hole XOR EXISTS(drilled_hole_depth);
+    WR2: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_depth_tolerance\tolerance_value.lower_bound);
+    WR3: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_depth_tolerance\tolerance_value.upper_bound);
+    WR4: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(drilled_hole_diameter_tolerance)) OR
+    ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_diameter_tolerance\tolerance_value.lower_bound));
+    WR5: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(drilled_hole_diameter_tolerance)) OR
+     ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_diameter_tolerance\tolerance_value.upper_bound));
+-- Informal proposition
+--- IP1: counterbore members shall in ascending order in the list organized according to their drilled_hole_diameter
+--- IP2: counterbore[1] shall have a larger diameter than drilled_hole_diameter.
+--- IP3: The axis2_placement_3d in the inherited placement shall define the reference position and orientation for the counterbore_hole_definition.
+--- IP4: The z axis of the axis2_placement_3d shall point into the material of the item being machined.
+--- IP5: The placement of the axis2_placement_3d shall be on the surface of the item being machined.
+--- IP6: The drill axis and each bore axis shall be congruent with the z axis of the placement.
+--- IP7: If a limits_and_fits is provided for the diameter tolerance the limits_and_fits shall be for a hole.
+--- IP8: counterbore_hole_definitin and explicit_round_hole geometry are defined in the same context.
+END_ENTITY;
+
+ENTITY simplified_counterbore_hole_definition
+	SUBTYPE OF (counterbore_hole_definition);
+  WHERE
+    WR1: SIZEOF(SELF\explicit_composite_hole.placement\representation.items) = 1;
+    --There shall be exactly one item in the representation.
+END_ENTITY;
+
+ENTITY counterbore_hole_occurrence
+  SUBTYPE OF (shape_aspect_occurrence);
+   SELF\shape_aspect_occurrence.definition : counterbore_hole_definition;
+  WHERE
+   WR1: 'PRODUCT_DEFINITION_SCHEMA.PRODUCT_DEFINITION' IN TYPEOF(SELF\shape_aspect.of_shape\property_definition.definition);
+   WR2: SELF\shape_aspect.product_definitional = TRUE;
+   --desc: The placement of the hole shall be on the surface of the item.
+END_ENTITY;
+
+ENTITY counterbore_hole_occurrence_in_assembly
+  SUBTYPE OF (counterbore_hole_occurrence);
+  modified_components : LIST [1:?] OF UNIQUE multi_level_reference_designator;
+-- Informal proposition:
+--- IP1: The placement of the hole shall be on the surface of the first member of modified_components.
+END_ENTITY;
+
+ENTITY countersink_hole_definition
+  SUBTYPE OF (explicit_composite_hole);
+     countersink_angle            : positive_plane_angle_measure_with_unit;
+     countersink_angle_tolerance  : OPTIONAL tolerance_value;
+     countersink_diameter         : positive_length_measure_with_unit;
+ countersink_diameter_tolerance   : OPTIONAL tolerance_value_or_limits_and_fits;
+ 	   drilled_hole_depth         : OPTIONAL positive_length_measure_with_unit;
+   drilled_hole_depth_tolerance   : OPTIONAL tolerance_value;
+  	   drilled_hole_diameter      : positive_length_measure_with_unit;
+  drilled_hole_diameter_tolerance : OPTIONAL tolerance_value_or_limits_and_fits;
+     through_hole				  : Boolean;
+  WHERE
+    WR1: through_hole XOR EXISTS(drilled_hole_depth);
+    WR2: 'MEASURE_SCHEMA.PLANE_ANGLE_MEASURE_WITH_UNIT' IN TYPEOF(countersink_angle_tolerance\tolerance_value.lower_bound);
+    WR3: 'MEASURE_SCHEMA.PLANE_ANGLE_MEASURE_WITH_UNIT' IN TYPEOF(countersink_angle_tolerance\tolerance_value.upper_bound);
+    WR4: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(countersink_diameter_tolerance)) OR
+    ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(countersink_diameter_tolerance\tolerance_value.lower_bound));
+    WR5: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(countersink_diameter_tolerance)) OR
+     ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(countersink_diameter_tolerance\tolerance_value.upper_bound));
+    WR6: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_depth_tolerance\tolerance_value.lower_bound);
+    WR7: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_depth_tolerance\tolerance_value.upper_bound);
+    WR8: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(drilled_hole_diameter_tolerance)) OR
+    ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_diameter_tolerance\tolerance_value.lower_bound));
+    WR9: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(drilled_hole_diameter_tolerance)) OR
+     ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_diameter_tolerance\tolerance_value.upper_bound));
+-- Informal proposition
+--- IP1: countersink_diameter shall have a larger diameter than the drilled_hole_diameter.
+--- IP2: The axis2_placement_3d in the inherited placement shall define the reference position and orientation for the counterbore_hole_definition.
+--- IP3: The z axis of the axis2_placement_3d shall point into the material of the item being machined.
+--- IP4: The placement of the axis2_placement_3d shall be on the surface of the item being machined.
+--- IP5: The drill axis and the countersink axis shall be congruent with the z axis of the placement.
+--- IP6: If a limits_and_fits is provided for the diameter tolerance the limits_and_fits shall be for a hole.
+--- IP7: countersink_hole_definition and explicit_round_hole geometry are defined in the same context.
+END_ENTITY;
+
+ENTITY simplified_countersink_hole_definition
+	SUBTYPE OF (countersink_hole_definition);
+  WHERE
+    WR1: SIZEOF(SELF\explicit_composite_hole.placement\representation.items) = 1;
+    --There shall be exactly one item in the representation.
+END_ENTITY;
+
+ENTITY countersink_hole_occurrence
+ SUBTYPE OF (shape_aspect_occurrence);
+   SELF\shape_aspect_occurrence.definition : countersink_hole_definition;
+  WHERE
+   WR1: 'PRODUCT_DEFINITION_SCHEMA.PRODUCT_DEFINITION' IN TYPEOF(SELF\shape_aspect.of_shape\property_definition.definition);
+   WR2: SELF\shape_aspect.product_definitional = TRUE;
+   ---desc. The placement of the hole shall be on the surface of the item.
+END_ENTITY;
+
+ENTITY countersink_hole_occurrence_in_assembly
+  SUBTYPE OF (countersink_hole_occurrence);
+  modified_components : LIST [1:?] OF UNIQUE multi_level_reference_designator;
+-- Informal proposition:
+--- IP1: The placement of the hole shall be on the surface of the first member of modified_components.
+END_ENTITY;
+
+ENTITY counterdrill_hole_definition
+  SUBTYPE OF (explicit_composite_hole);
+     counterbore                  : explicit_round_hole;
+     counterdrill_angle           : positive_plane_angle_measure_with_unit;
+     counterdrill_angle_tolerance : OPTIONAL tolerance_value;
+ 	   drilled_hole_depth     : OPTIONAL positive_length_measure_with_unit;
+   drilled_hole_depth_tolerance   : OPTIONAL tolerance_value;
+  	   drilled_hole_diameter  : positive_length_measure_with_unit;
+  drilled_hole_diameter_tolerance : OPTIONAL tolerance_value_or_limits_and_fits;
+     through_hole                 : Boolean;
+  WHERE
+    WR1: through_hole XOR EXISTS(drilled_hole_depth);
+    WR2: 'MEASURE_SCHEMA.PLANE_ANGLE_MEASURE_WITH_UNIT' IN TYPEOF(counterdrill_angle_tolerance\tolerance_value.lower_bound);
+    WR3: 'MEASURE_SCHEMA.PLANE_ANGLE_MEASURE_WITH_UNIT' IN TYPEOF(counterdrill_angle_tolerance\tolerance_value.upper_bound);
+    WR4: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_depth_tolerance\tolerance_value.lower_bound);
+    WR5: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_depth_tolerance\tolerance_value.upper_bound);
+    WR6: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(drilled_hole_diameter_tolerance)) OR
+    ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_diameter_tolerance\tolerance_value.lower_bound));
+    WR7: NOT('SHAPE_TOLERANCE_SCHEMA.TOLERANCE_VALUE' IN TYPEOF(drilled_hole_diameter_tolerance)) OR
+     ('MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(drilled_hole_diameter_tolerance\tolerance_value.upper_bound));
+-- Informal proposition
+--- IP1: The counterbore shall have a larger diameter than the drilled_hole_diameter.
+--- IP2: The axis2_placement_3d in the inherited placement shall define the reference position and orientation for the counterbore_hole_definition.
+--- IP3: The z axis of the axis2_placement_3d shall point into the material of the item being machined.
+--- IP4: The placement of the axis2_placement_3d shall be on the surface of the item being machined.
+--- IP5: The drill axis and the counterdrill axis and each bore axis shall be congruent with the z axis of the placement.
+--- IP6: counterdrill_hole_definition and explicit_round_hole geometry are defined in the same context.
+ END_ENTITY;
+
+ENTITY simplified_counterdrill_hole_definition
+	SUBTYPE OF (counterdrill_hole_definition);
+  WHERE
+    WR1: SIZEOF(SELF\explicit_composite_hole.placement\representation.items) = 1;
+    --There shall be exactly one item in the representation.
+END_ENTITY;
+
+ENTITY counterdrill_hole_occurrence
+ SUBTYPE OF (shape_aspect_occurrence);
+   SELF\shape_aspect_occurrence.definition : counterdrill_hole_definition;
+  WHERE
+   WR1: 'PRODUCT_DEFINITION_SCHEMA.PRODUCT_DEFINITION' IN TYPEOF(SELF\shape_aspect.of_shape\property_definition.definition);
+   WR2: SELF\shape_aspect.product_definitional = TRUE;
+---desc: The placement shall be on the surface of the item.
+END_ENTITY;
+
+ENTITY counterdrill_hole_occurrence_in_assembly
+  SUBTYPE OF (counterdrill_hole_occurrence);
+  modified_components : LIST [1:?] OF UNIQUE multi_level_reference_designator;
+-- Informal proposition:
+--- IP1: The placement of the hole shall be on the surface of the first member of modified_components.
+END_ENTITY;
+
+ENTITY spotface_definition
+  SUBTYPE OF (explicit_round_hole);
+        spotface_radius : positive_length_measure_with_unit;
+        spotface_radius_tolerance : OPTIONAL tolerance_value;
+ WHERE
+    WR1: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(spotface_radius_tolerance\tolerance_value.lower_bound);
+    WR2: 'MEASURE_SCHEMA.LENGTH_MEASURE_WITH_UNIT' IN TYPEOF(spotface_radius_tolerance\tolerance_value.upper_bound);
+END_ENTITY;
+
+ENTITY spotface_hole_definition
+  SUBTYPE OF (counterbore_hole_definition);
+  SELF\counterbore_hole_definition.counterbore RENAMED spotface : LIST [1:?] OF UNIQUE spotface_definition;
+END_ENTITY;
+
+ENTITY simplified_spotface_hole_definition
+	SUBTYPE OF (spotface_hole_definition, simplified_counterbore_hole_definition);
+END_ENTITY;
+
+ENTITY spotface_occurrence
+  SUBTYPE OF (counterbore_hole_occurrence);
+   SELF\counterbore_hole_occurrence.definition   : spotface_hole_definition;
+END_ENTITY;
+
+ENTITY spotface_occurrence_in_assembly
+  SUBTYPE OF (counterbore_hole_occurrence_in_assembly);
+   SELF\counterbore_hole_occurrence.definition   : spotface_hole_definition;
+END_ENTITY;
+
+
+
+ END_SCHEMA;

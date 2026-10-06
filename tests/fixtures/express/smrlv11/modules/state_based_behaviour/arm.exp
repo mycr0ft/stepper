@@ -1,0 +1,295 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.35 2010/06/11 03:00:12 philsp Exp
+ISO TC184/SC4/WG3 N2759 - ISO/TS 10303-1371 State based behaviour - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG3 N2511
+*)
+
+SCHEMA State_based_behaviour_arm;
+
+USE FROM Activity_method_assignment_arm;    -- ISO/TS 10303-1249
+
+USE FROM Behaviour_description_assignment_arm;    -- ISO/TS 10303-1483
+
+USE FROM Collection_identification_and_version_arm;    -- ISO/TS 10303-1396
+
+USE FROM Condition_arm;    -- ISO/TS 10303-1253
+
+USE FROM Description_assignment_arm;    -- ISO/TS 10303-1473
+
+USE FROM Expression_assignment_arm;    -- ISO/TS 10303-1491
+
+USE FROM External_state_based_behaviour_model_arm;    -- ISO/TS 10303-1468
+
+USE FROM General_model_parameter_arm;    -- ISO/TS 10303-1472
+
+USE FROM Identification_relationship_arm;    -- ISO/TS 10303-1398
+
+USE FROM Process_property_assignment_arm;    -- ISO/TS 10303-1040
+
+USE FROM Same_as_external_item_arm;    -- ISO/TS 10303-1402
+
+USE FROM Textual_expression_representation_arm;    -- ISO/TS 10303-1367
+
+
+TYPE sbb_activity_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON activity_item WITH 
+   (State_definition);
+END_TYPE; 
+
+TYPE sbb_activity_method_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON activity_method_item WITH 
+   (State_definition);
+END_TYPE; 
+
+TYPE sbb_behaviour_item = SELECT BASED_ON behaviour_item WITH 
+   (State_definition);
+END_TYPE; 
+
+TYPE sbb_behaviour_model = SELECT BASED_ON behaviour_model WITH 
+   (Activity_method, 
+    State_based_behaviour_model, 
+    State_definition);
+END_TYPE; 
+
+TYPE sbb_characterized_activity_definition = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON characterized_activity_definition WITH 
+   (Activity_method_relationship);
+END_TYPE; 
+
+TYPE sbb_classification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON classification_item WITH 
+   (Activity_method, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Applied_state_definition_assignment, 
+    Assigned_property, 
+    Class, 
+    Description_text, 
+    Description_text_assignment, 
+    Expression, 
+    Expression_assignment, 
+    External_class_library, 
+    External_source_identification, 
+    File, 
+    Identification_assignment, 
+    Identification_relationship, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Independent_property_representation, 
+    Product, 
+    Product_relationship, 
+    Product_version, 
+    Product_version_relationship, 
+    Product_view_definition, 
+    Property_representation, 
+    Representation, 
+    Representation_item, 
+    Representation_relationship, 
+    State_definition, 
+    State_definition_relationship, 
+    Unit, 
+    Value_with_unit, 
+    View_definition_context);
+END_TYPE; 
+
+TYPE sbb_collection_assignment_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON collection_assignment_select WITH 
+   (Activity_method, 
+    Product, 
+    Product_version, 
+    Product_view_definition);
+END_TYPE; 
+
+TYPE sbb_collection_member_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON collection_member_select WITH 
+   (Activity_method, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Applied_state_definition_assignment, 
+    Assigned_property, 
+    Class, 
+    Classification_assignment, 
+    Collection_assignment, 
+    Collection_membership, 
+    Condition, 
+    Condition_assignment, 
+    Condition_parameter, 
+    Condition_relationship, 
+    Derived_unit_element, 
+    Description_text, 
+    Description_text_assignment, 
+    External_source, 
+    External_source_identification, 
+    File, 
+    Identification_assignment, 
+    Identification_relationship, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Name_assignment, 
+    Product, 
+    Product_relationship, 
+    Product_version, 
+    Product_version_relationship, 
+    Product_view_definition, 
+    Property_definition_representation, 
+    Representation, 
+    Representation_context, 
+    Representation_item, 
+    Representation_relationship, 
+    Same_as_external_item, 
+    State_definition, 
+    State_definition_relationship, 
+    State_definition_role, 
+    Unit, 
+    Value_with_unit, 
+    View_definition_context);
+END_TYPE; 
+
+TYPE sbb_condition_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON condition_item WITH 
+   (Activity_method, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Assigned_property, 
+    Expression_assignment, 
+    State_definition, 
+    State_definition_relationship);
+END_TYPE; 
+
+TYPE sbb_condition_parameter_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON condition_parameter_item WITH 
+   (Activity_method, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Assigned_property, 
+    Classification_assignment, 
+    Identification_assignment, 
+    Independent_property, 
+    Independent_property_representation, 
+    parameter_value_select, 
+    Product, 
+    Product_version, 
+    Property_representation, 
+    State_transition_definition);
+END_TYPE; 
+
+TYPE sbb_description_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON description_item WITH 
+   (Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Assigned_property, 
+    behaviour_model, 
+    Class, 
+    Condition, 
+    Condition_assignment, 
+    Condition_parameter, 
+    Condition_relationship, 
+    Description_text_assignment, 
+    Expression, 
+    External_source, 
+    External_source_identification, 
+    File, 
+    Identification_assignment, 
+    Identification_relationship, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Product, 
+    Product_relationship, 
+    Product_version, 
+    Product_version_relationship, 
+    Product_view_definition, 
+    Property_definition_representation, 
+    Representation, 
+    Representation_item, 
+    Representation_relationship, 
+    State_definition_relationship, 
+    State_definition_role, 
+    Unit, 
+    Value_with_unit, 
+    View_definition_context);
+END_TYPE; 
+
+TYPE sbb_expression_assignment_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON expression_assignment_item WITH 
+   (Condition);
+END_TYPE; 
+
+TYPE sbb_external_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON external_identification_item WITH 
+   (Product);
+END_TYPE; 
+
+TYPE sbb_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON identification_item WITH 
+   (Activity_method, 
+    Activity_method_relationship, 
+    Applied_activity_method_assignment, 
+    Applied_state_definition_assignment, 
+    Assigned_property, 
+    Class, 
+    Condition, 
+    Description_text_assignment, 
+    External_class_library, 
+    External_source_identification, 
+    File, 
+    Identification_relationship, 
+    Independent_property, 
+    Independent_property_relationship, 
+    Product, 
+    Product_relationship, 
+    Product_version, 
+    Product_view_definition, 
+    Representation, 
+    Representation_item, 
+    State_definition, 
+    State_definition_relationship, 
+    View_definition_context);
+END_TYPE; 
+
+TYPE sbb_parameter_value_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON parameter_value_select WITH 
+   (Product_view_definition, 
+    Representation, 
+    Representation_item, 
+    State_definition);
+END_TYPE; 
+
+TYPE sbb_property_assignment_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON property_assignment_select WITH 
+   (Applied_activity_method_assignment, 
+    Applied_state_definition_assignment, 
+    Condition_parameter, 
+    File, 
+    Generic_expression, 
+    Independent_property_relationship, 
+    Product, 
+    Product_version, 
+    Product_version_relationship, 
+    Product_view_definition, 
+    Property_definition_representation, 
+    Representation, 
+    Representation_context, 
+    Representation_item, 
+    State_definition, 
+    State_definition_relationship);
+END_TYPE; 
+
+TYPE sbb_same_as_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON same_as_item WITH 
+   (Activity_method, 
+    Condition, 
+    Condition_parameter, 
+    Derived_unit_element, 
+    Description_text, 
+    External_source, 
+    External_source_identification, 
+    Independent_property, 
+    Product, 
+    Product_version, 
+    Product_view_definition, 
+    Representation_context, 
+    State_definition, 
+    State_definition_role, 
+    Unit, 
+    Value_with_unit, 
+    View_definition_context);
+END_TYPE; 
+
+TYPE sbb_state_definition_of_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON state_definition_of_item WITH 
+   (Activity_method, 
+    Applied_activity_method_assignment, 
+    Behaviour_description_association, 
+    File, 
+    File_location_identification, 
+    Product, 
+    Product_version, 
+    Product_view_definition);
+END_TYPE; 
+
+END_SCHEMA;  -- State_based_behaviour_arm

@@ -1,0 +1,142 @@
+(*
+   ISO TC184/SC4/WG12 N11378 - ISO/TS 10303-400 Reference schema for sysml mapping - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N11008
+*)
+
+SCHEMA Reference_schema_for_sysml_mapping_arm;
+ USE FROM Ap239_product_life_cycle_support_arm; -- ISO/TS 10303-439
+ USE FROM Ap242_managed_model_based_3d_engineering_arm; -- ISO/TS 10303-442
+
+	(* core model subtypes of AssignmentObject not in 239 Domain model *)
+  TYPE assignment_object_proxy = SELECT ( 
+    Appearance_assignment,
+    Frozen_assignment,
+    Ineffectivity_assignment,
+    Process_operation_resource_assignment
+    );
+  END_TYPE;
+  
+	(* core model subtypes of RelationshipObject not in 239 Domain model *)
+	TYPE relationship_object_proxy = SELECT ( 
+		Activity_relationship,
+		Assembly_shape_constraint_item_relationship,
+		Assembly_shape_joint_item_relationship,
+		Contact_feature_definition_fit_relationship,
+		Definitional_representation_relationship,
+		Draughting_callout_relationship,
+		Effectivity_relationship,
+		File_relationship,
+		Geometric_tolerance_relationship,
+		Independent_property_relationship,
+		Mated_assembly_occurrence_relationship,
+		Observation_relationship,
+		Part_contact_feature_fit_relationship,
+		Part_feature_fit_relationship,
+		Part_shape_element_relationship,
+		Process_operation_definition_relationship,
+		Process_operation_occurrence_relationship,
+		Process_plan_relationship,
+		Product_class_relationship,
+		Product_configuration_relationship,
+		Shape_element_relationship,
+		Shape_feature_definition_element_relationship,
+		Shape_feature_definition_occurrence_element_relationship,
+		Work_order_relationship,
+		Work_request_relationship
+	);
+  END_TYPE;
+  
+  (* core model subtypes of AssociationObject not in 239 Domain model *)
+  	TYPE association_object_proxy = SELECT ( 
+		Draughting_model_item_association,
+		Product_structure_link_motion_association,
+		Material_property_association
+	);
+  END_TYPE;
+  
+  
+   (* core model  auxiliary of  AssignmentObject & RelationshipObject 
+   i.e. Auxiliary: ActivityAssignmentSelect ApprovalAssignmentSelect DateTimeAssignmentSelect EffectivityAssignmentSelect EventAssignmentSelect MessageContentSelect ObservationAssignmentSelect PersonOrganizationAssignmentSelect
+    *)
+    
+  TYPE part400_activity_item = SELECT BASED_ON activity_item WITH (
+    assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);
+  END_TYPE;  
+   
+  TYPE part400_approval_item = SELECT BASED_ON approval_item WITH 
+	(assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);
+  END_TYPE;  
+  
+ 
+  TYPE part400_date_or_date_time_item = SELECT BASED_ON date_or_date_time_item WITH 
+    (assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);
+  END_TYPE;
+  
+  TYPE part400_effectivity_item = SELECT BASED_ON effectivity_item WITH 
+    (assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);
+  END_TYPE;
+    
+  TYPE part400_event_item = SELECT BASED_ON event_item WITH 
+	(assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);
+  END_TYPE;
+	
+  TYPE part400_message_content_item = SELECT BASED_ON message_content_item WITH 
+	(assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);
+  END_TYPE;  
+	
+  TYPE part400_observation_item = SELECT BASED_ON observation_item WITH 
+	(assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);
+  END_TYPE;  
+	
+	
+  TYPE part400_organization_or_person_in_organization_item = SELECT BASED_ON organization_or_person_in_organization_item WITH 
+	(assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);
+  END_TYPE;  
+	
+	  
+    (* core model AssignmentObject attribut Id : [0:1] of IdentifierSelect *)
+  TYPE part400_identification_item = SELECT BASED_ON identification_item WITH 
+	(assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);
+  END_TYPE;
+  
+  TYPE part400_description_item = SELECT BASED_ON description_item WITH 
+	(assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy,
+    Item_identified_representation_usage);
+  END_TYPE;
+  
+  TYPE part400_classification_item = SELECT BASED_ON classification_item WITH 
+	(assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy);  
+  END_TYPE;
+  
+    (* core model AssignmentObject attribut Description : DescriptorSelect *)
+  TYPE part400_string_select = SELECT BASED_ON string_select WITH 
+	(assignment_object_proxy,
+    relationship_object_proxy,
+    association_object_proxy,
+    Item_identified_representation_usage);  
+  END_TYPE;
+
+END_SCHEMA;
+

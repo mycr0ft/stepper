@@ -1,0 +1,89 @@
+(*
+$Id: domain_schema.exp,v 1.11 2019/05/07 13:05:17 kevin Exp $
+ISO 10303 TC184/SC4/WG12 N10061
+
+EXPRESS Source:
+ISO 10303-110 ed2 Mesh-based computational fluid dynamics - Domain schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2019  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-110 ed2 Mesh-based computational fluid dynamics - Domain schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA domain_schema '{iso standard 10303 part(110) version(2) object(1) domain_schema(3)}';
+  REFERENCE FROM analysis_schema                  -- ISO 10303-53
+                 (model_product_domain_with_mesh,
+                  model_property_distribution);
+  REFERENCE FROM basis_schema                     -- ISO 10303-110
+                 (mbna_property_distribution_select,
+                 property_3d_data_name,
+                 specified_general_property);
+  REFERENCE FROM mathematical_description_of_distribution_schema  -- ISO 10303-51
+                 (property_distribution_description);
+  REFERENCE FROM mesh_topology_schema             -- ISO 10303-52
+                 (rind);
+
+TYPE coordinate_data_name = EXTENSIBLE ENUMERATION BASED_ON PROPERTY_3D_DATA_NAME with
+     (coordinate_x,
+      coordinate_y,
+      coordinate_z,
+      coordinate_r,
+      coordinate_theta,
+      coordinate_phi,
+      coordinate_normal,
+      coordinate_tangential,
+      coordinate_xi,
+      coordinate_eta,
+      coordinate_zeta,
+      coordinate_transform);
+END_TYPE;
+
+ENTITY grid_coordinates
+  SUBTYPE OF (model_property_distribution);
+  SELF\model_property_distribution.domain : model_product_domain_with_mesh;
+  SELF\model_property_distribution.range  : specified_general_property;
+INVERSE
+  data : SET OF property_distribution_description FOR physical_function;
+WHERE
+  WR1 : is_coordinate_property(range);
+END_ENTITY;
+
+ENTITY grid_coordinates_with_rind
+  SUBTYPE OF (grid_coordinates);
+  rind_planes : rind;
+END_ENTITY;
+
+FUNCTION is_coordinate_property(arg : specified_general_property) : BOOLEAN;
+  IF ('EXTERNAL_REFERENCE_SCHEMA.EXTERNALLY_DEFINED_ITEM' IN
+      TYPEOF(arg\specified_general_property.name_specifier) ) THEN
+    RETURN(TRUE);
+  END_IF;  
+  IF (arg\specified_general_property.name_specifier = property_3d_data_name.position)
+      OR
+    ('DOMAIN_SCHEMA.COORDINATE_DATA_NAME' IN
+      TYPEOF(arg\specified_general_property.name_specifier)) THEN 
+     RETURN ( TRUE );
+  ELSE
+     RETURN( FALSE );
+  END_IF;
+END_FUNCTION;
+
+END_SCHEMA;  -- end of domain_schema

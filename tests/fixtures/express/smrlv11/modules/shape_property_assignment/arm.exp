@@ -1,0 +1,138 @@
+(* 
+	ISO TC184/SC4/WG12 N11076 - ISO/TS 10303-1032 Shape property assignment - EXPRESS ARM
+	Supersedes ISO TC184/SC4/WG12 N9673
+*)
+
+SCHEMA Shape_property_assignment_arm;
+
+USE FROM Assembly_structure_arm; -- ISO/TS 10303-1026
+USE FROM External_model_arm; -- ISO/TS 10303-1033
+USE FROM Geometric_model_relationship_arm; -- ISO/TS 10303-1403
+USE FROM Product_view_definition_relationship_arm; -- ISO/TS 10303-1041
+USE FROM Property_assignment_arm; -- ISO/TS 10303-1030
+
+TYPE assigned_shape_property_select = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON property_assignment_select WITH
+  (Product_occurrence_definition_relationship,
+   Product_view_definition,
+   Shape_element,
+   Shape_element_relationship,
+   View_definition_relationship);
+END_TYPE;
+
+TYPE chained_geometric_model_link = SELECT 
+  (Geometric_coordinate_space,
+   Geometric_model_relationship,
+   Geometric_placement_operation);
+END_TYPE;
+
+TYPE item_identified_representation_usage_definition = EXTENSIBLE GENERIC_ENTITY SELECT 
+  (Assigned_property,
+   Independent_property,
+   Shape_element,
+   Shape_element_relationship);
+END_TYPE;
+
+TYPE item_identified_representation_usage_select = SELECT 
+  (list_representation_items,
+   Representation_item,
+   set_representation_items);
+END_TYPE;
+
+TYPE list_representation_items = LIST [1 : ?] OF Representation_item;
+END_TYPE;
+
+TYPE set_representation_items = SET [1 : ?] OF Representation_item;
+END_TYPE;
+
+TYPE shape_element_or_relationship_select = SELECT 
+  (Shape_element,
+   Shape_element_relationship);
+END_TYPE;
+
+TYPE shape_model = EXTENSIBLE GENERIC_ENTITY SELECT 
+  (External_geometric_model,
+   Geometric_model);
+END_TYPE;
+
+TYPE shapeable_item = EXTENSIBLE GENERIC_ENTITY SELECT 
+  (Product_occurrence_definition_relationship,
+   Product_view_definition,
+   View_definition_relationship);
+END_TYPE;
+
+TYPE spa_represented_definition = SELECT BASED_ON represented_definition WITH
+  (Product_occurrence_definition_relationship,
+   Product_view_definition,
+   Shape_element,
+   Shape_element_relationship,
+   View_definition_relationship);
+END_TYPE;
+
+ENTITY Assigned_shape_property
+SUBTYPE OF (Assigned_property);
+  SELF\Assigned_property.described_element : assigned_shape_property_select;
+END_ENTITY;
+
+ENTITY Item_identified_representation_usage;
+  name : STRING;
+  description : OPTIONAL STRING;
+  definition : item_identified_representation_usage_definition;
+  used_representation : Representation;
+  identified_item : item_identified_representation_usage_select;
+  nodes : OPTIONAL LIST [2 : ?] OF UNIQUE Geometric_model;
+  undirected_link : OPTIONAL LIST [1 : ?] OF UNIQUE chained_geometric_model_link;
+UNIQUE
+  UR1: used_representation, identified_item;
+  UR2: used_representation, definition;
+WHERE
+    WR1: EXISTS(nodes) = EXISTS(undirected_link);
+END_ENTITY;
+
+ENTITY Shape_dependent_property_representation
+SUBTYPE OF (Property_definition_representation);
+  SELF\Property_definition_representation.definition : Assigned_shape_property;
+END_ENTITY;
+
+ENTITY Shape_description_association
+SUBTYPE OF (Property_definition_representation);
+  SELF\Property_definition_representation.definition : shapeable_item;
+  SELF\Property_definition_representation.used_representation : shape_model;
+END_ENTITY;
+
+ENTITY Shape_element;
+  id : OPTIONAL STRING;
+  element_name : STRING;
+  description : OPTIONAL STRING;
+  associated_definition : shapeable_item;
+  product_definitional : OPTIONAL BOOLEAN;
+  identified_item : OPTIONAL geometric_model_item;
+  nodes : OPTIONAL LIST [2 : ?] OF UNIQUE Geometric_model;
+  undirected_link : OPTIONAL LIST [1 : ?] OF UNIQUE chained_geometric_model_link;
+UNIQUE
+  UR1: id, associated_definition;
+WHERE
+    WR1: EXISTS(element_name) OR (TYPEOF(SELF\Shape_element) <> TYPEOF(SELF));
+    WR2: EXISTS(nodes) = EXISTS(undirected_link);
+END_ENTITY;
+
+ENTITY Shape_element_description_association
+SUBTYPE OF (Property_definition_representation);
+  SELF\Property_definition_representation.definition : shape_element_or_relationship_select;
+  SELF\Property_definition_representation.used_representation : shape_model;
+END_ENTITY;
+
+ENTITY Shape_element_relationship;
+  relation_type : OPTIONAL STRING;
+  description : OPTIONAL STRING;
+  relating : Shape_element;
+  related : Shape_element;
+WHERE
+    WR1: EXISTS(relation_type) OR (TYPEOF(SELF\Shape_element_relationship) <> TYPEOF(SELF));
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT property_definition_representation_subtype FOR Property_definition_representation;
+  ONEOF(Shape_description_association, Shape_dependent_property_representation, Shape_element_description_association);
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;
+

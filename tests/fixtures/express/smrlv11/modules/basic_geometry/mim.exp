@@ -1,0 +1,42 @@
+(*
+Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.23 2019/04/03 14:35:04 kevin Exp
+ISO TC184/SC4/WG12 N10422 - ISO/TS 10303-1652 Basic geometry - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N7829
+*) 
+
+
+SCHEMA Basic_geometry_mim;
+
+USE FROM Elemental_geometric_shape_mim;    -- ISO/TS 10303-1004
+
+USE FROM geometry_schema   -- ISO 10303-42
+  (bounded_curve,
+  bounded_surface,
+  circle,
+  conic,
+  conical_surface,
+  curve,
+  cylindrical_surface,
+  degenerate_pcurve,
+  ellipse,
+  hyperbola,
+  line,
+  oriented_surface,
+  parabola,
+  plane,
+  point_on_curve,
+  point_on_surface,
+  surface,
+  surface_of_linear_extrusion,
+  surface_of_revolution,
+  swept_surface,
+  toroidal_surface,
+  spherical_point,
+  cylindrical_point,
+  polar_point); 
+
+USE FROM Parametric_representation_mim;    -- ISO/TS 10303-1813
+
+END_SCHEMA;  -- Basic_geometry_mim
+

@@ -1,0 +1,37 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.31 2019/01/10 22:26:09 brandon Exp
+   ISO TC184/SC4/WG12 N10299 - ISO/TS 10303-1641 Assembly module with subassembly - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N9407
+*)
+
+SCHEMA Assembly_module_with_subassembly_arm;
+
+USE FROM Assembly_module_design_arm;	-- ISO/TS 10303-1636
+
+  ENTITY Assembly_module_component
+    SUBTYPE OF (Physical_component, Single_instance);
+      SELF\Definition_based_product_occurrence.derived_from : Assembly_module_design_view;
+    DERIVE
+      usage_view : Assembly_module_usage_view := derived_from\Part_design_view.usage_view;
+    INVERSE
+      access_mechanisms : SET[2:?] OF Assembly_module_component_terminal FOR associated_definition;
+    WHERE
+      WR1 : NOT EXISTS(SELF\Product_view_definition.name);
+      WR2 : usage_view = access_mechanisms[1]\Assembly_module_component_terminal.definition\Assembly_module_terminal.associated_definition;
+  END_ENTITY;
+
+  ENTITY Assembly_module_component_terminal
+    SUBTYPE OF (Physical_component_terminal);
+      SELF\Component_feature.associated_definition : Assembly_module_component;
+    DERIVE
+      SELF\Component_feature.definition            : Component_path_shape_element := assigned_component_path_shape_element;
+    INVERSE
+      assigned_component_path_shape_element        : Component_path_shape_element FOR component_shape_element;
+    WHERE
+      WR1 : NOT EXISTS(SELF\Shape_element.description);
+      WR2 : 'PHYSICAL_COMPONENT_FEATURE_ARM.PHYSICAL_COMPONENT_TERMINAL' IN TYPEOF(definition);
+  END_ENTITY;
+
+END_SCHEMA;
+

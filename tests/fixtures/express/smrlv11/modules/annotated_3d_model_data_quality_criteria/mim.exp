@@ -1,0 +1,33 @@
+(*
+   $Id: mim.exp,v 1.1 2020/12/11 07:42:55 ftanaka Exp $
+   ISO TC184/SC4/WG12 N10818 - ISO/TS 10303-1848 annotated_3d_model_data_quality_criteria - EXPRESS MIM
+*)
+
+SCHEMA Annotated_3d_model_data_quality_criteria_mim;
+
+  USE FROM annotated_3d_model_data_quality_criteria_schema;	-- ISO 10303-59
+
+  USE FROM Product_data_quality_criteria_mim;  -- ISO/TS 10303-1520 
+  
+  USE FROM Qualified_measure_mim;	-- ISO/TS 10303-1782
+  
+  USE FROM shape_data_quality_criteria_schema    --  ISO 10303-59
+    (shape_data_quality_assessment_specification_select,
+     shape_data_quality_assessment_by_logical_test,
+     shape_data_quality_assessment_by_numerical_test,
+     shape_data_quality_lower_value_limit,
+     shape_data_quality_upper_value_limit,
+     shape_data_quality_value_limit,
+     shape_data_quality_value_limit_type_select,
+     shape_data_quality_value_range,
+     shape_measurement_accuracy); 
+
+  TYPE a3mqc_accuracy_associated_target_select = EXTENSIBLE SELECT BASED_ON a3m_accuracy_associated_target_select WITH
+    (a3m_data_quality_criteria_representation,a3m_data_quality_criterion);
+  END_TYPE; 
+
+  TYPE a3mqc_accuracy_type_name = EXTENSIBLE ENUMERATION BASED_ON a3m_data_quality_accuracy_type_name WITH
+    (a3mdqa_inapt);
+  END_TYPE;
+
+END_SCHEMA;

@@ -1,0 +1,85 @@
+(*
+ISO TC184/SC4/WG12 N11078 - ISO/TS 10303-1164 Product as individual - EXPRESS ARM
+Supersedes ISO TC184/SC4/WG12 N7268
+*)
+
+
+SCHEMA Product_as_individual_arm;
+
+USE FROM Configuration_item_arm; -- ISO/TS 10303-1056
+
+USE FROM Identification_assignment_arm;    -- ISO/TS 10303-1021
+
+USE FROM Product_occurrence_arm;    -- ISO/TS 10303-1063
+
+USE FROM Product_view_definition_arm;    -- ISO/TS 10303-1019
+
+TYPE product_as_individual_identification_item = SELECT BASED_ON identification_item WITH
+  (Product_as_individual,
+   Product_as_individual_version);
+END_TYPE;
+
+TYPE product_design_view_or_configuration = SELECT 
+  (Product_configuration,
+   Product_view_definition);
+END_TYPE;
+
+TYPE product_version_or_configuration = SELECT 
+  (Product_configuration,
+   Product_version);
+END_TYPE;
+
+ENTITY Product_as_individual
+SUBTYPE OF (Product);
+END_ENTITY;
+
+ENTITY Product_as_individual_assembly
+SUBTYPE OF (Next_assembly_usage);
+  is_realization_of : OPTIONAL Product_occurrence;
+  SELF\Product_occurrence_definition_relationship.related_view : Product_as_individual_view;
+  SELF\Product_occurrence_definition_relationship.relating_view : Product_as_individual_view;
+WHERE
+    WR1:  NOT (EXISTS(SELF\Assembly_component_relationship.quantity));
+END_ENTITY;
+
+ENTITY Product_as_individual_version
+ABSTRACT SUPERTYPE OF (ONEOF(Product_as_planned, Product_as_realized))
+SUBTYPE OF (Product_version);
+  SELF\Product_version.of_product : Product_as_individual;
+END_ENTITY;
+
+ENTITY Product_as_individual_view
+SUBTYPE OF (Product_view_definition);
+  SELF\Product_view_definition.defined_version : Product_as_individual_version;
+END_ENTITY;
+
+ENTITY Product_as_planned
+SUBTYPE OF (Product_as_individual_version);
+END_ENTITY;
+
+ENTITY Product_as_realized
+SUBTYPE OF (Product_as_individual_version);
+END_ENTITY;
+
+ENTITY Product_design_to_individual;
+  product_design : Product;
+  individual_product : Product_as_individual;
+END_ENTITY;
+
+ENTITY Product_design_version_to_individual;
+  product_design_version : product_version_or_configuration;
+  individual_product : Product_as_individual_version;
+END_ENTITY;
+
+ENTITY Product_design_view_to_individual;
+  product_as_individual_view : Product_as_individual_view;
+  product_view_definition : product_design_view_or_configuration;
+END_ENTITY;
+
+ENTITY Product_planned_to_realized;
+  planned_product : Product_as_planned;
+  realized_product : Product_as_realized;
+END_ENTITY;
+
+END_SCHEMA;  -- Product_as_individual_arm
+

@@ -1,0 +1,28 @@
+(*
+ISO TC184/SC4/WG12 N10735 - ISO/TS 10303-1026 Assembly structure - EXPRESS MIM
+Supersedes ISO TC184/SC4/WG12 N7730
+*) 
+
+SCHEMA Assembly_structure_mim;
+
+USE FROM Product_view_definition_mim;    -- ISO/TS 10303-1019
+
+USE FROM Product_view_definition_reference_mim; -- ISO/TS 10303-1738
+
+USE FROM Value_with_unit_mim;    -- ISO/TS 10303-1054
+
+USE FROM product_structure_schema   -- ISO 10303-44
+  (assembly_component_usage,
+   multi_level_reference_designator,
+   next_assembly_usage_occurrence,
+   product_definition_occurrence, 
+   promissory_usage_occurrence,
+   quantified_assembly_component_usage,
+   specified_higher_usage_occurrence); 
+
+
+END_SCHEMA;  -- Assembly_structure_mim
+
+
+
+

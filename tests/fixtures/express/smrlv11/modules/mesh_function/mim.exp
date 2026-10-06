@@ -1,0 +1,15 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.5 2009/09/03 18:59:52 darla Exp
+   ISO/CD-TS WG12 N6734 10303-1385 mesh_function - EXPRESS MIM*)
+
+SCHEMA Mesh_function_mim;
+
+USE FROM Generic_expression_mim;
+
+USE FROM mesh_function_schema;
+
+USE FROM Mesh_topology_mim;
+
+END_SCHEMA;
+

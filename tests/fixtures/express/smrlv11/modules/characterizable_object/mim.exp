@@ -1,0 +1,19 @@
+(*
+   $Id: mim.exp,v 1.11 2019/06/10 20:32:27 kevin Exp $
+   ISO TC184/SC4/WG12 N10538 - ISO/TS 10303-1765 Characterizable object - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N9294
+*)
+
+SCHEMA Characterizable_object_mim;
+
+USE FROM Activity_mim;      -- ISO/TS 10303-1047
+USE FROM product_property_definition_schema   -- ISO 10303-41
+  (characterized_object);
+USE FROM Shape_property_assignment_mim; -- ISO/TS 10303-1032
+USE FROM Support_resource_mim;   -- ISO 10303-41
+
+TYPE co_action_items = SELECT BASED_ON action_items WITH
+  (characterized_object);
+END_TYPE;
+
+END_SCHEMA;

@@ -1,0 +1,150 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.10 2017/10/26 13:04:04 verodub Exp
+ ISO TC184/SC4/WG12 N9899 - ISO/TS 10303-1380 Fea_definition_relationships_arm - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N6720
+*)
+
+SCHEMA Fea_definition_relationships_arm;
+
+USE FROM Activity_arm;                 --ISO/TS 10303-1047
+
+USE FROM Analysis_arm;                 --ISO/TS 10303-1372
+
+USE FROM Elemental_topology_arm;       --ISO/TS 10303-1005
+
+USE FROM Finite_element_analysis_arm;  --ISO/TS 10303-1381
+
+USE FROM Finite_elements_arm;          --ISO/TS 10303-1383
+
+USE FROM Independent_property_arm;     --ISO/TS 10303-1036
+
+USE FROM Product_analysis_arm;--ISO/TS 10303-1387
+
+USE FROM Product_view_definition_arm;--ISO/TS 10303-1019
+
+USE FROM Property_assignment_arm;--ISO/TS 10303-1030
+
+TYPE discretised_action_model_select = EXTENSIBLE SELECT 
+  (Fe_analysis_control_step,
+   Model_action_domain);
+END_TYPE;
+
+TYPE discretised_product_model_select = EXTENSIBLE SELECT 
+  (Fea_model,
+   Model_product_domain);
+END_TYPE;
+
+TYPE discretised_state_model_select = EXTENSIBLE SELECT 
+  (Fe_analysis_state,
+   Model_state_domain);
+END_TYPE;
+
+TYPE idealised_action_select = EXTENSIBLE SELECT 
+  (Activity,
+   Physical_action_domain);
+END_TYPE;
+
+TYPE idealised_product_select = EXTENSIBLE SELECT 
+  (Physical_product_domain,
+   Product_view_definition);
+END_TYPE;
+
+TYPE idealised_state_select = EXTENSIBLE SELECT 
+  (Physical_state_domain);
+END_TYPE;
+
+ENTITY Action_view_relationship;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  discretised_model : discretised_action_model_select;
+  idealised_action : idealised_action_select;
+END_ENTITY;
+
+ENTITY Element_topological_relationship;
+  element_ref : element;
+  item : Detailed_topological_model_element;
+  aspect : Element_shape_aspect;
+END_ENTITY;
+
+ENTITY Fea_beam_section_idealisation_relationship;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  idealised : Independent_property;
+  idealising : Curve_section_properties;
+END_ENTITY;
+
+ENTITY Fea_model_topological_relationship;
+  item : Detailed_topological_model_element;
+  model_ref : Fea_model;
+END_ENTITY;
+
+ENTITY Fea_shell_section_distribution_idealisation_relationship;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  idealised : Assigned_property;
+  idealising : Surface_property;
+END_ENTITY;
+
+ENTITY Fea_shell_section_idealisation_relationship;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  idealised : Independent_property;
+  idealising : Surface_property;
+END_ENTITY;
+
+ENTITY Node_topological_relationship;
+  item : Detailed_topological_model_element;
+  node_ref : Node;
+END_ENTITY;
+
+ENTITY Product_view_relationship;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  discretised_model : discretised_product_model_select;
+  idealised_product : idealised_product_select;
+END_ENTITY;
+
+ENTITY Same_discretised_action_model;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  equivalent_records : SET [2 : ?] OF discretised_action_model_select;
+END_ENTITY;
+
+ENTITY Same_discretised_state_model;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  equivalent_records : SET [2 : ?] OF discretised_state_model_select;
+END_ENTITY;
+
+ENTITY Same_idealised_action;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  equivalent_records : SET [2 : ?] OF idealised_action_select;
+END_ENTITY;
+
+ENTITY Same_idealised_state;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  equivalent_records : SET [2 : ?] OF idealised_state_select;
+END_ENTITY;
+
+ENTITY State_view_relationship;
+  id : STRING;
+  name : STRING;
+  description : OPTIONAL STRING;
+  discretised_model : discretised_state_model_select;
+  idealised_state : idealised_state_select;
+END_ENTITY;
+
+END_SCHEMA;
+

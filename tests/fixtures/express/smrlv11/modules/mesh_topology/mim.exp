@@ -1,0 +1,15 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.8 2010/02/19 21:21:37 lothartklein Exp
+   ISO/CD-TS WG12 N6747 10303-1386 mesh_topology - EXPRESS MIM*)
+
+SCHEMA Mesh_topology_mim;
+
+USE FROM Basic_geometric_topology_mim;    --  ISO/TS 10303-1323
+USE FROM Elemental_topology_mim;    --  ISO/TS 10303-1005
+USE FROM Finite_elements_mim;    --  ISO/CD-TS 10303-1383
+USE FROM Maths_space_mim;    --  ISO/TS 10303-1091
+USE FROM Support_resource_mim;    --  ISO/TS 10303-1800
+USE FROM mesh_topology_schema;    --  ISO 10303-52
+
+END_SCHEMA;

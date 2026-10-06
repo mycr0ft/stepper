@@ -1,0 +1,52 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.17 2019/01/14 18:51:35 brandon Exp
+   ISO TC184/SC4/WG12 N10354 - ISO/TS 10303-1807 General part feature - EXPRESS ARM
+   Supersedes ISO TC184/SC4/WG12 N9692
+*)
+
+SCHEMA Part_shape_arm;
+
+USE FROM Part_view_definition_arm;    --  ISO/TS 10303-1023
+USE FROM Shape_feature_arm; -- ISO/TS 10303-1764
+USE FROM Shape_property_assignment_arm; -- ISO/TS 10303-1032
+
+TYPE part_view_definition_or_part_shape_element_select = EXTENSIBLE SELECT (
+  Part_shape_element,
+  Part_view_definition);
+END_TYPE; 
+
+TYPE part_shape_element_definition_select = EXTENSIBLE GENERIC_ENTITY SELECT (
+  Shape_feature_definition,
+  Part_shape_element); 
+END_TYPE; 
+
+TYPE ps_initial_application_domain_enumeration = ENUMERATION BASED_ON initial_application_domain_enumeration WITH (
+  electrical,
+  thermal);
+END_TYPE;
+
+TYPE ps_additional_application_domain_enumeration = ENUMERATION BASED_ON additional_application_domain_enumeration WITH (
+  electrical,
+  thermal);
+END_TYPE;
+
+ENTITY Part_shape_element
+  SUBTYPE OF (Shape_element);
+  SELF\Shape_element.associated_definition : part_view_definition_or_part_shape_element_select;
+  definition : OPTIONAL part_shape_element_definition_select; 
+END_ENTITY;  
+
+ENTITY Part_shape_element_relationship
+  SUBTYPE OF (Shape_element_relationship);
+  SELF\Shape_element_relationship.related : Part_shape_element;
+  SELF\Shape_element_relationship.relating : Part_shape_element;
+END_ENTITY;  
+
+ENTITY General_part_feature
+  SUBTYPE OF (Part_shape_element);
+DERIVE
+  SELF\Shape_element.product_definitional : BOOLEAN := TRUE;
+END_ENTITY;  
+
+END_SCHEMA;

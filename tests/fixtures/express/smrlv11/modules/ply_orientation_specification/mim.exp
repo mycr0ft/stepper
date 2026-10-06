@@ -1,0 +1,111 @@
+(*
+ $Id: mim.exp,v 1.30 2017/11/19 20:27:57 thomasrthurman Exp $
+ ISO TC184/SC4/WG12 N9895 - ISO/TS 10303-1772 Ply orientation specification - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N8897
+*)
+
+SCHEMA Ply_orientation_specification_mim;
+
+USE FROM geometry_schema (direction, point);   -- ISO 10303-42
+USE FROM Measure_representation_mim;   -- ISO/TS 10303-1118
+USE FROM Part_and_zone_laminate_tables_mim; -- ISO/CD-TS 10303-1770
+USE FROM representation_schema(   -- ISO 10303-43
+  compound_representation_item);
+USE FROM Value_with_unit_mim;   -- ISO/TS 10303-1054
+
+  TYPE basis_11_direction_member = SELECT
+    (cartesian_11,
+     curve_11,
+     cylindrical_11,
+     polar_11,
+     point_array,
+     user_defined_11);
+  END_TYPE;
+ 
+  TYPE point_and_vector_member = SELECT
+    (point,
+     direction);
+  END_TYPE;
+
+  TYPE point_and_vector_members = LIST [2:3] OF point_and_vector_member;
+  END_TYPE;
+
+  TYPE point_array_members = LIST [1:?] OF point_and_vector;
+  END_TYPE;
+ 
+ 
+  ENTITY cartesian_11
+    SUBTYPE OF (geometric_representation_item);
+  WHERE
+    WR1: 'PLY_ORIENTATION_SPECIFICATION_MIM.AXIS2_PLACEMENT_3D' IN TYPEOF(SELF);
+  END_ENTITY;
+ 
+  ENTITY curve_11
+    SUBTYPE OF (geometric_representation_item);
+  WHERE
+    WR1: ('PLY_ORIENTATION_SPECIFICATION_MIM.CURVE' IN TYPEOF(SELF)) OR
+         ('PLY_ORIENTATION_SPECIFICATION_MIM.MEASURE_REPRESENTATION_ITEM' IN TYPEOF(SELF));
+  END_ENTITY;
+ 
+  ENTITY cylindrical_11
+    SUBTYPE OF (geometric_representation_item);
+  WHERE
+    WR1: ('PLY_ORIENTATION_SPECIFICATION_MIM.CURVE' IN TYPEOF(SELF));
+ END_ENTITY;
+ 
+  ENTITY draped_orientation_angle
+    SUBTYPE OF (ply_orientation_angle);
+  END_ENTITY;
+
+  ENTITY laid_orientation_angle
+    SUBTYPE OF (ply_orientation_angle);
+  END_ENTITY;
+
+  ENTITY ply_angle_representation
+    SUBTYPE OF (representation);
+      self\representation.items : SET [1:1] OF measure_representation_item;
+  END_ENTITY;
+ 
+  ENTITY ply_orientation_angle
+    SUBTYPE of (representation_relationship);
+      SELF\representation_relationship.rep_1 : reinforcement_orientation_basis;
+      SELF\representation_relationship.rep_2 : ply_angle_representation;
+  END_ENTITY;
+
+  ENTITY point_and_vector
+    SUBTYPE OF (compound_representation_item, geometric_representation_item);
+      SELF\compound_representation_item.item_element : point_and_vector_members;
+  END_ENTITY;
+
+  ENTITY point_array
+    SUBTYPE OF (compound_representation_item, geometric_representation_item);
+      SELF\compound_representation_item.item_element : point_array_members;
+  END_ENTITY;
+
+  ENTITY polar_11
+    SUBTYPE OF (geometric_representation_item);
+  WHERE
+    WR1: ('PLY_ORIENTATION_SPECIFICATION_MIM.AXIS2_PLACEMENT_3D' IN TYPEOF(SELF));
+  END_ENTITY;
+ 
+  ENTITY reinforcement_orientation_basis
+    SUBTYPE OF (representation);
+      SELF\representation.items : SET[1:1] OF basis_11_direction_member;
+  END_ENTITY;
+ 
+  ENTITY user_defined_11
+    SUBTYPE OF (representation_item);
+  END_ENTITY;
+ 
+  SUBTYPE_CONSTRAINT pos_representation_subtypes FOR representation;
+    ONEOF (reinforcement_orientation_basis,
+           ply_angle_representation);
+  END_SUBTYPE_CONSTRAINT;
+ 
+  SUBTYPE_CONSTRAINT pos_compound_representation_item_subtypes FOR compound_representation_item;
+    ONEOF (point_and_vector,
+	       point_array);
+  END_SUBTYPE_CONSTRAINT;
+
+ 
+END_SCHEMA;

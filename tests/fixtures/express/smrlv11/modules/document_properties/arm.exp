@@ -1,0 +1,63 @@
+ (*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: arm.exp,v 1.27 2019/04/03 14:35:03 kevin Exp
+ ISO TC184/SC4/WG12 N10408 - ISO/TS 10303-1126 Document properties - EXPRESS ARM
+ Supersedes ISO TC184/SC4/WG12 N7996
+*)
+
+
+SCHEMA Document_properties_arm;
+
+USE FROM Document_definition_arm;    -- ISO/TS 10303-1123
+
+USE FROM File_identification_arm;    -- ISO/TS 10303-1127
+
+USE FROM Foundation_representation_arm;    -- ISO/TS 10303-1006
+
+USE FROM Measure_representation_arm;    -- ISO/TS 10303-1118
+
+USE FROM Property_assignment_arm;    -- ISO/TS 10303-1030
+
+
+TYPE descriptive_or_numerical = SELECT
+   (Descriptive_document_property, 
+    Numerical_document_property);
+END_TYPE; 
+
+TYPE document_property_item = SELECT BASED_ON property_assignment_select WITH 
+   (Document_definition, 
+    File);
+END_TYPE; 
+
+ENTITY Assigned_document_property
+  SUBTYPE OF (Assigned_property);
+  SELF\Assigned_property.described_element : document_property_item;
+DERIVE
+  SELF\Assigned_property.name : STRING := 'document property';
+WHERE
+  WR1: SIZEOF(['DOCUMENT_PROPERTIES_ARM.DOCUMENT_DEFINITION', 'DOCUMENT_PROPERTIES_ARM.FILE']*TYPEOF(SELF\Assigned_property.described_element)) = 1;
+END_ENTITY;
+
+ENTITY Descriptive_document_property
+  SUBTYPE OF (String_representation_item);
+INVERSE
+  valued_characteristic : SET[1:1] OF Document_property_representation FOR items;
+END_ENTITY;
+
+ENTITY Document_property_representation
+  SUBTYPE OF (Representation);
+  SELF\Representation.items : SET[1:?] OF descriptive_or_numerical;
+WHERE
+  WR1: SIZEOF(QUERY( pr <* USEDIN(SELF, 'PROPERTY_ASSIGNMENT_ARM.PROPERTY_DEFINITION_REPRESENTATION.USED_REPRESENTATION') | 'DOCUMENT_PROPERTIES_ARM.ASSIGNED_PROPERTY' IN TYPEOF (pr\Property_representation.property)))> 0;
+  WR2: SELF\Representation.context_of_items.kind = 'document parameters';
+  WR3: SIZEOF(QUERY(it1 <* SELF\Representation.items | (it1.name <> 'geometry type') AND (SIZEOF(QUERY(it2 <* SELF\Representation.items | it1.name = it2.name)) > 1 )))= 0;
+END_ENTITY;
+
+ENTITY Numerical_document_property
+  SUBTYPE OF (Numerical_item_with_unit);
+INVERSE
+  valued_characteristic : SET[1:1] OF Document_property_representation FOR items;
+END_ENTITY;
+
+END_SCHEMA;  -- Document_properties_arm
+

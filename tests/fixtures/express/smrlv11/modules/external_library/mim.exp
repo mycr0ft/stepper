@@ -1,0 +1,17 @@
+(*
+   Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.7 2009/04/22 20:07:48 liutkuviene Exp
+   ISO TC184/SC4/WG12 N6235 - ISO/TS 10303-1778 External library - EXPRESS MIM
+   Supersedes ISO TC184/SC4/WG12 N5381
+*)
+SCHEMA External_library_mim;
+
+USE FROM External_source_mim;  -- ISO/TS 10303-1331
+
+USE FROM Plib_class_reference_mim; -- ISO/TS 10303-1291
+
+  TYPE el_external_identification_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON external_identification_item WITH  
+    (external_source);
+  END_TYPE;
+
+END_SCHEMA;

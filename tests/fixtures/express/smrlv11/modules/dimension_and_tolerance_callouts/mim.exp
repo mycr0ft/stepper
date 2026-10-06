@@ -1,0 +1,119 @@
+(*
+ ISO TC184/SC4/WG12 N11235 - ISO/TS 10303-1362 Dimension and tolerance callouts - EXPRESS MIM
+ Supersedes ISO TC184/SC4/WG12 N10201
+*) 
+
+SCHEMA Dimension_and_tolerance_callouts_mim;
+
+USE FROM Appearance_assignment_mim;  -- ISO/TS 10303-1001
+USE FROM Associative_draughting_elements_mim; -- ISO/TS 10303-1311
+USE FROM Associative_text_mim; -- ISO/TS 10303-1132
+USE FROM Basic_geometry_mim; -- ISO/TS 10303-1652
+USE FROM Draughting_annotation_mim; -- ISO/TS 10303-1206
+USE FROM draughting_element_schema -- ISO 10303-101
+		(draughting_model_item_definition); 
+USE FROM Draughting_element_specialisations_mim; -- ISO/TS 10303-1312
+USE FROM Elemental_geometric_shape_mim; -- ISO/TS 10303-1004
+USE FROM Geometric_tolerance_mim; -- ISO/TS 10303-1051
+USE FROM geometry_schema    -- ISO 10303-42 
+       (axis2_placement_2d,
+        axis2_placement_3d,
+        cartesian_point,
+        point_on_curve,
+        point_on_surface);
+USE FROM mechanical_design_schema   --ISO 10303-113  
+        (annotation_placeholder_occurrence,
+         draughting_model_item_association_with_placeholder,
+         md_draughting_callout_element,
+         md_geometric_set_select); 
+USE FROM presentation_definition_schema    --ISO 10303-46
+         (annotation_text);   
+USE FROM presentation_resource_schema   --ISO 10303-46
+          (planar_box); 
+USE FROM product_property_definition_schema --ISO 10303-41
+		(characterized_object,
+         property_definition, 
+         product_definition_shape, 
+         shape_aspect,
+         shape_aspect_relationship); 
+
+USE FROM shape_dimension_schema -- ISO 10303-47
+        (angular_size,
+         dimensional_location,
+         dimensional_location_with_normal_constraint, 
+         dimensional_location_with_path,
+         dimensional_size_with_path,
+         dimensional_size,
+         directed_dimensional_location);
+
+USE FROM shape_tolerance_schema -- ISO 10303-47 
+        (angularity_tolerance,
+         group_geometric_tolerance_with_datum_system_reference,
+         geometric_tolerance,
+         circular_runout_tolerance,
+         coaxiality_tolerance,
+         concentricity_tolerance,
+         cylindricity_tolerance,
+         datum_system_for_composite_group_element,
+         flatness_tolerance,
+         line_profile_tolerance,
+         geometric_tolerance_with_datum_reference, 
+         geometric_tolerance_with_defined_unit,
+         geometric_tolerance_with_defined_area_unit,
+         geometric_tolerance_with_maximum_tolerance,
+         geometric_tolerance_with_modifiers, 
+         modified_geometric_tolerance,
+         parallelism_tolerance,
+         perpendicularity_tolerance,
+         position_tolerance,
+         roundness_tolerance,
+         straightness_tolerance,
+         surface_profile_tolerance,
+         symmetry_tolerance,
+         total_runout_tolerance,
+         unequally_disposed_geometric_tolerance);
+
+USE FROM Value_with_unit_mim; -- ISO/TS 10303-1054
+
+TYPE datc_draughting_model_item_definition = SELECT BASED_ON draughting_model_item_definition WITH (
+  angularity_tolerance,
+  dimensional_location,
+  dimensional_size,
+  circular_runout_tolerance,
+  coaxiality_tolerance,
+  group_geometric_tolerance_with_datum_system_reference,
+  concentricity_tolerance,
+  cylindricity_tolerance,
+  datum_system_for_composite_group_element,
+  flatness_tolerance,
+  line_profile_tolerance,
+  geometric_tolerance,
+  geometric_tolerance_with_datum_reference, 
+  geometric_tolerance_with_defined_unit,
+  geometric_tolerance_with_defined_area_unit,
+  geometric_tolerance_with_maximum_tolerance,
+  geometric_tolerance_with_modifiers, 
+  modified_geometric_tolerance,
+  parallelism_tolerance,
+  perpendicularity_tolerance,
+  position_tolerance,
+  property_definition,
+  roundness_tolerance,
+  straightness_tolerance,
+  surface_profile_tolerance,
+  symmetry_tolerance,
+  total_runout_tolerance,
+  unequally_disposed_geometric_tolerance);
+END_TYPE;
+
+TYPE dimensioning_standard_document_reference_item = EXTENSIBLE GENERIC_ENTITY SELECT BASED_ON document_reference_item WITH 
+  (product_definition);
+END_TYPE; 
+
+ENTITY dimension_curve_terminator_to_projection_curve_associativity
+  SUBTYPE OF(annotation_occurrence_associativity);
+  SELF\annotation_occurrence_relationship.relating_annotation_occurrence : dimension_curve_terminator;
+  SELF\annotation_occurrence_relationship.related_annotation_occurrence  : projection_curve;
+END_ENTITY;
+
+END_SCHEMA; 

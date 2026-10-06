@@ -1,0 +1,16 @@
+(*
+ Part1000: $Id: $
+ STEPmod.CVS.Id: mim.exp,v 1.4 2009/08/11 07:52:38 robbod Exp
+ ISO TC184/SC4/WG12 N6040 - ISO/TS 10303-1398 Identification relationship - EXPRESS MIM
+*) 
+
+
+SCHEMA Identification_relationship_mim;
+
+USE FROM Identification_assignment_mim;    -- ISO/TS 10303-1021
+
+USE FROM management_resources_schema   -- ISO 10303-41
+  (identification_assignment_relationship); 
+
+
+END_SCHEMA;  -- Identification_relationship_mim

@@ -1,0 +1,85 @@
+(*
+$Id: classification_schema.exp,v 1.11 2014/03/04 00:30:32 thomasrthurman Exp $
+ISO 10303 TC184/SC4/WG12 N3213
+
+EXPRESS Source:
+ISO 10303-54 ed1 Classification and set theory - Classification schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2014  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-54 ed1 Classification and set theory - Classification schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA classification_schema '{iso standard 10303 part(54) version(1) object(1) classification_schema(1)}';
+
+REFERENCE FROM group_schema   -- ISO 10303-41
+  (group); 
+
+REFERENCE FROM management_resources_schema   -- ISO 10303-41
+  (classification_assignment); 
+
+
+TYPE classification_select = EXTENSIBLE SELECT;
+END_TYPE; 
+
+TYPE complete_membership_select = EXTENSIBLE SELECT;
+END_TYPE; 
+
+ENTITY class
+  SUBTYPE OF (group);
+END_ENTITY;
+
+ENTITY class_by_extension
+  SUBTYPE OF (class);
+END_ENTITY;
+
+ENTITY class_by_intension
+  SUBTYPE OF (class);
+END_ENTITY;
+
+ENTITY classification
+  SUBTYPE OF (classification_assignment);
+  classified : classification_select;
+DERIVE
+  classifier : class := SELF\classification_assignment.assigned_class;
+END_ENTITY;
+
+ENTITY complete_membership
+  SUBTYPE OF (classification_assignment);
+DERIVE
+  containing_set : class := SELF\classification_assignment.assigned_class;
+END_ENTITY;
+
+ENTITY complete_membership_of_empty_set
+  SUBTYPE OF (complete_membership);
+END_ENTITY;
+
+ENTITY complete_membership_of_non_empty_set
+  SUBTYPE OF (complete_membership);
+  members : SET[1:?] OF complete_membership_select;
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT classification_or_complete_membership FOR classification_assignment;
+  ONEOF (classification,
+         complete_membership);
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;  -- classification_schema
