@@ -29,8 +29,23 @@ def _entities(schema):
     return ents() if callable(ents) else ents
 
 
+STEPCODE_ROOT = os.path.join(os.path.dirname(__file__), "fixtures", "express", "stepcode")
+STEPCODE = sorted(glob.glob(os.path.join(STEPCODE_ROOT, "*.exp")))
+
+
 def test_corpus_present():
     assert len(ALL) >= 300, f"corpus missing: only {len(ALL)} schemas"
+
+
+def test_stepcode_corpus_present():
+    """stepcode edge-case schemas (BSD; incl. the WHERE-rule corpus)."""
+    assert len(STEPCODE) == 75, len(STEPCODE)
+
+
+@pytest.mark.parametrize("path", STEPCODE)
+def test_stepcode_schema_parses(path):
+    ents = _entities(load_express(path))
+    assert isinstance(ents, dict)
 
 
 def test_corpus_subdirs_complete():
