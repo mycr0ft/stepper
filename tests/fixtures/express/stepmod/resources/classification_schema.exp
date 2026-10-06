@@ -1,0 +1,54 @@
+(* 
+ $Id: classification_schema.exp,v 1.5 2004/10/27 16:57:12 thendrix Exp $
+ Extracted from:
+ ISO TC184/SC4/WG12 N00000 - ISO/IS 10303-54 Classification and set theory - EXPRESS
+*) 
+
+
+SCHEMA classification_schema; 
+
+USE FROM group_schema;    -- ISO 10303-41
+
+REFERENCE FROM group_schema   -- ISO 10303-41
+  (group); 
+
+REFERENCE FROM management_resources_schema   -- ISO 10303-41
+  (classification_assignment); 
+
+
+TYPE classification_select = EXTENSIBLE SELECT;
+END_TYPE; 
+
+TYPE complete_membership_select = EXTENSIBLE SELECT;
+END_TYPE; 
+
+ENTITY class
+  SUBTYPE OF (group);
+END_ENTITY;
+
+ENTITY class_by_extension
+  SUBTYPE OF (class);
+END_ENTITY;
+
+ENTITY class_by_intension
+  SUBTYPE OF (class);
+END_ENTITY;
+
+ENTITY classification
+  SUBTYPE OF (classification_assignment);
+  classified : classification_select;
+DERIVE
+  classifier : class := SELF\classification_assignment.assigned_class;
+END_ENTITY;
+
+ENTITY complete_membership
+  SUBTYPE OF (classification_assignment);
+  members : SET[0:?] OF complete_membership_select;
+DERIVE
+  containing_set : class := SELF\classification_assignment.assigned_class;
+END_ENTITY;
+
+SUBTYPE_CONSTRAINT classification_or_complete_membership FOR classification_assignment;
+END_SUBTYPE_CONSTRAINT;
+
+END_SCHEMA;  -- classification_schema
