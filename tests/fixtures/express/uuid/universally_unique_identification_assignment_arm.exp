@@ -1,0 +1,102 @@
+(*
+   N11523 - ISO/TS 10303-1028 universally_unique_identification_assignment - EXPRESS ARM*)
+SCHEMA Universally_unique_identification_assignment_arm;
+
+USE FROM Elemental_geometric_shape_arm;
+REFERENCE FROM Foundation_representation_arm 
+                 (using_representations);
+
+  TYPE uuid = STRING (36) FIXED;
+  END_TYPE;
+
+  TYPE uuid_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT;
+  END_TYPE;
+
+  TYPE uuid_list_item = LIST [1:?] OF UNIQUE LIST [1:?] OF UNIQUE uuid_attribute_select; 
+  END_TYPE; 
+
+  TYPE uuid_set_item = SET [1:?] OF uuid_attribute_select;
+  END_TYPE; 
+
+  TYPE uuid_set_or_list_attribute_select = SELECT
+    (uuid_list_item,
+     uuid_set_item);
+  END_TYPE;
+
+  TYPE uuid_relationship_role = ENUMERATION OF
+    (supersedes,
+     merge,
+     split,
+     derive_from,
+     same_as,
+     similar_to);
+  END_TYPE;
+
+ENTITY Uuid_attribute
+  ABSTRACT SUPERTYPE OF 
+     (ONEOF(V5_uuid_attribute, V4_uuid_attribute) ANDOR 
+        Uuid_attribute_with_approximate_location);
+      identifier      : uuid;
+      identified_item : uuid_set_or_list_attribute_select;
+    UNIQUE
+      UR1 : identifier;
+END_ENTITY;
+
+ENTITY V5_uuid_attribute
+  SUBTYPE OF(Uuid_attribute);
+END_ENTITY;
+
+ENTITY Hash_based_v5_uuid_attribute
+  SUBTYPE OF(V5_uuid_attribute);
+      hash_function : STRING;
+    WHERE
+      WR1 : hash_function <> '';
+END_ENTITY;
+
+ENTITY V4_uuid_attribute
+    SUBTYPE OF(Uuid_attribute);
+END_ENTITY;
+
+ENTITY Uuid_attribute_with_approximate_location
+  SUBTYPE OF(Uuid_attribute);
+      location_representation : Geometric_model;
+      approximate_location    : Cartesian_point;
+    WHERE
+      WR1 : location_representation IN using_representations(approximate_location);
+END_ENTITY;
+
+ENTITY Uuid_context;
+      identifier         : uuid;
+      frame_of_reference : STRING;
+      target             : SET [1:?] OF uuid;
+    UNIQUE
+      UR1 : identifier;
+      UR2 : frame_of_reference, target;
+    WHERE
+      WR1 : frame_of_reference <> '';
+END_ENTITY;
+
+ENTITY Uuid_provenance;
+      content    : LIST [1:?] OF UNIQUE Uuid_relationship;
+      identifier : uuid;
+    UNIQUE
+      UR1 : identifier;
+END_ENTITY;
+
+ENTITY Uuid_relationship;
+      identifier : uuid;
+      uuid_2     : uuid;
+      uuid_1     : uuid;
+      role       : uuid_relationship_role;
+    UNIQUE
+      UR1 : identifier;
+    WHERE
+     WR1: uuid_1 <> uuid_2;
+     WR2: uuid_1 <> identifier;
+     WR3: uuid_2 <> identifier;
+--IP1:
+END_ENTITY;
+  
+ 
+END_SCHEMA;
+

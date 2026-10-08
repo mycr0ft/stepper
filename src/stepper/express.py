@@ -185,6 +185,7 @@ def _parse_entity_body(name: str, body: str) -> ExpressEntity:
             derived.append((am.group(1), am.group(2).strip()[:120]))
 
     ent.attributes = attrs
+    ent.explicit_attrs = list(attrs)
     ent.derived_attrs = derived
 
     # SELF\redeclarations

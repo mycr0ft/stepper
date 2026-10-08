@@ -1,0 +1,158 @@
+(*
+ISO 10303 TC184/SC4/WG12 N11569
+
+EXPRESS Source:
+ISO 10303-41 ed8 Fundamentals of product description and support - Support resource schema
+
+The following permission notice and disclaimer shall be included in all copies of this EXPRESS schema ("the Schema"), 
+and derivations of the Schema:
+
+Copyright ISO 2025  All rights reserved
+Permission is hereby granted, free of charge in perpetuity, to any person obtaining a copy of the Schema,
+to use, copy, modify, merge and distribute free of charge, copies of the Schema for the purposes of developing, 
+implementing, installing and using software based on the Schema, and to permit persons to whom the Schema is furnished to do so, 
+subject to the following conditions:
+
+THE SCHEMA IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SCHEMA OR THE 
+USE OR OTHER DEALINGS IN THE SCHEMA.
+
+In addition, any modified copy of the Schema shall include the following notice:
+
+THIS SCHEMA HAS BEEN MODIFIED FROM THE SCHEMA DEFINED IN
+ISO 10303-41 ed8 Fundamentals of product description and support - Support resource schema
+AND SHOULD NOT BE INTERPRETED AS COMPLYING WITH THAT STANDARD
+*)
+
+SCHEMA uuid_attribute_schema '{iso standard 10303 part(41) version(1) object(1) uuid_attribute_schema(23)}';
+
+REFERENCE FROM basic_attribute_schema;
+
+REFERENCE FROM product_property_representation_schema
+               (shape_representation);
+
+REFERENCE FROM geometry_schema
+                (cartesian_point);
+
+REFERENCE FROM representation_schema
+               (using_representations);
+
+REFERENCE FROM support_resource_schema
+               (bag_to_set);
+
+  TYPE uuid = STRING (36) FIXED;
+  END_TYPE;
+
+  TYPE uuid_list_item = LIST [1:?] OF UNIQUE LIST [1:?] OF UNIQUE uuid_attribute_select; 
+  END_TYPE; 
+
+  TYPE uuid_set_item = SET [1:?] OF uuid_attribute_select;
+  END_TYPE; 
+
+  TYPE uuid_set_or_list_attribute_select = SELECT
+    (uuid_list_item,
+     uuid_set_item);
+  END_TYPE;
+    
+  TYPE uuid_attribute_select = EXTENSIBLE GENERIC_ENTITY SELECT
+    (id_attribute_select);
+  END_TYPE;
+
+  TYPE uuid_relationship_role = ENUMERATION OF
+    (supersedes,
+     merge,
+     split,
+     derive_from,
+     same_as,
+     similar_to);
+  END_TYPE;
+
+  ENTITY uuid_attribute
+    ABSTRACT
+    SUPERTYPE OF (ONEOF(v5_uuid_attribute, v4_uuid_attribute) ANDOR uuid_attribute_with_approximate_location);
+      identifier      : uuid;
+      identified_item : uuid_set_or_list_attribute_select;
+    UNIQUE
+      UR1 : identifier;
+  END_ENTITY;
+
+  ENTITY v4_uuid_attribute
+    SUBTYPE OF(uuid_attribute);
+    WHERE
+     WR1 : SELF\uuid_attribute.identifier[14] = '4';
+  END_ENTITY;
+
+  ENTITY v5_uuid_attribute
+    SUBTYPE OF(uuid_attribute);
+    WHERE
+     WR1 : SELF\uuid_attribute.identifier[14] = '5';
+  END_ENTITY;
+
+  ENTITY hash_based_v5_uuid_attribute
+    SUBTYPE OF(v5_uuid_attribute);
+      hash_function : STRING;
+    WHERE
+      WR1 : hash_function <> '';
+  END_ENTITY;
+
+  ENTITY uuid_attribute_with_approximate_location
+    SUBTYPE OF(uuid_attribute);
+      location_representation : shape_representation;
+      approximate_location    : cartesian_point;
+    WHERE
+      WR1 : location_representation IN using_representations(approximate_location);
+  END_ENTITY;
+
+  ENTITY uuid_context;
+      identifier         : uuid;
+      frame_of_reference : STRING;
+      target             : SET [1:?] OF uuid;
+    UNIQUE
+      UR1 : identifier;
+      UR2 : frame_of_reference, target;
+    WHERE
+      WR1 : frame_of_reference <> '';
+  END_ENTITY;
+
+  ENTITY uuid_provenance;
+      identifier : uuid;
+      content    : LIST [1:?] OF UNIQUE uuid_relationship;
+    UNIQUE
+      UR1 : identifier;
+  END_ENTITY;
+
+  ENTITY uuid_relationship;
+      identifier : uuid;
+      uuid_1     : uuid;
+      uuid_2     : uuid;
+      role       : uuid_relationship_role;
+    UNIQUE
+      UR1 : identifier;
+    WHERE
+     WR1: uuid_1 <> uuid_2;
+     WR2: uuid_1 <> identifier;
+     WR3: uuid_2 <> identifier;
+     WR4: acyclic_uuid_relationship(SELF, [uuid_2], 'UUID_ATTRIBUTE_SCHEMA.UUID_RELATIONSHIP'); 
+  END_ENTITY;
+  
+ FUNCTION acyclic_uuid_relationship (relation : uuid_relationship; relatives : SET [1:?] OF uuid; specific_relation : STRING):BOOLEAN;
+    LOCAL
+      x : SET OF uuid_relationship;
+    END_LOCAL;
+
+    IF relation.uuid_1 IN relatives THEN
+      RETURN (FALSE);
+    END_IF;
+    x := QUERY(am <* bag_to_set(USEDIN(relation.uuid_1, 'UUID_ATTRIBUTE_SCHEMA.' + 'UUID_RELATIONSHIP.' + 'UUID_2')) | specific_relation IN TYPEOF(am));
+    REPEAT i := 1 TO HIINDEX(x);
+      IF NOT acyclic_uuid_relationship(x[i], relatives + relation.uuid_1, specific_relation) THEN
+        RETURN (FALSE);
+      END_IF;
+    END_REPEAT;
+    RETURN (TRUE);
+  END_FUNCTION;
+
+END_SCHEMA;

@@ -1,0 +1,9 @@
+(*
+ WG12 N11524  ISO/TS 10303-1028 universally_unique_identification_assignment - EXPRESS MIM*)
+SCHEMA Universally_unique_identification_assignment_mim;
+USE FROM Elemental_geometric_shape_mim;
+REFERENCE FROM representation_schema 
+                 (using_representations);
+USE FROM uuid_attribute_schema;
+
+END_SCHEMA;
