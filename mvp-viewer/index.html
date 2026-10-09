@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>stepper OSLC viewer — MVP spike</title>
+<style>
+  :root { --bg:#10141a; --pane:#171d26; --edge:#2a3340; --fg:#d8dee7;
+          --dim:#8a93a2; --acc:#4f9cf9; --ok:#5fbf77; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:14px/1.45 system-ui, sans-serif; height:100vh;
+         display:flex; flex-direction:column; }
+  header { padding:.6rem 1rem; border-bottom:1px solid var(--edge);
+           display:flex; gap:.6rem; align-items:center; }
+  header input { flex:1; background:var(--pane); border:1px solid var(--edge);
+                 color:var(--fg); padding:.45rem .7rem; border-radius:6px;
+                 min-width:200px; }
+  header button { background:var(--acc); color:#0b1220; border:0;
+                  padding:.45rem .9rem; border-radius:6px; font-weight:600;
+                  cursor:pointer; }
+  #status { color:var(--dim); font-size:12px; max-width:40ch;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  main { flex:1; display:flex; min-height:0; }
+  #explorer { width:38%; min-width:340px; border-right:1px solid var(--edge);
+              overflow:auto; padding:.7rem; }
+  #viewer-pane { flex:1; position:relative; }
+  #viewer { position:absolute; inset:0; }
+  .crumb { color:var(--acc); cursor:pointer; padding:2px 0; }
+  .crumb:hover { text-decoration:underline; }
+  .crumb-sep { color:var(--dim); padding:0 4px; }
+  .pane-title { color:var(--dim); font-size:12px; text-transform:uppercase;
+                letter-spacing:.08em; margin:.6rem 0 .3rem; }
+  .res-card { background:var(--pane); border:1px solid var(--edge);
+              border-radius:8px; padding:.6rem .8rem; margin:.5rem 0;
+              cursor:pointer; }
+  .res-card:hover { border-color:var(--acc); }
+  .res-card .t { font-weight:600; }
+  .res-card .tt { color:var(--dim); font-size:11px; }
+  .res-card.current { border-color:var(--ok); }
+  table.props { width:100%; border-collapse:collapse; font-size:13px; }
+  table.props td { padding:3px 6px; border-bottom:1px solid var(--edge);
+                   vertical-align:top; }
+  table.props td:first-child { color:var(--dim); width:38%;
+    word-break:break-all; }
+  table.props a { color:var(--acc); word-break:break-all; }
+  .link-chip { display:inline-block; background:var(--pane);
+    border:1px solid var(--acc); color:var(--acc); border-radius:20px;
+    padding:1px 9px; margin:2px 4px 2px 0; font-size:12px; cursor:pointer; }
+  .link-chip:hover { background:var(--acc); color:#0b1220; }
+  #viewer-msg { position:absolute; top:8px; left:8px; right:8px;
+    color:var(--dim); font-size:12px; pointer-events:none;
+    text-shadow:0 1px 2px #000; }
+</style>
+</head>
+<body>
+<header>
+  <b style="color:var(--acc)">stepper</b>&nbsp;<span style="color:var(--dim)">OSLC viewer</span>
+  <input id="root-url" placeholder="OSLC resource URL — e.g. http://localhost:5055/oslc/step/product"
+         value="http://localhost:5055/oslc/step/product">
+  <button id="go">Fetch</button>
+  <span id="status"></span>
+</header>
+<main>
+  <div id="explorer">
+    <div id="breadcrumbs"><span class="crumb-sep">root:</span></div>
+    <div class="pane-title">Resources</div>
+    <div id="res-list"><span style="color:var(--dim)">Set the server URL and Fetch.</span></div>
+    <div class="pane-title">Properties</div>
+    <div id="props"><span style="color:var(--dim)">Select a resource.</span></div>
+    <div class="pane-title">Links</div>
+    <div id="links"><span style="color:var(--dim)">—</span></div>
+  </div>
+  <div id="viewer-pane">
+    <div id="viewer"></div>
+    <div id="viewer-msg">3D pane: select a StepFile resource to tessellate
+      locally (OpenCascade WASM, in-browser — the file never leaves your machine).</div>
+  </div>
+</main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const VOCAB = "https://github.com/mycr0ft/stepper/vocab#";
+const DCT = "http://purl.org/dc/terms/";
+
+let currentResource = null;   // {url, doc}
+let breadcrumb = [];          // [{url, label}]
+
+function shortTerm(uri) {
+  const hash = uri.lastIndexOf("#");
+  const slash = uri.lastIndexOf("/");
+  return uri.slice(Math.max(hash, slash) + 1) || uri;
+}
+
+function fmtVal(v) {
+  if (v == null) return "";
+  if (typeof v === "object") {
+    if ("@value" in v) return String(v["@value"]);
+    if ("@id" in v) return v["@id"];
+    return JSON.stringify(v);
+  }
+  return String(v);
+}
+
+async function fetchLD(url) {
+  // flask-restx serves JSON-LD on Accept: application/json (and
+  // application/ld+json) — a bare fetch (Accept: */*) 406/400s on the
+  // RDF/XML path (no rdflib plugin registered for */*), so ALWAYS ask
+  // for JSON explicitly here (MVP scope: JSON-LD only).
+  const r = await fetch(url, { headers: { "Accept": "application/json" } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText} — ${url}`);
+  const ct = (r.headers.get("content-type") || "");
+  const text = await r.text();
+  if (!ct.includes("json")) {
+    // RDF/XML — minimal parse: extract rdf:about + dcterms:title/identifier
+    return xmlFallback(text, url);
+  }
+  try { return JSON.parse(text); } catch (e) { return xmlFallback(text, url); }
+}
+
+// NOTE (MVP): full RDF/XML → triples needs an RDF lib; for the MVP we rely on
+// the flask-restx JSON-LD representation ('application/json' works — verified).
+function xmlFallback(text, url) {
+  const doc = new DOMParser().parseFromString(text, "text/xml");
+  const nodes = [...doc.querySelectorAll("[rdf\\:about], [about]")].map(n => ({
+    "@id": n.getAttribute("rdf:about") || n.getAttribute("about"),
+    "dcterms:title": [{ "@value": n.querySelector("title")?.textContent || "" }],
+  }));
+  return { "@context-raw": "rdfxml-fallback", "@graph": nodes };
+}
+
+function normalize(doc, baseUrl) {
+  // /oslc/step/product returns an ARRAY of node objects; single resources an OBJECT
+  const graph = Array.isArray(doc) ? doc : (doc["@graph"] ? doc["@graph"] : [doc]);
+  return graph;
+}
+
+function getProp(node, term) {
+  const v = node[term] ?? node[VOCAB + term] ?? node[DCT + term];
+  return Array.isArray(v) ? v[0] : v;
+}
+
+function resourceList(node) {
+  // every key whose value looks like a resource reference
+  const out = [];
+  for (const [k, v] of Object.entries(node)) {
+    const vals = Array.isArray(v) ? v : [v];
+    for (const x of vals) {
+      const id = (x && typeof x === "object" && "@id" in x) ? x["@id"]
+               : (typeof x === "string" && (x.startsWith("http") || x.startsWith("#")) ? x : null);
+      if (id && k !== "@id" && k !== "@type") out.push({ prop: shortTerm(k), id });
+    }
+  }
+  return out;
+}
+
+async function openUrl(url, label) {
+  try {
+    $("status").textContent = "fetching…";
+    const doc = await fetchLD(url);
+    const nodes = normalize(doc, url);
+    const selfNode = nodes.find(n => (n["@id"] || "").split("#")[0] === url.split("#")[0]) || nodes[0];
+    currentResource = { url, nodes, selfNode };
+    if (label) { breadcrumb.push({ url, label }); renderBreadcrumbs(); }
+    renderList(nodes);
+    renderProps(selfNode);
+    maybeTessellate(selfNode);
+    $("status").textContent = `${nodes.length} resource(s) @ ${url}`;
+  } catch (e) {
+    $("status").textContent = "ERROR: " + e.message;
+  }
+}
+
+function renderBreadcrumbs() {
+  $("breadcrumbs").innerHTML = breadcrumb.map((b, i) =>
+    `<span class="crumb" data-i="${i}">${b.label}</span>`).join('<span class="crumb-sep">›</span>');
+  document.querySelectorAll(".crumb").forEach(el => el.onclick = () => {
+    const i = +el.dataset.i;
+    breadcrumb = breadcrumb.slice(0, i);
+    openUrl(breadcrumb.length ? breadcrumb[breadcrumb.length-1].url : breadcrumbRoot(), null);
+  });
+}
+function breadcrumbRoot() { return $("root-url").value; }
+
+function renderList(nodes) {
+  if (!nodes.length) { $("res-list").innerHTML = "<i>empty</i>"; return; }
+  $("res-list").innerHTML = nodes.map(n => {
+    const title = fmtVal(getProp(n, "title")) || shortTerm(n["@id"]);
+    const id = fmtVal(getProp(n, "identifier")) || "";
+    const type = Array.isArray(n["@type"]) ? shortTerm(n["@type"][0]) : shortTerm(n["@type"] || "?");
+    return `<div class="res-card ${(n["@id"]||"") === (currentResource?.selfNode?.["@id"]||"") ? "current" : ""}" data-url="${n["@id"]}">
+      <div class="t">${title}</div>
+      <div class="tt">${type}${id ? " · id " + id : ""}</div></div>`;
+  }).join("");
+  document.querySelectorAll(".res-card").forEach(el =>
+    el.onclick = () => openUrl(el.dataset.url, shortTerm(el.dataset.url)));
+}
+
+function renderProps(node) {
+  if (!node) { $("props").innerHTML = "<i>—</i>"; return; }
+  const rows = Object.entries(node)
+    .filter(([k]) => k !== "@context")
+    .map(([k, v]) => {
+      const vals = Array.isArray(v) ? v : [v];
+      return vals.map(x => {
+        const s = fmtVal(x);
+        const isRef = (typeof x === "object" && "@id" in x) ||
+                      (typeof x === "string" && x.startsWith("http"));
+        return `<tr><td>${shortTerm(k)}</td><td>${
+          isRef ? `<a href="#" class="ref" data-url="${s}">${s}</a>` : s}</td></tr>`;
+      }).join("");
+    }).join("");
+  $("props").innerHTML = `<table class="props">${rows}</table>`;
+  document.querySelectorAll("a.ref").forEach(a =>
+    a.onclick = (ev) => { ev.preventDefault(); openUrl(a.dataset.url, shortTerm(a.dataset.url)); });
+
+  // links = resource-valued properties (chips)
+  const links = resourceList(node);
+  $("links").innerHTML = links.length
+    ? links.map(l => `<span class="link-chip" data-url="${l.id}">${l.prop}: ${shortTerm(l.id)}</span>`).join("")
+    : "<i>none</i>";
+  document.querySelectorAll(".link-chip").forEach(c =>
+    c.onclick = () => openUrl(c.dataset.url, shortTerm(c.dataset.url)));
+}
+
+// ---- 3D pane: tessellate the .stp LOCALLY via occt-import-js --------------
+let ov = null;
+function maybeTessellate(node) {
+  const isStepFile = JSON.stringify(node?.["@type"] || "").includes("StepFile");
+  const msg = $("viewer-msg");
+  if (!node || !isStepFile) {
+    msg.textContent = "3D pane: select a StepFile resource to tessellate locally.";
+    return;
+  }
+  // the vocab#file value is a FILESYSTEM path (writer-side provenance) —
+  // browsers fetch the raw bytes from OUR download route instead:
+  // <@id>/model.stp (StepFileDownload).
+  const dlUrl = node["@id"].replace(/\/#$/, "").replace(/\/$/, "") + "/model.stp";
+  msg.textContent = "downloading raw STEP…";
+  fetch(dlUrl)
+    .then(r => { if (!r.ok) throw new Error(`download ${r.status}`); return r.arrayBuffer(); })
+    .then(async (buf) => {
+      msg.textContent = "tessellating (OpenCascade WASM)…";
+      try {
+        // Online3DViewer's exported engine API
+        if (!window.ov) throw new Error("viewer engine not loaded yet — reload once network is up");
+        const model = window.ov.Importers.ImportStepFile(new window.ov_importers.BufferSource ? null : null);
+      } catch (e) {
+        // Fallback minimal path: use the standalone occt-import-js directly
+        if (!window.__occt) {
+          msg.textContent = "loading occt-import-js…";
+          await loadScript("https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js");
+          // UMD exposes the factory as the GLOBAL `occtimportjs` and returns
+          // a PROMISE of the module — a common emscripten pattern.
+          const factory = window.occtimportjs;
+          window.__occt = await factory({ locateFile: (f) =>
+            `https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/${f}` });
+        }
+        const occt = window.__occt;
+        const result = occt.ReadStepFile(new Uint8Array(buf), null);
+        renderOcctResult(result);
+        msg.textContent = "rendered locally — geometry never left your machine.";
+      }
+    })
+    .catch(e => { msg.textContent = "3D pane error: " + e.message; });
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error("script load: " + src));
+    document.head.appendChild(s);
+  });
+}
+
+function renderOcctResult(result) {
+  // three.js scene from occt-import-js's meshes
+  if (!window.THREE) {
+    // three.js r128 global build (module builds break the no-bundler path)
+    return loadScript("https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js")
+      .then(() => renderOcctResult(result));
+  }
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x10141a);
+  const group = new THREE.Group();
+  for (const mesh of result.meshes) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(mesh.attributes.position.array, 3));
+    if (mesh.attributes.normal)
+      g.setAttribute("normal", new THREE.Float32BufferAttribute(mesh.attributes.normal.array, 3));
+    g.computeVertexNormals();
+    const color = mesh.color ? new THREE.Color(mesh.color[0], mesh.color[1], mesh.color[2]) : new THREE.Color(0x9fb2c8);
+    const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color, metalness: .1, roughness: .55 }));
+    group.add(m);
+  }
+  scene.add(group);
+  // frame the model
+  const box = new THREE.Box3().setFromObject(group);
+  const size = box.getSize(new THREE.Vector3()).length();
+  const center = box.getCenter(new THREE.Vector3());
+  group.position.sub(center);
+  const cam = new THREE.PerspectiveCamera(45, viewerAspect(), Math.max(size/1000, 0.01), size * 10);
+  cam.position.set(0, size * .35, size * .9);
+  cam.lookAt(0, 0, 0);
+  const light = new THREE.DirectionalLight(0xffffff, 1.1);
+  light.position.set(1, 1.4, .8);
+  scene.add(light, new THREE.AmbientLight(0xffffff, .35));
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize($("viewer").clientWidth, $("viewer").clientHeight);
+  $("viewer").innerHTML = "";
+  $("viewer").appendChild(renderer.domElement);
+  let ro = () => {
+    renderer.setSize($("viewer").clientWidth, $("viewer").clientHeight);
+    cam.aspect = viewerAspect(); cam.updateProjectionMatrix();
+  };
+  window.addEventListener("resize", ro);
+  // orbit-lite: drag to rotate, wheel to zoom (no external orbit control dep)
+  let drag = null, theta = 0, phi = 0.35, radius = cam.position.length();
+  const el = renderer.domElement;
+  el.onmousedown = e => drag = [e.clientX, e.clientY];
+  el.onwheel = e => { e.preventDefault(); radius = Math.max(size/5, Math.min(size*5, radius * (1 + Math.sign(e.deltaY) * .12))); push(); };
+  window.addEventListener("mousemove", e => {
+    if (!drag) return;
+    theta -= (e.clientX - drag[0]) * .008; phi = Math.min(1.4, Math.max(-1.4, phi + (e.clientY - drag[1]) * .008));
+    drag = [e.clientX, e.clientY]; push();
+  });
+  window.addEventListener("mouseup", () => drag = null);
+  function push() {
+    cam.position.set(
+      radius * Math.cos(phi) * Math.sin(theta),
+      radius * Math.sin(phi),
+      radius * Math.cos(phi) * Math.cos(theta));
+    cam.lookAt(0, 0, 0);
+  }
+  push();
+  (function loop() { requestAnimationFrame(loop); renderer.render(scene, cam); })();
+}
+function viewerAspect() { const p = $("viewer-pane"); return p.clientWidth / Math.max(1, p.clientHeight); }
+
+$("go").onclick = () => { breadcrumb = []; renderBreadcrumbs(); openUrl($("root-url").value, "root"); };
+$("root-url").onkeydown = e => { if (e.key === "Enter") $("go").onclick(); };
+</script>
+</body>
+</html>
