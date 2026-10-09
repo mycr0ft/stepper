@@ -450,6 +450,12 @@ class P21Parser:
                 if v2 == ")":
                     self.next()
                     return items
+                if v2 == ";":        # defensive: statement end inside a group
+                    self.next()
+                    return items
+                if v2 == ",":        # separator — not a value
+                    self.next()
+                    continue
                 items.append(self.parse_value())
         if v == "$":
             return UNSET

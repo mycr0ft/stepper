@@ -17,6 +17,8 @@ findings are labeled and reported without blocking until Phase B.
 
 from __future__ import annotations
 
+import os
+
 from dataclasses import dataclass, field
 from typing import List, Optional, Sequence
 
@@ -171,8 +173,33 @@ def check_file(
     if semantic != "off" and schema is not None:
         f = check_schema_instances(p21, schema, file=path)
         result.findings.extend(f)
+        # -- Phase C item 4: WHERE-rule evaluation
+        where_enabled = os.environ.get("STEPPER_WHERE", "1") != "0"
+        if where_enabled:
+            from .where import evaluate_where_rules
+            wr = evaluate_where_rules(p21, schema)
+            for x in wr.failures:
+                # a genuinely-failing decidable rule: blocks in strict mode;
+                # advisory mode flags it as a warning (same contract as the
+                # schema stage)
+                result.findings.append(Finding(
+                    path,
+                    "error" if semantic == "strict" else "warning",
+                    "where", "WHERE_FAIL",
+                    f"{x.entity}.{x.rule}: {x.detail}",
+                    x.instance))
+            # (strict mode: the indeterminate rows are already visible as
+            # warnings — they cannot block, by definition: undecided ≠ failed)
+            for x in wr.indeterminate:
+                result.findings.append(Finding(
+                    path, "warning", "where",
+                    "WHERE_INDETERMINATE" if x.outcome == "indeterminate"
+                    else "WHERE_NOT_EVALUATED",
+                    f"{x.entity}.{x.rule}: {x.family}"
+                    + (f": {x.detail}" if x.detail else ""),
+                    x.instance))
     blocking = [x for x in result.findings
                 if x.level == "error"
-                and (x.stage in ("parse", "refs") or semantic == "strict")]
+                and (x.stage in ("parse", "refs", "where") or semantic == "strict")]
     result.exit_code = 1 if blocking else 0
     return result

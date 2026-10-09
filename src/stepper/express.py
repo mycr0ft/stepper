@@ -192,12 +192,17 @@ def _parse_entity_body(name: str, body: str) -> ExpressEntity:
     for rm in re.finditer(r"SELF\\([\w.]+)\s*\.\s*([A-Za-z_]\w*)", body, re.I):
         ent.redeclarations.append(f"{rm.group(1)}.{rm.group(2)}")
 
-    # WHERE rule names: 'WR1: expr;'
+    # WHERE rules: 'WR1: expr;' — body text RETAINED (the Phase C
+    # WHERE-rule evaluator consumes it; size cost is bounded by the
+    # corpus, not per-instance data)
     wm = re.search(r"\bWHERE\b(.*?)(?=\bEND_ENTITY\b|\Z)", body,
                    re.I | re.S)
     if wm:
-        for wrm in re.finditer(r"([A-Za-z_]\w*)\s*:\s*", wm.group(1)):
-            ent.where_rules[wrm.group(1)] = ""  # text kept out for size
+        wtext = wm.group(1)
+        for wrm in re.finditer(
+                r"([A-Za-z_]\w*)\s*:\s*(.*?);(?=\s*(?:[A-Za-z_]\w*\s*:|\Z))",
+                wtext, re.S):
+            ent.where_rules[wrm.group(1)] = " ".join(wrm.group(2).split())
 
     return ent
 
