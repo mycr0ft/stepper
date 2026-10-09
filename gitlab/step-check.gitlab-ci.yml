@@ -1,0 +1,52 @@
+# GitLab CI: STEP parse + check + WHERE + baseline gate via stepper.
+#
+# Include from your .gitlab-ci.yml:
+#
+#   include:
+#     - remote: 'https://raw.githubusercontent.com/mycr0ft/stepper/main/gitlab/step-check.gitlab-ci.yml'
+#
+#   step-check:
+#     extends: .step-check
+#     variables:
+#       STEP_PATHS: "step/"
+#       STEPPER_SEMANTIC: "advisory"    # off | advisory | strict
+#       # STEPPER_BASELINE: "config-mgmt/baseline.json"
+#
+# Parse failures are ALWAYS blocking; schema-level semantics are
+# advisory by default (STEPPER_SEMANTIC=strict to block, off to skip).
+#
+# NOTE: PyPI's `stepper` name is a DIFFERENT project — we install from
+# GitHub main; switch to a PyPI pin after we publish under a reserved
+# name.
+
+.step-check:
+  image: python:3.13
+  variables:
+    STEP_PATHS: "."
+    STEPPER_SEMANTIC: "advisory"
+    STEPPER_BASELINE: ""   # optional: path to a pinned baseline manifest
+    GIT_STRATEGY: clone
+  before_script:
+    - pip install git+https://github.com/mycr0ft/stepper@main
+  script:
+    - |
+      rc=0
+      # shellcheck disable=SC2086
+      files=$(find $STEP_PATHS \( -name '*.stp' -o -name '*.step' -o -name '*.p21' \) -type f 2>/dev/null)
+      for f in $files; do
+        echo "== $f"
+        stepper check "$f" --semantic "$STEPPER_SEMANTIC" || rc=1
+      done
+      if [ -n "$STEPPER_BASELINE" ]; then
+        # shellcheck disable=SC2086
+        stepper baseline gate "$STEPPER_BASELINE" --step $files || rc=1
+      fi
+      exit $rc
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+    - if: '$CI_COMMIT_BRANCH'
+      changes: ["**/*.stp", "**/*.step", "**/*.p21"]
+      when: always
+    - when: manual
+      allow_failure: true

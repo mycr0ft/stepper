@@ -1,0 +1,16 @@
+# Dogfood: run the reusable step-check workflow against stepper's own
+# vendored NIST fixtures (the self-hosted proof the gate works).
+name: step-dogfood
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/step-dogfood.yml", ".github/workflows/step-check.yml",
+            "src/**", "tests/fixtures/nist/**"]
+  workflow_dispatch:
+
+jobs:
+  dogfood:
+    uses: ./.github/workflows/step-check.yml
+    with:
+      paths: "tests/fixtures/nist"
+      semantic: "advisory"

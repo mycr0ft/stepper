@@ -1,0 +1,125 @@
+# STEP check gate — REUSABLE GitHub Actions workflow (workflow_call only).
+#
+# In YOUR repo:
+#
+#   jobs:
+#     step-check:
+#       uses: mycr0ft/stepper/.github/workflows/step-check.yml@main
+#       with:
+#         paths: "step/"
+#         semantic: "advisory"        # off | advisory | strict
+#         baseline-manifest: "config-mgmt/baseline.json"   # optional
+#
+# This repo's own pushes dogfood it via step-dogfood.yml (which calls
+# this workflow locally on the vendored NIST fixtures).
+#
+# NOTE: PyPI's `stepper` name is a DIFFERENT project (W. Trevor King's).
+# This workflow installs from this repo by default; pass
+# stepper-version: "stepper==X.Y.Z" only after we publish under a
+# reserved name.
+
+name: step-check
+
+on:
+  workflow_call:
+    inputs:
+      paths:
+        description: "Files or directories holding .stp files (space-separated)"
+        required: false
+        default: "."
+        type: string
+      exclude:
+        description: "Substring patterns to skip (comma-separated)"
+        required: false
+        default: ""
+        type: string
+      # Parse failures are ALWAYS blocking. `semantic` controls the
+      # schema-level stage: advisory = warnings only (default),
+      # strict = blocking too, off = skip.
+      semantic:
+        description: "Semantic gate: off | advisory | strict"
+        required: false
+        default: "advisory"
+        type: string
+      baseline-manifest:
+        description: "Optional pinned baseline manifest — gates drift (gate step)"
+        required: false
+        default: ""
+        type: string
+      baseline-inputs:
+        description: "--step globs the pin covers (default: reuse paths)"
+        required: false
+        default: ""
+        type: string
+      python-version:
+        required: false
+        default: "3.13"
+        type: string
+      stepper-version:
+        description: "Pip spec (default: git+https://github.com/mycr0ft/stepper@main)"
+        required: false
+        default: "git+https://github.com/mycr0ft/stepper@main"
+        type: string
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version || '3.13' }}
+          cache: pip
+
+      - name: Install stepper
+        run: |
+          python -m pip install --upgrade pip
+          pip install "${{ inputs.stepper-version }}"
+
+      - name: Resolve .stp files
+        env:
+          EXCLUDE_PATTERNS: ${{ inputs.exclude }}
+        id: files
+        run: |
+          set -- ${{ inputs.paths || '.' }}
+          found=""
+          for p in "$@"; do
+            for f in $(find "$p" -name '*.stp' -o -name '*.step' -o -name '*.p21' 2>/dev/null); do
+              skip=0
+              if [ -n "$EXCLUDE_PATTERNS" ]; then
+                IFS=',' read -ra pats <<< "$EXCLUDE_PATTERNS"
+                for pat in "${pats[@]}"; do
+                  case "$f" in *"$pat"*) skip=1; break;; esac
+                done
+              fi
+              [ "$skip" = 0 ] && found="$found $f"
+            done
+          done
+          echo "list=$found" >> "$GITHUB_OUTPUT"
+          echo "resolved:$(echo $found | wc -w) files"
+
+      - name: STEP parse + check (blocking on parse)
+        if: steps.files.outputs.list != ''
+        run: |
+          rc=0
+          # shellcheck disable=SC2086
+          for f in ${{ steps.files.outputs.list }}; do
+            echo "::group::$f"
+            stepper check "$f" --semantic ${{ inputs.semantic || 'advisory' }} || rc=1
+            echo "::endgroup::"
+          done
+          exit $rc
+
+      - name: Baseline gate (fail on drift from pinned configuration)
+        if: ${{ inputs.baseline-manifest != '' }}
+        run: |
+          if [ -n "${{ inputs.baseline-inputs }}" ]; then
+            # shellcheck disable=SC2086
+            stepper baseline gate "${{ inputs.baseline-manifest }}" \
+              --step ${{ inputs.baseline-inputs }}
+          else
+            # shellcheck disable=SC2086
+            stepper baseline gate "${{ inputs.baseline-manifest }}" \
+              --step ${{ steps.files.outputs.list }}
+          fi

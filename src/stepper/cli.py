@@ -58,6 +58,30 @@ def main(argv=None):
     p_struct.add_argument("--format", choices=("jsonld", "turtle"),
                           default="jsonld")
 
+    p_base = sub.add_parser("baseline", help="Vee baseline gate (Phase C)")
+    pbase_sub = p_base.add_subparsers(dest="base_cmd", required=True)
+    pb_create = pbase_sub.add_parser("create", help="pin a configuration")
+    pb_create.add_argument("--sysml", nargs="*", default=[])
+    pb_create.add_argument("--step", nargs="*", default=[])
+    pb_create.add_argument("--schema", action="append", default=[],
+                           metavar="LABEL=PATH",
+                           help="EXPRESS schema to pin (repeatable)")
+    pb_create.add_argument("--title", default="")
+    pb_create.add_argument("--author", default="")
+    pb_create.add_argument("--out", help="write the manifest JSON here")
+    pb_verify = pbase_sub.add_parser("verify", help="verify a pinned baseline")
+    pb_verify.add_argument("manifest", help="the pinned manifest JSON")
+    pb_verify.add_argument("--sysml", nargs="*", default=[])
+    pb_verify.add_argument("--step", nargs="*", default=[])
+    pb_verify.add_argument("--schema", action="append", default=[],
+                           metavar="LABEL=PATH")
+    pb_gate = pbase_sub.add_parser("gate", help="CI gate: fail on drift")
+    pb_gate.add_argument("manifest", help="the pinned manifest JSON")
+    pb_gate.add_argument("--sysml", nargs="*", default=[])
+    pb_gate.add_argument("--step", nargs="*", default=[])
+    pb_gate.add_argument("--schema", action="append", default=[],
+                         metavar="LABEL=PATH")
+
     args = ap.parse_args(argv)
 
     if args.cmd == "check":
@@ -107,6 +131,46 @@ def main(argv=None):
         else:
             print(json.dumps(jsonld, indent=2))
         return 0
+
+    if args.cmd == "baseline":
+        from .baselines import BaselineInput, create_baseline, verify_baseline, gate
+        import json as _json
+
+        def _input(ns) -> BaselineInput:
+            schemas = {}
+            for spec in ns.schema:
+                label, _, path = spec.partition("=")
+                if not path:
+                    raise SystemExit(f"--schema expects LABEL=PATH, got {spec!r}")
+                schemas[label.strip()] = path.strip()
+            return BaselineInput(
+                sysml_files=list(ns.sysml), step_files=list(ns.step),
+                schemas=schemas, title=getattr(ns, "title", ""),
+                author=getattr(ns, "author", ""))
+
+        if args.base_cmd == "create":
+            inp = _input(args)
+            base = create_baseline(inp)
+            manifest = {k: v for k, v in base.items()
+                        if k != "artifacts_bytes"}
+            if args.out:
+                with open(args.out, "w", encoding="utf-8") as fh:
+                    _json.dump(manifest, fh, indent=2, sort_keys=True)
+                print(f"baseline pinned: {manifest['id']} → {args.out}")
+            else:
+                print(_json.dumps(manifest, indent=2, sort_keys=True))
+            return 0
+
+        if args.base_cmd == "verify":
+            with open(args.manifest, encoding="utf-8") as fh:
+                pinned = _json.load(fh)
+            res = verify_baseline(pinned, _input(args) if
+                                  (args.sysml or args.step or args.schema) else None)
+            print(_json.dumps(res, indent=2))
+            return 0 if res["matches_current"] in (True, None) else 1
+
+        if args.base_cmd == "gate":
+            return gate(args.manifest, _input(args))
 
 
 if __name__ == "__main__":

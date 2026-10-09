@@ -100,6 +100,26 @@ Full walkthrough for beginners: **[the mkdocs
 site](https://mycr0ft.github.io/stepper/)** — six lessons assuming no
 prior STEP knowledge, every command verified on the vendored files.
 
+## CI/CD gates
+
+```yaml
+jobs:
+  step-check:
+    uses: mycr0ft/stepper/.github/workflows/step-check.yml@main
+    with:
+      paths: "step/"
+      semantic: "advisory"     # off | advisory | strict
+      baseline-manifest: "config-mgmt/baseline.json"   # optional
+```
+
+Parse is **always blocking**; schema semantics are advisory by
+default. Adding `baseline-manifest` gates merges against a pinned,
+content-addressed released configuration (`stepper baseline
+create/gate` — any drift exits 1 and prints the first differing
+artifact). GitLab template + pre-commit hook in the repo; details in
+[`docs/ci-integration.md`](docs/ci-integration.md). (PyPI's `stepper`
+name is an unrelated project — pins resolve from GitHub.)
+
 ## Roadmap
 
 See [`docs/directions.md`](docs/directions.md) for the ten ranked

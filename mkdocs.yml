@@ -38,6 +38,7 @@ nav:
       - 5. The Vee link (SysML ↔ STEP): tutorial/vee.md
       - 6. Baselines (releases): tutorial/baselines.md
   - Where next: directions.md
+  - CI/CD integration: ci-integration.md
   - Architecture: oslc-integration.md
 
 markdown_extensions:
