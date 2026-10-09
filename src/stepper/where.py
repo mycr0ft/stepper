@@ -85,7 +85,7 @@ _TOKEN_RE = re.compile(r"""
   | (?P<number>[+-]?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)
   | (?P<kw>[A-Za-z_]\w*)
   | (?P<self>SELF)
-  | (?P<op><>|:=|:=:|:<>:|<=|>=|\.\.|[,()\[\]{}=<>:+*/-])
+  | (?P<op><>|:=|:=:|:<>:|<=|>=|\.\.|[,()\[\]{}=<>:+*/|!&])
 """, re.X | re.S)
 
 KEYWORDS = {"AND", "OR", "NOT", "IN", "EXISTS", "TYPEOF", "SIZEOF", "QUERY",
@@ -126,6 +126,14 @@ _USEDIN_RE = re.compile(r"\bUSEDIN\s*\(", re.I)
 _FUNC_CALL_RE = re.compile(r"\b[a-z]\w+\s*\(", re.I)
 
 
+_QUERY_VAR_RE = re.compile(r"QUERY\s*\(\s*([A-Za-z_]\w*)\s*<", re.I)
+
+
+def _query_vars(expr: str) -> set:
+    """Variables bound by QUERY expressions in this rule."""
+    return {m.group(1).lower() for m in _QUERY_VAR_RE.finditer(expr)}
+
+
 def _chain_anchors(tokens: List[Tuple[str, str]]) -> List[Tuple[str, List[str]]]:
     """Every attribute-chain anchor in a token stream: (anchor, path-names).
 
@@ -159,9 +167,9 @@ def _chain_anchors(tokens: List[Tuple[str, str]]) -> List[Tuple[str, List[str]]]
 
 
 def rule_family(expr: str) -> str:
-    """C-stratum kinds win; otherwise the (evaluable) A-stratum label."""
-    if _QUERY_RE.search(expr):
-        return "query"
+    """C-stratum kinds win; otherwise the (evaluable) A-stratum label.
+    QUERY is EVALUABLE since Phase C item 4 v2 (per-member binding); the
+    tokenizer + _eval_query handle it."""
     if _USEDIN_RE.search(expr):
         return "usedin"
     if re.search(r"\b[a-z]\w+\s*\(", expr):     # schema-local function call
@@ -255,6 +263,51 @@ class _Eval:
         layout = self.attr_layout(entity_name)
         return layout.get(attr.lower())
 
+    def resolve_attr(self, attr_chain_head_entity: str, attr: str):
+        """Attr → (part_args, idx) for the instance THIS eval anchors.
+
+        Complex entities store ONE arg-list PER PART (ComplexEntity.get(type));
+        the layout's linear index is valid only against the OWNING part's
+        arg tuple. Walks the part types to find the part declaring `attr`.
+        Returns (args_tuple, idx) or None."""
+        entity = self._casefold_entity(attr_chain_head_entity)
+        if entity is None:
+            return None
+        attr_l = attr.lower()
+        # the attr may live on a supertype of the anchor entity — candidate
+        # parts = the instance's declared types + their supertype closures
+        for part_type in self.instance_types():
+            part_entity = self._casefold_entity(part_type)
+            if part_entity is None:
+                continue
+            # layout of the PART's own entity (its inherited chain)
+            layout = self.attr_layout(part_entity.name if hasattr(part_entity, "name") else part_type)
+            if attr_l in layout:
+                idx = layout[attr_l]
+                args = self.args_of_part(part_type)
+                if idx < len(args):
+                    return args, idx
+        return None
+
+    def args_of_part(self, part_type: str):
+        """The args of one PART of a complex instance (or the whole args of
+        a simple instance). ComplexEntity.get returns EITHER a raw list of
+        args or the part's internal object carrying .args — handle both."""
+        inst = self.instance
+        if isinstance(inst, ComplexEntity):
+            try:
+                v = inst.get(part_type)
+            except Exception:
+                return ()
+            if isinstance(v, (list, tuple)):
+                return tuple(v)
+            for attr in ("args", "parameters", "params", "values"):
+                inner = getattr(v, attr, None)
+                if isinstance(inner, (list, tuple)):
+                    return tuple(inner)
+            return ()
+        return self.args(inst)
+
     def value_of_chain(self, chain: List[str]) -> List[Any]:
         """SELF backslash-entity.attr(.attr)* → derefed values (bag flattening)."""
         names = list(chain)
@@ -284,20 +337,28 @@ class _Eval:
         # hop 1: the instance's own attribute
         while names and cur is not None:
             attr = names[0]
-            idx = None
-            types = ([cur.name] if isinstance(cur, SimpleEntity)
-                     else (cur.types() if isinstance(cur, ComplexEntity) else []))
-            for t in reversed(types):
-                idx = self.attr_index(t, attr)
-                if idx is not None:
-                    break
-            if idx is None:
-                return []
-            args = self.args(cur)
-            if idx >= len(args):
-                return []
+            resolved = None
+            if cur is self.instance and self.entity_name:
+                resolved = self.resolve_attr(self.entity_name, attr)
+            if resolved is None:
+                # generic walk (member instances inside QUERY bodies etc.)
+                idx = None
+                types = ([cur.name] if isinstance(cur, SimpleEntity)
+                         else (cur.types() if isinstance(cur, ComplexEntity) else []))
+                for t in reversed(types):
+                    idx = self.attr_index(t, attr)
+                    if idx is not None:
+                        break
+                if idx is None:
+                    return []
+                args = self.args(cur)
+                if idx >= len(args):
+                    return []
+                head = names[1:]
+                return self._walk(args[idx], head)
+            resolved_args, idx = resolved
             head = names[1:]
-            return self._walk(args[idx], head)
+            return self._walk(resolved_args[idx], head)
         return []
 
     def attr_root_of(self, names: List[str]) -> Optional[str]:
@@ -381,17 +442,32 @@ class _Eval:
 
     def parse_comparison(self, t, i):
         left, i = self.parse_primary(t, i)
-        if i < len(t) and t[i][0] == "op":
+        if i < len(t) and (t[i][0] == "op" or
+                           (t[i][0] == "kw" and
+                            t[i][1].upper() in ("IN",))):
             op = t[i][1]
+            op_up = t[i][1].upper()
+            # IN membership (ISO 10303-11: 'a IN set'; the set side is a
+            # TYPEOF-string list, an aggregate value, or a select type)
+            if op_up == "IN":
+                right, j = self.parse_primary(t, i + 1)
+                return self._in_test(left, right), j
+            if op == "*":     # select-multiply: 'Schema.Type' * TYPEOF(SELF)
+                right, j = self.parse_primary(t, i + 1)
+                return self._in_test(right, left), j
             rhs_ops = {"=", "!=", "<>", ":", "<", ">", "<=", ">=", ":<>:", ":=:"}
             if op in rhs_ops and i + 1 < len(t):
                 right, j = self.parse_primary(t, i + 1)
-                if op == ":<>:" or op == "<>":
-                    return (left != right), j
+                # ISO 10303-11 12.3: comparison with UNKNOWN/unset yields
+                # UNKNOWN — indeterminate, never False
+                if _is_unknown(left) or _is_unknown(right):
+                    raise _Uneval(f"unset operand: {left!r} {op} {right!r}")
+                if op in (":<>:", "<>", "!=", ):  # instance/value inequality
+                    return (self._ne_comparable(left, right)), j
                 if op == ":=:":
                     return (left is right or left == right), j
                 if op == "=":
-                    return (left == right), j
+                    return self._eq_comparable(left, right), j
                 if op in ("<", ">", "<=", ">="):
                     try:
                         return (compare_num(left, right, op)), j
@@ -399,20 +475,82 @@ class _Eval:
                         raise _Uneval(f"ordering on non-numeric: {left!r} {op} {right!r}")
         return left, i
 
+    @staticmethod
+    def _eq_comparable(left, right) -> bool:
+        """Value equality tolerant of instance-vs-primitive mismatches:
+        two entity instances compare by identity; mixed kinds are unequal
+        (not a failure)."""
+        if isinstance(left, (ComplexEntity, SimpleEntity)) or \
+                isinstance(right, (ComplexEntity, SimpleEntity)):
+            return left is right if type(left) is type(right) else False
+        return left == right
+
+    @staticmethod
+    def _ne_comparable(left, right) -> bool:
+        return not _Eval._eq_comparable(left, right)
+
+    @staticmethod
+    def _in_test(item, collection) -> bool:
+        """item IN collection — collection: a string (TYPEOF form:
+        'SCHEMA.ENTITY' substring test per ISO 10303-11: a string is
+        treated as the type-name collection), a list/bag, or an entity
+        instance (its type closure)."""
+        if isinstance(collection, str):
+            # TYPEOF form: collection is one qualified type string —
+            # item (also a string) must match; both sides plain-compared
+            return item == collection or (isinstance(item, str)
+                                          and _type_name_of(item) == _type_name_of(collection))
+        if isinstance(collection, (list, tuple, set)):
+            return any(_type_name_of(item) == _type_name_of(x) or item == x
+                       for x in collection)
+        if isinstance(collection, (ComplexEntity, SimpleEntity)):
+            types = (_type_names_of_instance(collection))
+            return _type_name_of(item) in types
+        return False
+
     def parse_primary(self, t, i):
         if i >= len(t):
             raise _Uneval("unexpected end")
         kind, text = t[i]
 
+        if text == "{":
+            # interval expression: {low <= attr <= high} (ISO 10303-11 §12.7)
+            vals, j = self._parse_interval(t, i + 1)
+            return vals, j
+
+        if text == "[":
+            # aggregate literal: ['a', 'b', ...] (type-name lists and more)
+            items, j = self._parse_aggregate_lit(t, i + 1)
+            return items, j
+
         if text == "(":
-            # parenthesized sub-expression: recurse the boolean grammar
+            # TYPEOF argument form? TYPEOF(v) handled below; a bare paren
+            # group with a SINGLE value inside (e.g. ('#1')) is a 1-bag
             val, j = self.parse_or(t, i + 1)
             if j < len(t) and t[j][1] == ")":
                 return val, j + 1
             raise _Uneval("unclosed paren")
 
-        if text.upper() == "NOT" or text.upper() in ("AND", "OR"):
-            raise _Uneval(f"misplaced {text}")
+        if text.upper() == "QUERY":
+            if i + 1 < len(t) and t[i + 1][1] == "(":
+                kept, j = self._eval_query(t, i + 2)
+                return kept, j      # a bag; SIZEOF/compare consumes it
+            raise _Uneval("QUERY without '('")
+
+        if text.upper() == "TYPEOF":
+            if i + 1 < len(t) and t[i + 1][1] == "(":
+                operand, j = self.parse_primary(t, i + 2)
+                if j < len(t) and t[j][1] == ")":
+                    j += 1
+                    return _typeof_strings(operand, self), j
+            raise _Uneval("TYPEOF without '('")
+
+        if kind == "kw" and text[0].islower() and i + 1 < len(t) and \
+                t[i + 1][1] == "(" and text.upper() not in ():
+            # schema-local function call — OUT of the evaluable subset
+            # (e.g. acyclic_mapped_representation(SELF)); classification,
+            # not failure
+            raise _Uneval(f"schema-function-call: {text}")
 
         if text.upper() == "EXISTS":
             if i + 1 < len(t) and t[i + 1][1] == "(":
@@ -451,11 +589,141 @@ class _Eval:
         return vals, j
 
     def parse_sizeof_arg(self, t, i):
-        """SIZEOF(QUERY(...)) → classify not-evaluable; SIZEOF(chain) → bag."""
+        """SIZEOF(QUERY(var <* chain | expr>)) → evaluate the query and
+        return the surviving members (bag); SIZEOF(chain) → the bag."""
         if i < len(t) and t[i][1].upper() == "QUERY":
-            raise _Uneval("SIZEOF(QUERY)")
+            return self._eval_query(t, i + 1)
         chain, j = self.parse_chain(t, i)
         return self.value_of_chain(chain), j
+
+    def _eval_query(self, t, i):
+        """QUERY(var <* source | body> or QUERY(var <* source | body))
+
+        Evaluates the query: resolves the source bag (a chain or a nested
+        QUERY), binds var per member, keeps members whose body is TRUE.
+        Delimiter: '>' (BNF form) or the query's own ')' (real-world
+        writer form — most of the corpus and several toolchains omit the
+        '>'; both accepted, whichever comes first at depth 0).
+        """
+        # tolerate being called AT the QUERY token or AFTER it
+        if i < len(t) and t[i][1].upper() == "QUERY":
+            i += 1
+        if i < len(t) and t[i][1] == "(":
+            i += 1
+        if i >= len(t) or t[i][0] != "kw":
+            raise _Uneval("QUERY: expected variable")
+        var_name = t[i][1].lower()
+        j = i + 1
+        if not (j < len(t) and t[j][1] == "<" and j + 1 < len(t) and
+                t[j + 1][1] == "*"):
+            raise _Uneval("QUERY: expected <*")
+        j += 2
+        # -- source: a chain OR a nested QUERY whose bag feeds this one
+        if j < len(t) and t[j][0] == "kw" and t[j][1].upper() == "QUERY":
+            members, j = self._eval_query(t, j)
+        else:
+            chain, j = self.parse_chain(t, j)
+            members = self.value_of_chain(chain)
+        if not (j < len(t) and t[j][1] == "|"):
+            raise _Uneval("QUERY: expected |")
+        # -- body: up to '>' (BNF) or our ')' (world form)
+        depth = 0
+        k = j + 1
+        closed_at = None
+        while k < len(t):
+            tx = t[k][1]
+            if tx == "(":
+                depth += 1
+            elif tx == ")":
+                if depth == 0:
+                    closed_at = k
+                    break
+                depth -= 1
+            elif tx == ">" and depth == 0:
+                closed_at = k
+                break
+            k += 1
+        if closed_at is None:
+            raise _Uneval("QUERY: missing > or ')'")
+        body = t[j + 1:closed_at]
+        kept = []
+        for member in members:
+            sub = self._bind_member(member)
+            try:
+                if sub.parse_or(list(body), 0)[0] is True:
+                    kept.append(member)
+            except _Uneval:
+                raise      # member bodies must stay in the subset
+        return kept, closed_at + 1
+
+    def _bind_member(self, member):
+        """Scoped _Eval whose SELF is the member (query bodies address the
+        member with bare attribute chains)."""
+        member_id = str(int(member)) if isinstance(member, int) else \
+            getattr(member, "instance_id", None)
+        if member_id is None:
+            for e_id, inst in self.p21.instances.items():
+                if inst is member:
+                    member_id = e_id
+                    break
+        ent_name = self.entity_name
+        if isinstance(member, SimpleEntity):
+            ent_name = member.name.lower()
+        elif isinstance(member, ComplexEntity) and member.types():
+            ent_name = member.types()[0].lower()
+        return _Eval(self.p21, self.schema, member_id, ent_name)
+
+    def _parse_aggregate_lit(self, t, i):
+        """[ item, item, ... ] → list of values (strings, numbers)."""
+        items = []
+        while i < len(t):
+            if t[i][1] == "]":
+                return items, i + 1
+            if t[i][1] == ",":
+                i += 1
+                continue
+            kind, text = t[i]
+            if kind == "string":
+                items.append(text[1:-1].replace("''", "'"))
+                i += 1
+            elif kind == "number":
+                items.append(_int_or_float(text))
+                i += 1
+            elif kind == "kw":
+                items.append(text)
+                i += 1
+            else:
+                raise _Uneval(f"unsupported aggregate item {t[i]}")
+        raise _Uneval("unclosed aggregate literal")
+
+    def _parse_interval(self, t, i):
+        """{low op1 attr op2 high} → bool (ISO §12.7)."""
+        low, i = self.parse_primary(t, i)
+        op1 = t[i][1]
+        if op1 not in ("<", "<=", ">", ">="):
+            raise _Uneval("interval not of form {low op mid op high}")
+        if op1 in ("<", "<="):
+            mid, i = self.parse_primary(t, i + 1)
+            op2 = t[i][1]
+            if op2 not in ("<", "<=", ">", ">=") or i + 1 >= len(t) or \
+                    t[i + 1][1] != "}":
+                raise _Uneval("interval missing '}'")
+            if _is_unknown(mid):
+                raise _Uneval("interval over unset value")
+            high = self._interval_bound(t, i + 2)
+            a = float(low) <= float(mid) if op1 == "<=" else float(low) < float(mid)
+            b = (float(mid) <= float(high)) if op2 == "<=" else (float(mid) < float(high))
+            return (a and b), i + 3
+        raise _Uneval("interval high-first form unsupported (use low <= mid)")
+
+    def _interval_bound(self, t, i):
+        if i >= len(t):
+            raise _Uneval("interval missing bound")
+        kind, text = t[i]
+        if kind == "number":
+            return _int_or_float(text)
+        vals = self.value_of_chain(self.parse_chain(t, i)[0])
+        return vals[0] if len(vals) == 1 else None
 
     def parse_chain(self, t, i) -> Tuple[List[str], int]:
         """chain := SELF backslash-entity name (. name)*  — returns names."""
@@ -487,6 +755,83 @@ class _Uneval(Exception):
 def _int_or_float(text: str):
     f = float(text)
     return int(f) if f.is_integer() and "." not in text and "e" not in text.lower() else f
+
+
+def _is_unknown(v) -> bool:
+    """ISO 10303-11 UNKNOWN: unset (?) values and the UNKNOWN logical —
+    plus UNSET/DERIVED sentinels from the P21 reader."""
+    from .p21 import UNSET, DERIVED
+    return v is None or v is UNSET or v is DERIVED or (
+        isinstance(v, str) and v == "UNKNOWN")
+
+
+def _type_name_of(x) -> str:
+    """Normalize a type name to its bare entity part (qualified 'S.E' → 'e'),
+    case-folded."""
+
+    def fold(name: str) -> str:
+        return name.split(".")[-1].strip().lower()
+    if isinstance(x, str):
+        return fold(x.strip("'").strip('"'))
+    if isinstance(x, (ComplexEntity, SimpleEntity)):
+        return _type_name_of(_type_names_of_instance(x)[0]) if \
+            _type_names_of_instance(x) else ""
+    return fold(str(x))
+
+
+def _type_names_of_instance(inst) -> List[str]:
+    """All type names of a P21 instance, casefolded (complex: every part)."""
+    if isinstance(inst, ComplexEntity):
+        return [t.lower() for t in inst.types()]
+    if isinstance(inst, SimpleEntity):
+        return [inst.name.lower()]
+    return []
+
+
+def _typeof_strings(operand, ev: "_Eval") -> List[str]:
+    """ISO 10303-11 TYPEOF(v) — the SUPERTYPE-CLOSED set of the operand's
+    type names as 'SCHEMA.ENTITY' strings (the corpus' rule texts test
+    e.g. 'SCHEMA.ENTITY' IN TYPEOF(x)).  Casefolded + bare-name + Upper
+    aliases, so rules written either way match. The closure walks the
+    schema's supertype graph (composite_curve_segment's parent_curve
+    instance TRIMMED_CURVE → + curve + geometric_representation_item…)."""
+    names: List[str] = []
+    if isinstance(operand, (ComplexEntity, SimpleEntity)):
+        types = ([operand.name] if isinstance(operand, SimpleEntity)
+                 else operand.types())
+        ents = ev.schema.entities
+
+        def closure(name: str, seen: set) -> None:
+            key = name.lower()
+            if key in seen:
+                return
+            seen.add(key)
+            names.append(key)
+            names.append(name.upper())
+            qualified = f"{_schema_prefix(ev)}.{name}".lower()
+            names.append(qualified)
+            ent = ents.get(name) or ev._casefold_entity(name)
+            if ent is not None:
+                for sup in ent.supertypes:
+                    closure(sup, seen)
+
+        for t in types:
+            closure(t, set())
+    elif isinstance(operand, str):
+        names.append(operand.lower())
+    elif operand is None:
+        pass
+    else:
+        names.append(str(operand).lower())
+    return names
+
+
+def _schema_prefix(ev: "_Eval") -> str:
+    """File's schema name, camel-stripped for the qualified form."""
+    s = getattr(ev.p21, "schema_names", []) or []
+    if s:
+        return str(s[0]).split("(")[0].strip("('\" ")
+    return getattr(ev.schema, "name", "").split("(")[0]
 
 
 def compare_num(left, right, op) -> bool:
@@ -534,12 +879,14 @@ def evaluate_entity(p21: P21File, schema: ExpressSchema, entity_name: str,
             # -- A-stratum anchor analysis: EVERY attribute chain in the rule
             # must resolve to an EXPLICIT attribute; derived (computed) or
             # unknown anchors leave the subset → indeterminate, never a false
-            # failure.
-            status = self_or_none = None
-            chains = _chain_anchors(tokens)
+            # failure. Chains whose head is a bound QUERY variable are
+            # exempt (they resolve per-member at evaluation).
+            bound_vars = _query_vars(expr)
+            chains = [(name, path) for name, path in _chain_anchors(tokens)
+                      if name.lower() not in bound_vars]
             verdict = None       # None=indeterminate | True=ok
             if not chains:
-                verdict = True   # constant-only rule (TRUE/FALSE)
+                verdict = True   # constant-only/QUERY-only rule
             else:
                 verdict = True
                 for anchor in chains:
