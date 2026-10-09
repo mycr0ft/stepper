@@ -10,7 +10,8 @@ import os
 
 import pytest
 
-from stepper.bom import MIM_TO_OBP_EXACT, OBPModel, to_obp, to_obp_json, bom_schema
+from stepper.bom import (MIM_TO_OBP_EXACT, OBPModel, to_obp, to_obp_json,
+                         bom_schema, uuid_bridge, instance_uuid)
 from stepper.express import load_express
 
 BOM = os.path.join(os.path.dirname(__file__), "fixtures", "express", "bom_3001.exp")
@@ -119,3 +120,52 @@ class TestToOBPJson:
             assert m.nodes, f
             total_nodes += len(m.nodes)
         assert total_nodes >= 80
+
+class TestUuidBridge:
+    def test_uuids_deterministic(self, ctc):
+        b = uuid_bridge(ctc)
+        again = uuid_bridge(ctc)
+        assert b["provenance"] == again["provenance"]
+        assert b == again
+
+    def test_uuids_are_v5_uuids(self, ctc):
+        import uuid as u
+        b = uuid_bridge(ctc)
+        first = next(iter(b["provenance"].values()))
+        assert str(u.UUID(first).version) == "5"
+
+    def test_hash_function_declared(self, ctc):
+        b = uuid_bridge(ctc)
+        assert b["hash_function"] == "stepper-obp-v1"
+        assert b["obm"] == "iso-ts-10303-400-uuid"
+
+    def test_attributes_shape_matches_400(self, ctc):
+        """One Hash_based_v5_uuid_attribute pseudo-instance per OBP node."""
+        b = uuid_bridge(ctc)
+        assert len(b["attributes"]) == len(ctc.nodes)
+        for a in b["attributes"]:
+            assert a["uuid"]
+            assert a["identified"]["obp_class"]
+            assert a["identified"]["step_ref"].startswith("#")
+
+    def test_relationships_mirror_obp_refs(self, ctc):
+        b = uuid_bridge(ctc)
+        n_edges = sum(len(n.obp_refs) for n in ctc.nodes.values())
+        assert len(b["relationships"]) == n_edges > 0
+        for rel in b["relationships"]:
+            assert rel["uuid_1"] != rel["uuid_2"]
+
+    def test_ref_resolution_via_bridge(self, ctc):
+        """The Vee-registry join key: step_ref -> uuid round trip."""
+        b = uuid_bridge(ctc)
+        # a known STEP ref resolves to the Part uuid
+        step_refs = {n.step_ref: n.obp_class for n in ctc.nodes.values()}
+        part_ref = next(ref for ref, c in step_refs.items() if c == "Part")
+        part_uuid = b["provenance"][part_ref]
+        attrs_by_uuid = {a["uuid"]: a["identified"] for a in b["attributes"]}
+        assert attrs_by_uuid[part_uuid]["obp_class"] == "Part"
+
+    def test_instance_uuid_stable_across_param_order(self):
+        a = instance_uuid("Part", "#4374", "NIST Test Case 1")
+        b = instance_uuid("Part", "#4374", "NIST Test Case 1")
+        assert a == b and a != instance_uuid("PartVersion", "#4374", "NIST Test Case 1")

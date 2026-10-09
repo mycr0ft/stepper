@@ -350,3 +350,71 @@ def to_obp_json(model: OBPModel) -> Dict[str, Any]:
         ],
         "report": model.report,
     }
+
+
+# -- the UUID identity bridge (ISO/TS 10303-400 v12 vocabulary) ----------------
+
+# Hash_based_v5_uuid_attribute: uuid + hash_function + identified_item.
+# uuids here are uuid5(content) — the same content-addressing spirit as
+# sysmlpy's stable interchange ids (hash the declared identity, never
+# the resolved context).
+
+OBUUID_NAMESPACE = "6f1a2f52-9d0e-4b8a-9c1f-0b7a58d2e100"   # stepper OBP uuid ns
+
+
+def instance_uuid(obp_class: str, step_ref: str, name: str = "") -> str:
+    """Hash-based v5 uuid of one OBP node (deterministic across runs and
+    machines; stable across unrelated edits — mirrors sysmlpy's
+    stable-id rules: hash the declared identity, not resolved state)."""
+    import uuid as _uuid
+
+    key = "|".join((obp_class, step_ref, name))
+    return str(_uuid.uuid5(_uuid.UUID(OBUUID_NAMESPACE), key))
+
+
+def uuid_bridge(model: OBPModel) -> Dict[str, Any]:
+    """The -400 identity payload for an OBP model:
+
+    - ``attributes`` — one pseudo-instance per OBP node, in the
+      Hash_based_v5_uuid_attribute shape
+      (``{uuid, hash_function: 'stepper-obp-v1', identified: {...}}``);
+    - ``provenance`` — step_ref → uuid (the join key the Vee registry
+      resolves STEP-side);
+    - ``relationships`` — the obp_refs edges as -400 Uuid_relationship
+      rows (uuid_1 + uuid_2 + role).
+    """
+    uuid_of: Dict[str, str] = {}
+    for oid, n in model.nodes.items():
+        uuid_of[oid] = instance_uuid(n.obp_class, n.step_ref, n.name)
+
+    return {
+        "obm": "iso-ts-10303-400-uuid",
+        "hash_function": "stepper-obp-v1",
+        "file": model.file,
+        "attributes": [
+            {
+                "uuid": uuid_of[oid],
+                "identified": {
+                    "obp_class": n.obp_class,
+                    "step_ref": n.step_ref,
+                    "obp_id": oid,
+                },
+            }
+            for oid, n in sorted(model.nodes.items())
+        ],
+        "provenance": {
+            n.step_ref: uuid_of[oid]
+            for oid, n in sorted(model.nodes.items())
+        },
+        "relationships": [
+            {
+                "identifier": f"{uuid_of[src]}~{uuid_of[dst]}~references",
+                "uuid_1": uuid_of[src],
+                "uuid_2": uuid_of[dst],
+                "role": "references",
+            }
+            for src, n in sorted(model.nodes.items())
+            for dst in n.obp_refs
+            if dst in uuid_of
+        ],
+    }
